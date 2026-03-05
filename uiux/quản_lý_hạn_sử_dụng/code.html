@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+
+<html class="light" lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Quản lý Hạn sử dụng - CloudPOS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1c43a6",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#121620",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3 text-primary">
+<div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined">inventory_2</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight">CloudPOS</h2>
+</div>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-semibold transition-colors" href="#">Tổng quan</a>
+<a class="text-primary text-sm font-bold border-b-2 border-primary py-4 -mb-4" href="#">Kho hàng</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-semibold transition-colors" href="#">Giao dịch</a>
+<a class="text-slate-600 dark:text-slate-400 hover:text-primary dark:hover:text-primary text-sm font-semibold transition-colors" href="#">Báo cáo</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+<input class="w-64 pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/50" placeholder="Tìm kiếm nhanh..."/>
+</div>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<div class="h-8 w-[1px] bg-slate-200 dark:border-slate-800 mx-1"></div>
+<div class="flex items-center gap-3 pl-2">
+<div class="text-right hidden sm:block">
+<p class="text-sm font-bold leading-none">Admin User</p>
+<p class="text-xs text-slate-500 mt-1">Quản trị viên</p>
+</div>
+<div class="size-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center overflow-hidden">
+<img alt="User Avatar" class="size-full" data-alt="User avatar illustration" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCcpQKlVpj03ugckXHS9FqUBTS-YmqLDcrW39oNTB982ZmnfJu-4khSuP7yHF3zP_50tKekAfB3A3lhYM_fVk6qBc2QzPKHboMKOm4oXsOLT7y4GgNziGunzZhGGQaiwBcY23CHJmIPhlO8wt8IKdY-ziBIhceY7gg3b8kbR3rSjnUgcMyKeU3uF_UI3XNOHod5amG39J5GCpmOmMv6IG8ct04pYDKkbQa7WbbN0GKocLDm3OUy6Nna_19y5Rs6XXdkLwSVssakuJo"/>
+</div>
+</div>
+</div>
+</header>
+<div class="flex flex-1">
+<!-- Sidebar Navigation -->
+<aside class="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hidden lg:flex flex-col p-4 gap-6">
+<div class="flex flex-col gap-1">
+<p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Quản lý kho</p>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Bảng điều khiển</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">package_2</span>
+<span class="text-sm font-medium">Danh mục hàng hóa</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 bg-primary/10 text-primary rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined font-fill">history_toggle_off</span>
+<span class="text-sm font-bold">Lô hàng &amp; Hạn dùng</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">import_export</span>
+<span class="text-sm font-medium">Nhập - Xuất kho</span>
+</a>
+</div>
+<div class="flex flex-col gap-1">
+<p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Báo cáo</p>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="text-sm font-medium">Báo cáo tồn kho</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined">warning</span>
+<span class="text-sm font-medium">Cảnh báo hết hạn</span>
+</a>
+</div>
+<div class="mt-auto p-4 bg-primary/5 rounded-xl border border-primary/10">
+<p class="text-xs font-bold text-primary uppercase mb-1">Dung lượng kho</p>
+<div class="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mb-2">
+<div class="bg-primary h-1.5 rounded-full w-[75%]"></div>
+</div>
+<p class="text-[10px] text-slate-500">Đã sử dụng 750/1000m³</p>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto p-6 lg:p-10">
+<div class="max-w-6xl mx-auto flex flex-col gap-8">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div class="space-y-1">
+<div class="flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-wider">
+<span class="material-symbols-outlined text-sm">inventory</span>
+                            Kho hàng chính
+                        </div>
+<h1 class="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Quản lý Hạn sử dụng</h1>
+<p class="text-slate-500 dark:text-slate-400 max-w-xl">Giám sát vòng đời sản phẩm, tối ưu hóa quy trình luân chuyển hàng hóa và giảm thiểu thất thoát do hết hạn.</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm font-bold shadow-sm hover:bg-slate-50 transition-all">
+<span class="material-symbols-outlined text-sm">download</span>
+                            Xuất báo cáo (Excel)
+                        </button>
+<button class="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
+<span class="material-symbols-outlined text-sm">add</span>
+                            Kiểm kê kho
+                        </button>
+</div>
+</div>
+<!-- Stats Overview -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+<div class="size-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+<span class="material-symbols-outlined">event_busy</span>
+</div>
+<div>
+<p class="text-slate-500 text-sm font-medium">Đã hết hạn</p>
+<h3 class="text-2xl font-bold">12 Lô hàng</h3>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+<div class="size-12 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center">
+<span class="material-symbols-outlined">running_with_errors</span>
+</div>
+<div>
+<p class="text-slate-500 text-sm font-medium">Sắp hết hạn (&lt;30 ngày)</p>
+<h3 class="text-2xl font-bold">24 Lô hàng</h3>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+<div class="size-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+<span class="material-symbols-outlined">task_alt</span>
+</div>
+<div>
+<p class="text-slate-500 text-sm font-medium">Đang an toàn</p>
+<h3 class="text-2xl font-bold">1,452 Lô hàng</h3>
+</div>
+</div>
+</div>
+<!-- Filters & Search -->
+<div class="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center gap-4">
+<div class="flex-1 min-w-[300px] relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-primary" placeholder="Tìm kiếm theo tên sản phẩm, mã SKU hoặc số lô..." type="text"/>
+</div>
+<div class="flex items-center gap-3">
+<select class="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium py-2 px-4 focus:ring-primary min-w-[160px]">
+<option value="">Tất cả trạng thái</option>
+<option value="expired">Đã hết hạn (Đỏ)</option>
+<option value="near">Sắp hết hạn (Cam)</option>
+<option value="safe">Còn hạn (Xanh)</option>
+</select>
+<select class="bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm font-medium py-2 px-4 focus:ring-primary min-w-[160px]">
+<option value="">Thời gian: 30 ngày tới</option>
+<option value="7">7 ngày tới</option>
+<option value="15">15 ngày tới</option>
+<option value="90">90 ngày tới</option>
+</select>
+<button class="p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 hover:bg-slate-100 transition-all">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Data Table -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Tên sản phẩm</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Số lô (Batch)</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Ngày hết hạn</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Số lượng</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Trạng thái</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Thao tác</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<!-- Row 1: Expired -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+<img alt="Product 1" data-alt="Smartphone product image thumbnail" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDoouKuZG2tPWGWVfPvKE1WtuBACEZ5AW4VwjwwCtB4lZ0AmU1PBmGA4jeWyMQvZtQW9LIbohagHZB2S56PJXo8qyYVjiTmrPZTz9W9rioxVKN_Jn54Bqedp8r9Eym75LpVtkrPiOlUqAUaONnbTQnGx_CimCB1ykBtUQ1hdfM_jAMnyYcpTOcCSmXtyZbZdGrybUQvKM1XeviT7ssB2tqzPCL3t6P13ZuU9ib3Zr3Pr9gj5TouBSyW8RQswaM9LTD3wZXtUp4HgEs"/>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">iPhone 15 Pro Max 256GB</p>
+<p class="text-xs text-slate-500">Mã: IP15PM-BLK</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm font-mono text-slate-600 dark:text-slate-400">LOT-2023-0045</td>
+<td class="px-6 py-4">
+<p class="text-sm font-semibold text-red-600">15/02/2024</p>
+<p class="text-[10px] text-slate-400">Đã quá hạn 5 ngày</p>
+</td>
+<td class="px-6 py-4 text-sm font-bold">12 máy</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+<span class="size-1.5 rounded-full bg-red-600"></span>
+                                            HẾT HẠN
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 2: Warning -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+<img alt="Product 2" data-alt="Watch product image thumbnail" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsKPOGswuyxMeDri6x4JBgymr0a1wD3X7KjNni5IDBa8wUnwu6o4VIItQ8Aun1T7Ksjx6ZAIQsasn2fTbM6eSwre6Ob0zWeLbYRpsBNJCY7ZOKb_O7T5VkyprmdRPbrn-V_HgPMQEB5rb3QWjfy5o-PRGAyP_0Uwh-5O-tqLIjFza4Xw4BY8ZzyZoBUlkYt-Rnskb57MN32wQi20hOr2e81-pU40A5mzLsrXtSPoC7WEj2p0gnpQzRVH5Y7JwNwNlBd0vNChMrQoI"/>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Apple Watch Series 9</p>
+<p class="text-xs text-slate-500">Mã: AW9-S-45</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm font-mono text-slate-600 dark:text-slate-400">LOT-2023-0122</td>
+<td class="px-6 py-4">
+<p class="text-sm font-semibold text-orange-600">10/03/2024</p>
+<p class="text-[10px] text-slate-400">Còn lại 18 ngày</p>
+</td>
+<td class="px-6 py-4 text-sm font-bold">45 chiếc</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+<span class="size-1.5 rounded-full bg-orange-600"></span>
+                                            SẮP HẾT HẠN
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 3: Warning -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+<img alt="Product 3" data-alt="Earphones product image thumbnail" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOrFJxVXRXl6K3KjZo_o7m2BKdL9j2BHww48OgK0WmSnHRIAiGITdcTlZzqrp0w3MxmgL5Y7lwtYaNhrOMPE89YfpNCsr7ym7ypfUyCbTmX2IfpDMSGoguGCHn-Bl51VnDLhtGOIC40gGB4EJ9K103p5YKNTNPZplwR6J9Ps91TvxkInENLh7HY8anlMzpgiJ8NWhLzbbA2gKLE0iDVKKyjJUBdP_fVe2oO7uP7NmmfWLOS744733rwzqhko5uLvPmy2kbkarOlFo"/>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Sony WH-1000XM5</p>
+<p class="text-xs text-slate-500">Mã: SN-XM5-W</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm font-mono text-slate-600 dark:text-slate-400">LOT-2023-0210</td>
+<td class="px-6 py-4">
+<p class="text-sm font-semibold text-orange-600">12/03/2024</p>
+<p class="text-[10px] text-slate-400">Còn lại 20 ngày</p>
+</td>
+<td class="px-6 py-4 text-sm font-bold">20 tai nghe</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400">
+<span class="size-1.5 rounded-full bg-orange-600"></span>
+                                            SẮP HẾT HẠN
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Row 4: Expired -->
+<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden">
+<img alt="Product 4" data-alt="Sneakers product image thumbnail" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDs6h3dOngnwDE6tsaRbqjTxGyEsPLtwQDFcyzY5ADk8zKH-fL_V43NpvI7AWQJjwBtHLYDzfqMCPaf69HtOZMJ5V239yW1xg9SYWSya5GcLrG7AhztEvay0jDlHSr92NsnU3aXIG6u0NvXsHbrMhOcG8PxhIjFuBOVSj_rAxwwSJoo79gHbTEEm5OpxSKKGQKKYplEYNOW4pZqMKjo6CS6HVF4uurf9d1obRX5y2tmD2NlWYj_Jgu5xmJ5Zcke2vzXYo1DeOVX5Qg"/>
+</div>
+<div>
+<p class="text-sm font-bold text-slate-900 dark:text-white">Nike Air Max 270</p>
+<p class="text-xs text-slate-500">Mã: NK-AM270-R</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 text-sm font-mono text-slate-600 dark:text-slate-400">LOT-2023-0305</td>
+<td class="px-6 py-4">
+<p class="text-sm font-semibold text-red-600">01/01/2024</p>
+<p class="text-[10px] text-slate-400">Đã quá hạn 50 ngày</p>
+</td>
+<td class="px-6 py-4 text-sm font-bold">5 đôi</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+<span class="size-1.5 rounded-full bg-red-600"></span>
+                                            HẾT HẠN
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="px-6 py-4 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
+<p class="text-xs text-slate-500">Hiển thị <span class="font-bold text-slate-900 dark:text-white">1-10</span> trong số <span class="font-bold text-slate-900 dark:text-white">36</span> lô hàng cần lưu ý</p>
+<div class="flex gap-2">
+<button class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-xs font-bold disabled:opacity-50" disabled="">Trước</button>
+<button class="px-3 py-1 bg-primary text-white rounded text-xs font-bold">1</button>
+<button class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-xs font-bold">2</button>
+<button class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-xs font-bold">3</button>
+<button class="px-3 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-xs font-bold">Sau</button>
+</div>
+</div>
+</div>
+<!-- Action Footer / Alerts -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="bg-primary/5 border border-primary/20 p-6 rounded-xl flex items-start gap-4">
+<div class="p-2 bg-primary/20 rounded-lg text-primary">
+<span class="material-symbols-outlined">auto_awesome</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-white mb-1">Đề xuất xả kho</h4>
+<p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Hệ thống phát hiện 15 mặt hàng sắp hết hạn trong 15 ngày tới. Bạn nên tạo chương trình khuyến mãi để giải phóng tồn kho nhanh hơn.</p>
+<button class="text-primary text-sm font-bold hover:underline">Xem danh sách đề xuất →</button>
+</div>
+</div>
+<div class="bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-900/30 p-6 rounded-xl flex items-start gap-4">
+<div class="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg text-red-600">
+<span class="material-symbols-outlined font-fill">delete_forever</span>
+</div>
+<div>
+<h4 class="font-bold text-slate-900 dark:text-white mb-1">Xử lý hàng quá hạn</h4>
+<p class="text-sm text-slate-600 dark:text-slate-400 mb-4">Hiện có 12 lô hàng đã quá hạn sử dụng và không thể tiếp tục bán. Vui lòng lập phiếu xuất hủy để cập nhật lại tồn kho thực tế.</p>
+<button class="text-red-600 text-sm font-bold hover:underline">Tạo phiếu xuất hủy ngay →</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>

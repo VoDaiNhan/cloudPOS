@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1c43a6",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#121620",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<title>Chọn chế độ làm việc - CloudPOS</title>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Header Section -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 px-6 py-4 md:px-10 lg:px-40 bg-white dark:bg-slate-900">
+<div class="flex items-center gap-4 text-primary">
+<div class="size-8 flex items-center justify-center bg-primary/10 rounded-lg">
+<span class="material-symbols-outlined text-primary font-bold">cloud_done</span>
+</div>
+<h2 class="text-slate-900 dark:text-slate-100 text-xl font-bold leading-tight tracking-tight">CloudPOS</h2>
+</div>
+<div class="flex flex-1 justify-end items-center gap-4">
+<div class="text-right hidden sm:block">
+<p class="text-sm font-semibold text-slate-900 dark:text-slate-100">Nguyễn Văn A</p>
+<p class="text-xs text-slate-500">Quản trị viên</p>
+</div>
+<div class="bg-primary/20 bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-primary/10 flex items-center justify-center overflow-hidden" data-alt="User profile avatar placeholder">
+<span class="material-symbols-outlined text-primary">person</span>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col items-center justify-center px-6 py-12 md:py-20 lg:px-40">
+<div class="max-w-[1000px] w-full">
+<div class="text-center mb-12">
+<h1 class="text-slate-900 dark:text-slate-100 text-3xl md:text-4xl font-black leading-tight tracking-tight mb-4">Chào mừng trở lại!</h1>
+<p class="text-slate-500 dark:text-slate-400 text-lg max-w-2xl mx-auto">Vui lòng chọn chế độ làm việc để tiếp tục. Bạn có thể thay đổi lựa chọn này bất cứ lúc nào trong phần cài đặt.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Card 1: Quản lý -->
+<div class="group cursor-pointer flex flex-col bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 hover:border-primary hover:shadow-xl transition-all duration-300 p-8">
+<div class="mb-6 size-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-4xl">bar_chart</span>
+</div>
+<div class="flex-1">
+<h3 class="text-slate-900 dark:text-slate-100 text-2xl font-bold mb-3">Quản lý</h3>
+<p class="text-slate-500 dark:text-slate-400 text-base leading-relaxed mb-8">
+                                    Công cụ toàn diện để quản lý hàng hóa, theo dõi đơn hàng và xem các báo cáo phân tích kinh doanh chuyên sâu.
+                                </p>
+</div>
+<button class="w-full py-4 px-6 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold rounded-lg group-hover:bg-primary group-hover:text-white transition-all flex items-center justify-center gap-2">
+<span>Truy cập Dashboard</span>
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+<!-- Card 2: Bán hàng - POS -->
+<div class="group cursor-pointer flex flex-col bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 hover:border-primary hover:shadow-xl transition-all duration-300 p-8">
+<div class="mb-6 size-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-symbols-outlined text-4xl">point_of_sale</span>
+</div>
+<div class="flex-1">
+<h3 class="text-slate-900 dark:text-slate-100 text-2xl font-bold mb-3">Bán hàng - POS</h3>
+<p class="text-slate-500 dark:text-slate-400 text-base leading-relaxed mb-8">
+                                    Giao diện được tối ưu hóa cho tốc độ xử lý nhanh, hỗ trợ các thao tác bán hàng tại quầy và in hóa đơn tức thì.
+                                </p>
+</div>
+<button class="w-full py-4 px-6 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100 font-bold rounded-lg group-hover:bg-primary group-hover:text-white transition-all flex items-center justify-center gap-2">
+<span>Mở màn hình POS</span>
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Footer Info -->
+<div class="mt-16 flex flex-col items-center gap-6">
+<div class="flex items-center gap-2 text-slate-400 dark:text-slate-500 text-sm">
+<span class="material-symbols-outlined text-base">info</span>
+<span>Mẹo: Bạn có thể sử dụng phím tắt (1) và (2) để chọn nhanh</span>
+</div>
+<div class="w-full h-px bg-slate-200 dark:bg-slate-800"></div>
+<div class="flex flex-wrap justify-center gap-6 text-slate-400 dark:text-slate-500 text-xs font-medium uppercase tracking-widest">
+<a class="hover:text-primary transition-colors" href="#">Hỗ trợ</a>
+<a class="hover:text-primary transition-colors" href="#">Hướng dẫn</a>
+<a class="hover:text-primary transition-colors" href="#">Điều khoản</a>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>

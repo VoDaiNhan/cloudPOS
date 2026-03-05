@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CloudPOS - Quản lý Nhà cung cấp</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1c43a6",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#121620",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-link {
+            background-color: rgba(28, 67, 166, 0.1);
+            color: #1c43a6;
+            border-right: 4px solid #1c43a6;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0">
+<div class="p-6 flex items-center gap-3">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined">cloud_done</span>
+</div>
+<div>
+<h1 class="text-lg font-bold leading-none">CloudPOS</h1>
+<p class="text-xs text-slate-500 mt-1">Hệ thống quản lý SaaS</p>
+</div>
+</div>
+<nav class="flex-1 px-4 py-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Tổng quan</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="text-sm font-medium">Bán hàng</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-sm font-medium">Sản phẩm</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg active-link" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">local_shipping</span>
+<span class="text-sm font-bold">Nhà cung cấp</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">warehouse</span>
+<span class="text-sm font-medium">Kho hàng</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="text-sm font-medium">Báo cáo</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 p-2">
+<div class="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-sm">person</span>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-medium truncate">Admin User</p>
+<p class="text-xs text-slate-500 truncate">admin@cloudpos.vn</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col overflow-hidden bg-background-light dark:bg-background-dark">
+<!-- Header Bar -->
+<header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 shrink-0">
+<div class="flex items-center gap-4 flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg focus:ring-2 focus:ring-primary/50 text-sm" placeholder="Tìm kiếm mã, tên hoặc số điện thoại NCC..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</header>
+<!-- Content Area -->
+<div class="flex-1 overflow-y-auto p-8 space-y-6">
+<!-- Page Title & Actions -->
+<div class="flex justify-between items-end">
+<div>
+<h2 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Quản lý Nhà cung cấp</h2>
+<p class="text-slate-500 mt-1">Quản lý thông tin và công nợ với các đối tác cung ứng.</p>
+</div>
+<button class="flex items-center gap-2 px-5 py-2.5 bg-primary text-white rounded-lg font-bold hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined">add</span>
+                        Thêm nhà cung cấp
+                    </button>
+</div>
+<!-- Stats Overview (Optional but professional) -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Tổng nhà cung cấp</p>
+<p class="text-2xl font-bold mt-2">124</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Tổng giá trị nhập (Tháng)</p>
+<p class="text-2xl font-bold mt-2 text-primary">2.450.000.000đ</p>
+</div>
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Tổng công nợ hiện tại</p>
+<p class="text-2xl font-bold mt-2 text-red-500">145.000.000đ</p>
+</div>
+</div>
+<!-- Supplier List Table -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Mã NCC</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Tên nhà cung cấp</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Số điện thoại</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Nhóm hàng</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Tổng giá trị nhập</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Công nợ</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Thao tác</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4 text-sm font-medium text-primary">NCC001</td>
+<td class="px-6 py-4">
+<div class="text-sm font-bold text-slate-900 dark:text-white">Công ty Toàn Cầu</div>
+<div class="text-xs text-slate-500">Quận 1, TP. HCM</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">0901234567</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[10px] font-bold uppercase">Điện tử</span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-900 dark:text-white font-medium text-right">500.000.000đ</td>
+<td class="px-6 py-4 text-sm text-right">
+<span class="text-slate-500 font-medium">0đ</span>
+</td>
+<td class="px-6 py-4 text-center">
+<button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined text-xl">visibility</span></button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors bg-blue-50/30 dark:bg-blue-900/10">
+<td class="px-6 py-4 text-sm font-medium text-primary">NCC002</td>
+<td class="px-6 py-4">
+<div class="text-sm font-bold text-slate-900 dark:text-white">Gia dụng Việt</div>
+<div class="text-xs text-slate-500">Thanh Xuân, Hà Nội</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">0988776655</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 text-[10px] font-bold uppercase">Gia dụng</span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-900 dark:text-white font-medium text-right">120.000.000đ</td>
+<td class="px-6 py-4 text-sm text-right">
+<span class="text-red-600 dark:text-red-400 font-bold">15.000.000đ</span>
+</td>
+<td class="px-6 py-4 text-center">
+<button class="text-primary"><span class="material-symbols-outlined text-xl">visibility</span></button>
+</td>
+</tr>
+<tr class="hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors">
+<td class="px-6 py-4 text-sm font-medium text-primary">NCC003</td>
+<td class="px-6 py-4">
+<div class="text-sm font-bold text-slate-900 dark:text-white">Thực phẩm Sạch</div>
+<div class="text-xs text-slate-500">Cầu Giấy, Hà Nội</div>
+</td>
+<td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">0911223344</td>
+<td class="px-6 py-4">
+<span class="px-2 py-1 rounded bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-[10px] font-bold uppercase">Thực phẩm</span>
+</td>
+<td class="px-6 py-4 text-sm text-slate-900 dark:text-white font-medium text-right">85.000.000đ</td>
+<td class="px-6 py-4 text-sm text-right">
+<span class="text-red-600 dark:text-red-400 font-bold">2.500.000đ</span>
+</td>
+<td class="px-6 py-4 text-center">
+<button class="text-slate-400 hover:text-primary"><span class="material-symbols-outlined text-xl">visibility</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Supplier Details Section: Stock History -->
+<div class="mt-12 space-y-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">history</span>
+<h3 class="text-xl font-bold text-slate-900 dark:text-white">Lịch sử phiếu nhập kho: <span class="text-primary font-black">Gia dụng Việt (NCC002)</span></h3>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
+<th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Mã phiếu</th>
+<th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Ngày nhập</th>
+<th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Sản phẩm</th>
+<th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Số lượng</th>
+<th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Thành tiền</th>
+<th class="px-6 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider">Trạng thái</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<tr>
+<td class="px-6 py-4 text-sm font-medium">PNK-2309-001</td>
+<td class="px-6 py-4 text-sm text-slate-500">12/09/2023 14:30</td>
+<td class="px-6 py-4 text-sm">Bộ nồi Inox, Chảo chống dính...</td>
+<td class="px-6 py-4 text-sm text-right">50</td>
+<td class="px-6 py-4 text-sm font-bold text-right text-slate-900 dark:text-white">45.000.000đ</td>
+<td class="px-6 py-4">
+<span class="flex items-center gap-1.5 text-xs font-bold text-green-600 dark:text-green-400">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                            Đã nhập hàng
+                                        </span>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 text-sm font-medium">PNK-2308-042</td>
+<td class="px-6 py-4 text-sm text-slate-500">28/08/2023 09:15</td>
+<td class="px-6 py-4 text-sm">Máy xay sinh tố Bluestone</td>
+<td class="px-6 py-4 text-sm text-right">20</td>
+<td class="px-6 py-4 text-sm font-bold text-right text-slate-900 dark:text-white">25.000.000đ</td>
+<td class="px-6 py-4">
+<span class="flex items-center gap-1.5 text-xs font-bold text-green-600 dark:text-green-400">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                            Đã nhập hàng
+                                        </span>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4 text-sm font-medium">PNK-2308-015</td>
+<td class="px-6 py-4 text-sm text-slate-500">15/08/2023 16:45</td>
+<td class="px-6 py-4 text-sm">Ấm siêu tốc 1.8L</td>
+<td class="px-6 py-4 text-sm text-right">100</td>
+<td class="px-6 py-4 text-sm font-bold text-right text-slate-900 dark:text-white">50.000.000đ</td>
+<td class="px-6 py-4">
+<span class="flex items-center gap-1.5 text-xs font-bold text-green-600 dark:text-green-400">
+<span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                            Đã nhập hàng
+                                        </span>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="p-4 bg-slate-50 dark:bg-slate-800/50 flex justify-center">
+<button class="text-sm font-bold text-primary hover:underline flex items-center gap-1">
+                                Xem tất cả lịch sử nhập kho
+                                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

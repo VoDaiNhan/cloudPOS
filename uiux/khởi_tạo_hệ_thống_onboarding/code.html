@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1c43a6",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#121620",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .step-active {
+            color: #1c43a6;
+        }
+        .step-inactive {
+            color: #64748b;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 transition-colors duration-300">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+<div class="layout-container flex h-full grow flex-col">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-4 md:px-40">
+<div class="flex items-center gap-3 text-primary">
+<div class="size-8 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined">cloud_done</span>
+</div>
+<h2 class="text-slate-900 dark:text-white text-xl font-bold leading-tight tracking-tight">CloudPOS</h2>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+<span class="material-symbols-outlined">help</span>
+</button>
+<button class="flex items-center justify-center rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold hover:bg-primary/90 transition-all">
+                        Đăng xuất
+                    </button>
+</div>
+</header>
+<main class="flex flex-1 justify-center py-10 px-4 md:px-0">
+<div class="layout-content-container flex flex-col max-w-[800px] flex-1">
+<div class="mb-10 text-center">
+<h1 class="text-slate-900 dark:text-white text-4xl font-black leading-tight tracking-tight mb-3">Chào mừng bạn đến với CloudPOS</h1>
+<p class="text-slate-500 dark:text-slate-400 text-lg">Thiết lập các thông số cơ bản để bắt đầu tối ưu hóa việc kinh doanh của bạn</p>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="flex items-center justify-between bg-slate-50 dark:bg-slate-800/50 px-8 py-6 border-b border-slate-200 dark:border-slate-800">
+<div class="flex flex-col items-center gap-2 group">
+<div class="flex items-center justify-center w-10 h-10 rounded-full bg-primary text-white ring-4 ring-primary/20">
+<span class="material-symbols-outlined text-[20px]">schedule</span>
+</div>
+<span class="text-xs font-bold uppercase tracking-wider text-primary">Bước 1</span>
+<span class="text-sm font-medium text-slate-900 dark:text-white">Thời gian</span>
+</div>
+<div class="h-px grow bg-slate-200 dark:bg-slate-700 mx-4"></div>
+<div class="flex flex-col items-center gap-2 opacity-50">
+<div class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[20px]">storefront</span>
+</div>
+<span class="text-xs font-bold uppercase tracking-wider text-slate-500">Bước 2</span>
+<span class="text-sm font-medium text-slate-500">Kênh bán</span>
+</div>
+<div class="h-px grow bg-slate-200 dark:bg-slate-700 mx-4"></div>
+<div class="flex flex-col items-center gap-2 opacity-50">
+<div class="flex items-center justify-center w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400">
+<span class="material-symbols-outlined text-[20px]">task_alt</span>
+</div>
+<span class="text-xs font-bold uppercase tracking-wider text-slate-500">Bước 3</span>
+<span class="text-sm font-medium text-slate-500">Hoàn tất</span>
+</div>
+</div>
+<div class="p-8">
+<h2 class="text-slate-900 dark:text-white text-2xl font-bold mb-6 flex items-center gap-2">
+<span class="bg-primary/10 text-primary w-8 h-8 rounded-lg flex items-center justify-center text-lg">1</span>
+                                Chọn thời gian kinh doanh
+                            </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+<label class="relative flex flex-col p-5 cursor-pointer rounded-xl border-2 border-primary bg-primary/5 transition-all hover:bg-primary/10">
+<input checked="" class="absolute top-4 right-4 h-5 w-5 text-primary border-slate-300 focus:ring-primary" name="business_time" type="radio"/>
+<span class="material-symbols-outlined text-primary text-4xl mb-3">update</span>
+<span class="text-slate-900 dark:text-white text-lg font-bold">Cả ngày (24/7)</span>
+<span class="text-slate-500 dark:text-slate-400 text-sm mt-1">Phù hợp cho cửa hàng tiện lợi, khách sạn hoặc dịch vụ trực tuyến liên tục.</span>
+</label>
+<label class="relative flex flex-col p-5 cursor-pointer rounded-xl border-2 border-slate-200 dark:border-slate-800 transition-all hover:border-primary/50 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+<input class="absolute top-4 right-4 h-5 w-5 text-primary border-slate-300 focus:ring-primary" name="business_time" type="radio"/>
+<span class="material-symbols-outlined text-slate-400 text-4xl mb-3">clinical_notes</span>
+<span class="text-slate-900 dark:text-white text-lg font-bold">Theo ca cố định</span>
+<span class="text-slate-500 dark:text-slate-400 text-sm mt-1">Kinh doanh theo khung giờ hành chính hoặc các ca làm việc cụ thể.</span>
+</label>
+</div>
+<hr class="border-slate-100 dark:border-slate-800 mb-8"/>
+<h2 class="text-slate-900 dark:text-white text-2xl font-bold mb-6 flex items-center gap-2">
+<span class="bg-primary/10 text-primary w-8 h-8 rounded-lg flex items-center justify-center text-lg">2</span>
+                                Chọn kênh bán hàng của bạn
+                            </h2>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+<div class="flex items-center gap-3 p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30">
+<input checked="" class="rounded text-primary focus:ring-primary h-5 w-5" type="checkbox"/>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-slate-900 dark:text-white">Tại quầy (POS)</span>
+<span class="text-xs text-slate-500">Bán hàng trực tiếp</span>
+</div>
+</div>
+<div class="flex items-center gap-3 p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30">
+<input class="rounded text-primary focus:ring-primary h-5 w-5" type="checkbox"/>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-slate-900 dark:text-white">Online Web</span>
+<span class="text-xs text-slate-500">Website bán hàng</span>
+</div>
+</div>
+<div class="flex items-center gap-3 p-4 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/30">
+<input class="rounded text-primary focus:ring-primary h-5 w-5" type="checkbox"/>
+<div class="flex flex-col">
+<span class="text-sm font-bold text-slate-900 dark:text-white">Facebook/Zalo</span>
+<span class="text-xs text-slate-500">Mạng xã hội</span>
+</div>
+</div>
+</div>
+<div class="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl border border-blue-100 dark:border-blue-800 mb-10 flex items-start gap-4">
+<div class="text-blue-600 dark:text-blue-400 mt-1">
+<span class="material-symbols-outlined">info</span>
+</div>
+<div class="flex-1">
+<p class="text-blue-900 dark:text-blue-100 font-semibold">Bạn muốn thử nghiệm nhanh?</p>
+<p class="text-blue-700 dark:text-blue-300 text-sm mt-1">Chọn nút bên dưới để tự động tạo 5 sản phẩm mẫu, 2 đơn hàng và 1 báo cáo để bạn có thể trải nghiệm đầy đủ tính năng ngay lập tức.</p>
+<button class="mt-4 flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-blue-800 text-blue-700 dark:text-blue-100 border border-blue-200 dark:border-blue-700 rounded-lg font-bold text-sm hover:bg-blue-50 dark:hover:bg-blue-700 transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px]">magic_button</span>
+                                        Khởi tạo dữ liệu mẫu
+                                    </button>
+</div>
+</div>
+<div class="flex items-center justify-between pt-6 border-t border-slate-100 dark:border-slate-800">
+<button class="px-6 py-3 text-slate-500 dark:text-slate-400 font-bold hover:text-slate-900 dark:hover:text-white transition-colors">
+                                    Quay lại
+                                </button>
+<button class="px-10 py-3 bg-primary text-white font-bold rounded-lg shadow-lg shadow-primary/30 hover:shadow-primary/40 hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                                    Tiếp theo
+                                    <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<div class="mt-8 flex justify-center gap-8">
+<div class="flex items-center gap-2 text-slate-400 text-sm">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+                            Bảo mật SSL 256-bit
+                        </div>
+<div class="flex items-center gap-2 text-slate-400 text-sm">
+<span class="material-symbols-outlined text-[18px]">support_agent</span>
+                            Hỗ trợ 24/7: 1900 1234
+                        </div>
+</div>
+</div>
+</main>
+<footer class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 px-40">
+<div class="flex flex-col md:flex-row items-center justify-between gap-4">
+<p class="text-slate-500 text-sm">© 2024 CloudPOS Ecosystem. Một sản phẩm của TechFlow JSC.</p>
+<div class="flex gap-6">
+<a class="text-slate-400 hover:text-primary text-sm transition-colors" href="#">Điều khoản dịch vụ</a>
+<a class="text-slate-400 hover:text-primary text-sm transition-colors" href="#">Chính sách bảo mật</a>
+</div>
+</div>
+</footer>
+</div>
+</div>
+</body></html>

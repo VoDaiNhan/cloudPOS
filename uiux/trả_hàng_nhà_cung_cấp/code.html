@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Trả hàng nhà cung cấp - CloudPOS</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1c43a6",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#121620",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+<div class="flex min-h-screen">
+<!-- Sidebar -->
+<aside class="w-[240px] flex-shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col fixed h-full z-20">
+<div class="p-6 flex items-center gap-3">
+<div class="bg-primary rounded-lg p-1.5">
+<span class="material-symbols-outlined text-white">inventory_2</span>
+</div>
+<div>
+<h1 class="text-primary font-bold text-lg leading-tight uppercase tracking-tight">CloudPOS</h1>
+<p class="text-slate-500 dark:text-slate-400 text-[10px] font-medium uppercase tracking-wider">Inventory System</p>
+</div>
+</div>
+<nav class="flex-1 px-4 py-2 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Tổng quan</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="text-sm font-medium">Bán hàng</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">add_box</span>
+<span class="text-sm font-medium">Nhập hàng</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">assignment_return</span>
+<span class="text-sm font-semibold">Trả hàng nhập</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">warehouse</span>
+<span class="text-sm font-medium">Kho hàng</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="text-sm font-medium">Báo cáo</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<div class="flex items-center gap-3 px-2 py-3 bg-slate-50 dark:bg-slate-800 rounded-xl">
+<div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">QT</div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-semibold truncate">Admin User</p>
+<p class="text-xs text-slate-500 truncate">Quản trị viên</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 ml-[240px] bg-background-light dark:bg-background-dark min-h-screen">
+<!-- Header -->
+<header class="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-8 sticky top-0 z-10">
+<div class="flex items-center gap-4">
+<h2 class="text-lg font-bold">Tạo phiếu trả hàng nhà cung cấp</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary/50" placeholder="Tìm kiếm sản phẩm..." type="text"/>
+</div>
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</header>
+<div class="p-8 max-w-7xl mx-auto">
+<!-- Breadcrumbs -->
+<div class="flex items-center gap-2 text-sm text-slate-500 mb-6">
+<a class="hover:text-primary" href="#">Quản lý kho</a>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-slate-900 dark:text-slate-100 font-medium">Trả hàng nhà cung cấp</span>
+</div>
+<div class="grid grid-cols-12 gap-6">
+<!-- Left Column: Form & Product List -->
+<div class="col-span-12 lg:col-span-8 space-y-6">
+<!-- Supplier Section -->
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+<h3 class="text-base font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">person</span>
+                                Thông tin nhà cung cấp
+                            </h3>
+<div class="grid grid-cols-2 gap-4">
+<div class="col-span-2 md:col-span-1">
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Chọn nhà cung cấp</label>
+<select class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:border-primary focus:ring-primary">
+<option>Tìm theo tên hoặc mã NCC</option>
+<option>Công ty TNHH Dược phẩm Tâm An</option>
+<option>Nhà cung cấp Thực phẩm Sạch HN</option>
+<option>Công ty CP Thiết bị Y tế Miền Nam</option>
+</select>
+</div>
+<div class="col-span-2 md:col-span-1">
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Mã phiếu trả</label>
+<input class="w-full bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm text-slate-500 cursor-not-allowed" readonly="" type="text" value="THNCC00045"/>
+</div>
+</div>
+</div>
+<!-- Product List Table -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+<div class="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+<h3 class="text-base font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">list_alt</span>
+                                    Danh sách sản phẩm trả
+                                </h3>
+<button class="text-primary text-sm font-semibold flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-sm">add_circle</span>
+                                    Thêm sản phẩm
+                                </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
+<th class="px-6 py-4">Sản phẩm</th>
+<th class="px-6 py-4">Lô/Hạn sử dụng</th>
+<th class="px-6 py-4 text-center">Tồn kho</th>
+<th class="px-6 py-4 text-center w-32">SL Trả</th>
+<th class="px-6 py-4 text-right">Giá nhập</th>
+<th class="px-6 py-4 text-right">Thành tiền</th>
+<th class="px-6 py-4"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+<tr>
+<td class="px-6 py-4">
+<div class="font-semibold text-slate-900 dark:text-slate-100">Khẩu trang N95</div>
+<div class="text-[11px] text-slate-500">Mã: SP001242</div>
+</td>
+<td class="px-6 py-4">
+<div class="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded text-xs font-medium inline-block">
+                                                    Lô: A102 - HSD: 15/05/2024
+                                                </div>
+</td>
+<td class="px-6 py-4 text-center text-slate-500">120</td>
+<td class="px-6 py-4">
+<input class="w-full border-slate-200 dark:border-slate-700 rounded-lg text-sm text-center focus:border-primary focus:ring-primary" type="number" value="20"/>
+</td>
+<td class="px-6 py-4 text-right font-medium text-slate-500">25.000</td>
+<td class="px-6 py-4 text-right font-bold">500.000</td>
+<td class="px-6 py-4 text-center">
+<button class="text-slate-400 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</td>
+</tr>
+<tr>
+<td class="px-6 py-4">
+<div class="font-semibold text-slate-900 dark:text-slate-100">Nước rửa tay Lifebuoy 500ml</div>
+<div class="text-[11px] text-slate-500">Mã: SP008912</div>
+</td>
+<td class="px-6 py-4">
+<div class="px-2 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded text-xs font-medium inline-block">
+                                                    Lô: L883 - HSD: 12/10/2025
+                                                </div>
+</td>
+<td class="px-6 py-4 text-center text-slate-500">45</td>
+<td class="px-6 py-4">
+<input class="w-full border-slate-200 dark:border-slate-700 rounded-lg text-sm text-center focus:border-primary focus:ring-primary" type="number" value="5"/>
+</td>
+<td class="px-6 py-4 text-right font-medium text-slate-500">85.000</td>
+<td class="px-6 py-4 text-right font-bold">425.000</td>
+<td class="px-6 py-4 text-center">
+<button class="text-slate-400 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-6 bg-slate-50 dark:bg-slate-800/30 text-xs text-slate-500 italic">
+                                * Hệ thống sẽ tự động trừ tồn kho ngay khi phiếu trả được hoàn tất.
+                            </div>
+</div>
+</div>
+<!-- Right Column: Summary & Actions -->
+<div class="col-span-12 lg:col-span-4 space-y-6">
+<!-- Summary Section -->
+<div class="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-fit">
+<h3 class="text-base font-bold mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">receipt_long</span>
+                                Tóm tắt phiếu trả
+                            </h3>
+<div class="space-y-4 mb-8">
+<div class="flex justify-between text-sm">
+<span class="text-slate-500">Số mặt hàng trả</span>
+<span class="font-semibold">02 sản phẩm</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-slate-500">Tổng số lượng trả</span>
+<span class="font-semibold">25</span>
+</div>
+<div class="flex justify-between text-sm">
+<span class="text-slate-500">Tổng giá trị trả</span>
+<span class="font-semibold">925.000 đ</span>
+</div>
+<div class="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-between">
+<span class="font-bold text-slate-900 dark:text-slate-100">Cần thanh toán</span>
+<span class="font-bold text-xl text-primary">925.000 đ</span>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Lý do trả hàng</label>
+<div class="space-y-2">
+<label class="flex items-center gap-2 cursor-pointer">
+<input checked="" class="text-primary focus:ring-primary w-4 h-4 border-slate-300" name="reason" type="radio"/>
+<span class="text-sm">Hàng hết hạn sử dụng</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="text-primary focus:ring-primary w-4 h-4 border-slate-300" name="reason" type="radio"/>
+<span class="text-sm">Lỗi sản xuất / Hư hỏng</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer">
+<input class="text-primary focus:ring-primary w-4 h-4 border-slate-300" name="reason" type="radio"/>
+<span class="text-sm">Khác (sai số lượng, sai mẫu...)</span>
+</label>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Ghi chú</label>
+<textarea class="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:border-primary focus:ring-primary" placeholder="Nhập ghi chú thêm..." rows="3"></textarea>
+</div>
+</div>
+<div class="mt-8 space-y-3">
+<button class="w-full py-3 bg-primary text-white rounded-lg font-bold text-sm hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+                                    Hoàn tất trả hàng
+                                </button>
+<button class="w-full py-3 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 rounded-lg font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                    Hủy bỏ
+                                </button>
+</div>
+</div>
+<!-- Warehouse Sync Alert -->
+<div class="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800/50 flex gap-3">
+<span class="material-symbols-outlined text-blue-600 dark:text-blue-400">sync</span>
+<div>
+<p class="text-xs font-bold text-blue-800 dark:text-blue-300">Đồng bộ tự động</p>
+<p class="text-[11px] text-blue-700 dark:text-blue-400 mt-1">
+                                    Tồn kho của các sản phẩm trên sẽ được cập nhật giảm ngay sau khi phiếu trả được xác nhận thành công.
+                                </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>
