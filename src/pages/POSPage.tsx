@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from 'react'
 import { posProducts, posCategories } from '../mock/pos'
 import type { POSProduct, CartItem, PaymentMethod } from '../types/posProduct'
 import VoiceOverlay from '../components/VoiceOverlay'
+import { DashboardLayout } from '../layouts/DashboardLayout'
 
 const POSPage = () => {
   // ── State ──────────────────────────────────────
@@ -81,55 +82,9 @@ const POSPage = () => {
   ]
 
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-background font-display">
-      {/* ═══ Top Nav ═══ */}
-      <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-6 dark:border-slate-800 dark:bg-slate-950 shrink-0">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-2">
-            <div className="size-8 rounded-lg bg-primary flex items-center justify-center text-white">
-              <span className="material-symbols-outlined text-xl">cloud_done</span>
-            </div>
-            <h2 className="text-xl font-black tracking-tight text-primary">CloudPOS</h2>
-          </div>
-          <nav className="hidden lg:flex items-center gap-1">
-            {[
-              { icon: 'point_of_sale', label: 'Bán hàng', active: true },
-              { icon: 'receipt_long', label: 'Đơn hàng', active: false },
-              { icon: 'inventory_2', label: 'Sản phẩm', active: false },
-              { icon: 'bar_chart', label: 'Báo cáo', active: false },
-            ].map((tab) => (
-              <button
-                key={tab.label}
-                className={`flex items-center gap-2 px-4 py-5 text-sm font-bold transition-all border-b-2 ${
-                  tab.active
-                    ? 'text-primary border-primary'
-                    : 'text-slate-500 border-transparent hover:text-primary'
-                }`}
-              >
-                <span className="material-symbols-outlined text-sm">{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex flex-col items-end mr-2">
-            <p className="text-sm font-black text-slate-900 dark:text-white">Chi nhánh Quận 1</p>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Nhân viên: Nguyễn Văn A</p>
-          </div>
-          <button className="size-10 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-500 hover:text-primary transition-all">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-          <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs">NV</div>
-          <button className="flex items-center gap-2 rounded-xl bg-slate-50 dark:bg-slate-900 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-slate-600 hover:bg-rose-50 hover:text-rose-500 transition-all">
-            <span className="material-symbols-outlined text-lg">logout</span>
-            Đăng xuất
-          </button>
-        </div>
-      </header>
-
+    <DashboardLayout title="Bán hàng (POS)" breadcrumb={[{ label: 'Bán hàng' }]}>
       {/* ═══ Main 3-Column Layout ═══ */}
-      <main className="flex flex-1 overflow-hidden p-4 gap-4">
+      <div className="flex overflow-hidden gap-4 font-display" style={{ height: 'calc(100vh - 10rem)' }}>
         {/* ─── LEFT: Product Browser (30%) ─────── */}
         <section className="flex w-[30%] flex-col gap-4 overflow-hidden rounded-2xl bg-white dark:bg-slate-950 p-4 shadow-sm border border-slate-200/60 dark:border-slate-800/60 relative">
           <VoiceOverlay
@@ -460,8 +415,8 @@ const POSPage = () => {
             </div>
           </div>
         </section>
-      </main>
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }
 

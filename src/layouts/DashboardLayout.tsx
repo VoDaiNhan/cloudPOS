@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { mockUser } from '../mock/auth'
 
@@ -13,22 +13,27 @@ const NavLink = ({
   icon,
   label,
   active,
+  collapsed,
 }: {
   to: string
   icon: string
   label: string
   active: boolean
+  collapsed: boolean
 }) => (
   <Link
     to={to}
+    title={collapsed ? label : undefined}
     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${
       active
         ? 'bg-primary text-white shadow-lg shadow-primary/20'
         : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-    }`}
+    } ${collapsed ? 'justify-center' : ''}`}
   >
-    <span className="material-symbols-outlined text-[22px]">{icon}</span>
-    <span className={`text-[14.5px] font-semibold ${active ? '' : 'group-hover:text-primary transition-colors'}`}>{label}</span>
+    <span className="material-symbols-outlined text-[22px] shrink-0">{icon}</span>
+    {!collapsed && (
+      <span className={`text-[14.5px] font-semibold whitespace-nowrap overflow-hidden ${active ? '' : 'group-hover:text-primary transition-colors'}`}>{label}</span>
+    )}
   </Link>
 )
 
@@ -39,6 +44,7 @@ export const DashboardLayout = ({
 }: DashboardLayoutProps) => {
   const { pathname } = useLocation()
   const user = mockUser
+  const [collapsed, setCollapsed] = useState(false)
 
   const menuItems = [
     { to: '/dashboard', icon: 'dashboard', label: 'Tổng quan' },
@@ -61,20 +67,26 @@ export const DashboardLayout = ({
   return (
     <div className="flex h-screen bg-background overflow-hidden selection:bg-primary/20 selection:text-primary">
       {/* Sidebar */}
-      <aside className="w-[280px] bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col z-50">
-        <div className="p-6">
+      <aside
+        className={`${collapsed ? 'w-[72px]' : 'w-[280px]'} bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col z-50 transition-all duration-300 ease-in-out shrink-0`}
+      >
+        <div className={`${collapsed ? 'p-3 flex justify-center' : 'p-6'} transition-all duration-300`}>
           <Link to="/" className="flex items-center gap-3 text-primary">
-            <div className="size-9 flex items-center justify-center bg-primary rounded-xl text-white shadow-md">
+            <div className="size-9 flex items-center justify-center bg-primary rounded-xl text-white shadow-md shrink-0">
               <span className="material-symbols-outlined text-2xl font-bold">cloud_done</span>
             </div>
-            <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white uppercase">CloudPOS</h1>
+            {!collapsed && (
+              <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white uppercase whitespace-nowrap overflow-hidden">CloudPOS</h1>
+            )}
           </Link>
         </div>
 
-        <nav className="flex-1 px-4 py-4 space-y-1.5 overflow-y-auto overflow-x-hidden scrollbar-hide">
-          <div className="px-3 mb-4">
-            <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest opacity-60">QUẢN LÝ CỬA HÀNG</h3>
-          </div>
+        <nav className={`flex-1 ${collapsed ? 'px-2' : 'px-4'} py-4 space-y-1.5 overflow-y-auto overflow-x-hidden scrollbar-hide transition-all duration-300`}>
+          {!collapsed && (
+            <div className="px-3 mb-4">
+              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest opacity-60">QUẢN LÝ CỬA HÀNG</h3>
+            </div>
+          )}
           {menuItems.map((item) => (
             <NavLink
               key={item.to}
@@ -82,20 +94,45 @@ export const DashboardLayout = ({
               icon={item.icon}
               label={item.label}
               active={pathname.includes(item.to)}
+              collapsed={collapsed}
             />
           ))}
         </nav>
+
+        {/* Toggle Button */}
+        <div className={`${collapsed ? 'px-2' : 'px-4'} py-2 transition-all duration-300`}>
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 transition-all group ${collapsed ? 'justify-center' : ''}`}
+            title={collapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar'}
+          >
+            <span className={`material-symbols-outlined text-[22px] transition-transform duration-300 ${collapsed ? 'rotate-180' : ''}`}>
+              chevron_left
+            </span>
+            {!collapsed && (
+              <span className="text-[13px] font-semibold whitespace-nowrap group-hover:text-primary transition-colors">Thu gọn</span>
+            )}
+          </button>
+        </div>
         
-        <div className="p-4 mt-auto border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10">
-           <div className="flex items-center gap-3 p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:shadow-md cursor-pointer group">
-            <div className="size-10 rounded-full bg-primary/10 border border-primary/5 flex items-center justify-center overflow-hidden shrink-0 group-hover:border-primary/20 transition-all">
-              <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">person</span>
+        <div className={`${collapsed ? 'p-2' : 'p-4'} mt-auto border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10 transition-all duration-300`}>
+          {collapsed ? (
+            <div className="flex justify-center">
+              <div className="size-10 rounded-full bg-primary/10 border border-primary/5 flex items-center justify-center overflow-hidden shrink-0" title={user.name}>
+                <span className="material-symbols-outlined text-primary">person</span>
+              </div>
             </div>
-            <div className="flex-1 min-w-0 pr-2">
-              <p className="text-[14px] font-bold text-slate-900 dark:text-white truncate">{user.name}</p>
-              <p className="text-[11px] text-slate-500 font-medium tracking-wide truncate">ADMIN STORE</p>
+          ) : (
+            <div className="flex items-center gap-3 p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm transition-all hover:shadow-md cursor-pointer group">
+              <div className="size-10 rounded-full bg-primary/10 border border-primary/5 flex items-center justify-center overflow-hidden shrink-0 group-hover:border-primary/20 transition-all">
+                <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">person</span>
+              </div>
+              <div className="flex-1 min-w-0 pr-2">
+                <p className="text-[14px] font-bold text-slate-900 dark:text-white truncate">{user.name}</p>
+                <p className="text-[11px] text-slate-500 font-medium tracking-wide truncate">ADMIN STORE</p>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </aside>
 
