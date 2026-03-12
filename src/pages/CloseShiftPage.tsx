@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { DashboardLayout } from '../layouts/DashboardLayout'
 
 const CloseShiftPage = () => {
   const navigate = useNavigate()
@@ -35,26 +36,9 @@ const CloseShiftPage = () => {
   }
 
   return (
-    <div className="relative flex h-auto min-h-screen w-full flex-col bg-background font-display">
-      {/* Header */}
-      <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-6 lg:px-10 py-3 sticky top-0 z-50 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="size-9 bg-primary rounded-xl flex items-center justify-center text-white shadow-sm">
-            <span className="material-symbols-outlined text-xl">cloud_done</span>
-          </div>
-          <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">CloudPOS</h2>
-        </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-bold text-slate-400 hidden md:block">{shiftData.branch}</span>
-          <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-1" />
-          <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs ring-2 ring-primary/20">
-            NV
-          </div>
-        </div>
-      </header>
-
+    <DashboardLayout title="Kết thúc ca bán hàng">
       {/* Main Content */}
-      <main className="max-w-5xl mx-auto w-full px-4 lg:px-10 py-10">
+      <main className="max-w-5xl mx-auto w-full px-4 lg:px-10 py-10 min-h-[calc(100vh-80px)]">
         {/* Title */}
         <div className="flex flex-col gap-2 mb-10">
           <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white lg:text-4xl uppercase">
@@ -237,15 +221,9 @@ const CloseShiftPage = () => {
           </div>
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="mt-auto py-6 px-10 border-t border-slate-100 dark:border-slate-800 text-center">
-        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-50">
-          © 2024 CloudPOS - Giải pháp quản lý bán hàng thông minh
-        </p>
-      </footer>
-    </div>
+    </DashboardLayout>
   )
 }
 
 export default CloseShiftPage
+

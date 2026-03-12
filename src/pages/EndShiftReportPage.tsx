@@ -1,39 +1,32 @@
 import { useNavigate } from 'react-router-dom'
 import { mockShiftReport } from '../mock/shiftReport'
+import { DashboardLayout } from '../layouts/DashboardLayout'
 
 const EndShiftReportPage = () => {
   const navigate = useNavigate()
   const report = mockShiftReport
 
-  return (
-    <div className="relative flex min-h-screen w-full flex-col bg-slate-100 dark:bg-slate-950 font-display text-slate-900 dark:text-slate-100 py-8 px-4">
-      <div className="mx-auto flex w-full max-w-[800px] flex-col flex-1 animate-fade-in">
-        
-        {/* Header Component */}
-        <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-6 py-5 bg-white dark:bg-slate-900 rounded-t-2xl shadow-sm z-10">
-          <div className="flex items-center gap-3 w-full">
-            <div className="text-primary flex items-center justify-center p-2 rounded-xl bg-primary/10">
-              <span className="material-symbols-outlined text-[28px]">receipt_long</span>
-            </div>
-            <h2 className="text-xl font-bold tracking-tight">Báo cáo kết thúc ca</h2>
-          </div>
-          <div className="flex gap-2 shrink-0">
-            <button className="flex items-center justify-center rounded-xl h-11 w-11 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors tooltip group relative">
-              <span className="material-symbols-outlined">print</span>
-              <span className="absolute -top-10 scale-0 transition-all rounded bg-slate-800 p-2 text-xs text-white group-hover:scale-100 whitespace-nowrap">In</span>
-            </button>
-            <button 
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center justify-center rounded-xl h-11 w-11 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors tooltip group relative"
-            >
-              <span className="material-symbols-outlined">close</span>
-              <span className="absolute -top-10 scale-0 transition-all rounded bg-slate-800 p-2 text-xs text-white group-hover:scale-100 whitespace-nowrap">Đóng</span>
-            </button>
-          </div>
-        </header>
+  const actions = (
+    <div className="flex gap-2 shrink-0">
+      <button className="flex items-center justify-center rounded-xl h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors tooltip group relative">
+        <span className="material-symbols-outlined">print</span>
+        <span className="absolute -top-10 scale-0 transition-all rounded bg-slate-800 p-2 text-xs text-white group-hover:scale-100 whitespace-nowrap">In</span>
+      </button>
+      <button 
+        onClick={() => navigate('/dashboard')}
+        className="flex items-center justify-center rounded-xl h-10 w-10 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors tooltip group relative"
+      >
+        <span className="material-symbols-outlined">close</span>
+        <span className="absolute -top-10 scale-0 transition-all rounded bg-slate-800 p-2 text-xs text-white group-hover:scale-100 whitespace-nowrap">Đóng</span>
+      </button>
+    </div>
+  )
 
+  return (
+    <DashboardLayout title="Báo cáo kết thúc ca" actions={actions}>
+      <div className="mx-auto flex w-full max-w-[800px] flex-col flex-1 animate-fade-in py-8 px-4">
         {/* Report Content */}
-        <div className="bg-white dark:bg-slate-900 shadow-sm px-8 py-10 border-x border-slate-200 dark:border-slate-800 print:shadow-none print:border-none">
+        <div className="bg-white dark:bg-slate-900 shadow-sm px-8 py-10 border border-slate-200 dark:border-slate-800 rounded-t-2xl print:shadow-none print:border-none">
           <div className="text-center mb-10">
             <h3 className="tracking-tight text-3xl font-black uppercase text-slate-900 dark:text-white mb-3">Tổng kết ca làm việc</h3>
             <div className="inline-block px-4 py-1.5 bg-primary/10 text-primary rounded-full text-sm font-black tracking-widest">
@@ -174,8 +167,9 @@ const EndShiftReportPage = () => {
         </p>
 
       </div>
-    </div>
+    </DashboardLayout>
   )
 }
 
 export default EndShiftReportPage
+

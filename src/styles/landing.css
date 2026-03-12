@@ -1,0 +1,154 @@
+/* ===== Landing Page Styles ===== */
+
+/* Smooth scroll for anchor links */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hero Section Animations */
+@keyframes float-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.25;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes badge-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.landing-hero-text {
+  animation: float-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.landing-hero-image {
+  animation: float-in-right 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+.landing-hero-glow {
+  animation: pulse-glow 4s ease-in-out infinite;
+}
+
+.landing-badge {
+  animation: badge-bounce 2s ease-in-out infinite;
+}
+
+/* Feature Card Hover Effects */
+.landing-feature-card {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.landing-feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px -12px rgba(28, 67, 166, 0.15);
+}
+
+.landing-feature-card:hover .landing-feature-icon {
+  background-color: var(--color-primary);
+  color: white;
+  transform: scale(1.1);
+}
+
+.landing-feature-icon {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* CTA Section */
+.landing-cta-bg {
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    var(--color-primary-dark) 100%
+  );
+}
+
+/* Stat Number Animation */
+@keyframes count-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-stat {
+  animation: count-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Customer Segment Card */
+.landing-segment-card {
+  transition: all 0.3s ease;
+}
+
+.landing-segment-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -8px rgba(0, 0, 0, 0.1);
+}
+
+/* Header blur effect */
+.landing-header {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Footer Social Icons */
+.landing-social-icon {
+  transition: all 0.2s ease;
+}
+
+.landing-social-icon:hover {
+  background-color: var(--color-primary);
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Responsive hero image */
+@media (max-width: 1024px) {
+  .landing-hero-image {
+    animation-delay: 0.1s;
+  }
+}
+
+/* Gradient text (for highlight) */
+.landing-gradient-text {
+  background: linear-gradient(135deg, var(--color-primary) 0%, #4f7df5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}

@@ -72,7 +72,7 @@ const RegisterPage = () => {
 
     // Navigate after delay
     setTimeout(() => {
-      window.location.href = '/login'
+      window.location.href = '/create-store'
     }, 2000)
   }
 

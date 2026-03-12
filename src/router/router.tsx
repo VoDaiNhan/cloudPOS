@@ -1,6 +1,9 @@
-import { useRoutes, Navigate } from 'react-router-dom'
+import { useRoutes } from 'react-router-dom'
 import type { RouteObject } from 'react-router-dom'
 import AuthLayout from '../layouts/AuthLayout'
+import PublicLayout from '../layouts/PublicLayout'
+import LandingPage from '../pages/LandingPage'
+import PricingPage from '../pages/PricingPage'
 import LoginPage from '../pages/LoginPage'
 import RegisterPage from '../pages/RegisterPage'
 import CreateStorePage from '../pages/CreateStorePage'
@@ -29,11 +32,15 @@ import EndShiftReportPage from '../pages/EndShiftReportPage'
 import ExpiryDatePage from '../pages/ExpiryDatePage'
 import StockHistoryPage from '../pages/StockHistoryPage'
 import OnboardingPage from '../pages/OnboardingPage'
+import CheckoutPage from '../pages/CheckoutPage'
 
 const routes: RouteObject[] = [
   {
-    path: '/',
-    element: <Navigate to="/login" replace />,
+    element: <PublicLayout />,
+    children: [
+      { index: true, element: <LandingPage /> },
+      { path: '/pricing', element: <PricingPage /> },
+    ],
   },
   {
     element: <AuthLayout />,
@@ -42,19 +49,19 @@ const routes: RouteObject[] = [
         path: '/login',
         element: <LoginPage />,
       },
-      {
-        path: '/receipt-voucher',
-        element: <ReceiptVoucherPage />
-      },
-      {
-        path: '/payment-voucher',
-        element: <PaymentVoucherPage />
-      },
-      {
-        path: '/debt',
-        element: <DebtPage />
-      }
     ],
+  },
+  {
+    path: '/receipt-voucher',
+    element: <ReceiptVoucherPage />
+  },
+  {
+    path: '/payment-voucher',
+    element: <PaymentVoucherPage />
+  },
+  {
+    path: '/debt',
+    element: <DebtPage />
   },
   {
     path: '/choose-workplace',
@@ -155,6 +162,10 @@ const routes: RouteObject[] = [
   {
     path: '/onboarding',
     element: <OnboardingPage />,
+  },
+  {
+    path: '/checkout',
+    element: <CheckoutPage />,
   },
 ]
 

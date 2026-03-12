@@ -123,6 +123,15 @@ const LoginPage = () => {
               Đăng ký dùng thử
             </Link>
           </p>
+          <p className="text-slate-600">
+            Bạn là nhân viên bán hàng?{' '}
+            <Link
+              to="/store-access"
+              className="text-primary font-bold hover:underline ml-1"
+            >
+              Truy cập bằng mã cửa hàng
+            </Link>
+          </p>
 
           {/* Support links */}
           <div className="flex justify-center gap-6 mt-4">

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { posProducts, posCategories } from '../mock/pos'
 import type { POSProduct, CartItem, PaymentMethod } from '../types/posProduct'
 import VoiceOverlay from '../components/VoiceOverlay'
@@ -15,6 +15,35 @@ const POSPage = () => {
   const [cashReceived, setCashReceived] = useState(0)
   const [customerSearch, setCustomerSearch] = useState('')
   const [voiceOpen, setVoiceOpen] = useState(false)
+
+  // ── Refs ───────────────────────────────────────
+  const productSearchRef = useRef<HTMLInputElement>(null)
+  const customerSearchRef = useRef<HTMLInputElement>(null)
+
+  // ── Keyboard Shortcuts ─────────────────────────
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if focus is inside an input, unless it's a specific function key
+      if (e.key === 'F1') {
+        e.preventDefault()
+        productSearchRef.current?.focus()
+      } else if (e.key === 'F2') {
+        e.preventDefault()
+        customerSearchRef.current?.focus()
+      } else if (e.key === 'F8') {
+        e.preventDefault()
+        // Trigger Payment
+        if (cart.length > 0) alert('Thực hiện Thanh toán thành công!')
+      } else if (e.key === 'F10') {
+        e.preventDefault()
+        // Save Draft
+        if (cart.length > 0) alert('Đã lưu nháp đơn hàng!')
+      }
+    }
+    
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [cart])
 
   // ── Filtered Products ──────────────────────────
   const filteredProducts = useMemo(() => {
@@ -105,6 +134,7 @@ const POSPage = () => {
                 <span className="material-symbols-outlined text-xl">mic</span>
               </button>
               <input
+                ref={productSearchRef}
                 className="w-full rounded-xl border-none bg-slate-50 dark:bg-slate-900 pl-10 pr-10 py-2.5 focus:ring-2 focus:ring-primary/20 text-sm font-bold placeholder:text-slate-400"
                 placeholder="Tìm sản phẩm (F1)..."
                 type="text"
@@ -270,6 +300,7 @@ const POSPage = () => {
             <div className="relative">
               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">person_search</span>
               <input
+                ref={customerSearchRef}
                 className="w-full rounded-xl border-none bg-slate-50 dark:bg-slate-900 pl-10 pr-4 py-2.5 focus:ring-2 focus:ring-primary/20 text-sm font-bold placeholder:text-slate-400"
                 placeholder="Tìm tên hoặc SĐT (F2)..."
                 type="text"
@@ -404,13 +435,19 @@ const POSPage = () => {
 
             {/* Action Buttons */}
             <div className="mt-auto grid grid-cols-2 gap-3 pt-4">
-              <button className="flex items-center justify-center gap-2 rounded-2xl border-2 border-primary py-4 font-black text-primary hover:bg-primary/5 transition-all text-sm uppercase tracking-widest">
+              <button 
+                onClick={() => { if (cart.length > 0) alert('Đã lưu nháp đơn hàng!') }}
+                className="flex items-center justify-center gap-2 rounded-2xl border-2 border-primary py-4 font-black text-primary hover:bg-primary/5 transition-all text-sm uppercase tracking-widest"
+              >
                 <span className="material-symbols-outlined">print</span>
-                In nháp
+                In nháp (F10)
               </button>
-              <button className="flex items-center justify-center gap-2 rounded-2xl bg-primary py-4 font-black text-white shadow-xl shadow-primary/25 hover:bg-primary/90 transition-all active:scale-95 text-sm uppercase tracking-widest">
+              <button 
+                onClick={() => { if (cart.length > 0) alert('Thực hiện Thanh toán thành công!') }}
+                className="flex items-center justify-center gap-2 rounded-2xl bg-primary py-4 font-black text-white shadow-xl shadow-primary/25 hover:bg-primary/90 transition-all active:scale-95 text-sm uppercase tracking-widest"
+              >
                 <span className="material-symbols-outlined">check_circle</span>
-                Thanh toán
+                Thanh toán (F8)
               </button>
             </div>
           </div>

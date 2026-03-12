@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/Button'
+import { DashboardLayout } from '../layouts/DashboardLayout'
 import type { Product, UnitConversion } from '../types/product'
 import { mockProducts } from '../mock/product'
 
@@ -56,51 +57,33 @@ const ProductDetailPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-display selection:bg-primary/20">
-      {/* Top Navigation Bar */}
-      <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-6 py-4 shadow-sm backdrop-blur-md bg-opacity-80">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => navigate('/products')}
-              className="size-10 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-500 hover:text-primary hover:bg-primary/10 transition-all border border-slate-100 dark:border-slate-800"
-            >
-              <span className="material-symbols-outlined">arrow_back</span>
-            </button>
-            <div className="flex items-center gap-3">
-              <div className="bg-primary/10 size-11 rounded-xl flex items-center justify-center text-primary shadow-sm">
-                <span className="material-symbols-outlined text-2xl">inventory_2</span>
-              </div>
-              <div className="flex flex-col">
-                <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white uppercase leading-none">
-                  {isEdit ? 'Chỉnh sửa sản phẩm' : 'Thêm mới sản phẩm'}
-                </h1>
-                <p className="text-[11px] text-slate-500 font-bold uppercase tracking-widest mt-0.5 opacity-70">CloudPOS - Quản lý kho hàng</p>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => navigate('/products')}
-              className="px-6 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 transition-all"
-            >
-              Hủy
-            </button>
-            <Button 
-              className="px-8 h-11 rounded-xl shadow-lg shadow-primary/20 text-sm font-black uppercase tracking-widest"
-              onClick={handleSave}
-              loading={isLoading}
-              icon="save"
-            >
-              Lưu sản phẩm
-            </Button>
-          </div>
+    <DashboardLayout
+      title={isEdit ? 'Chỉnh sửa sản phẩm' : 'Thêm mới sản phẩm'}
+      breadcrumb={[
+        { label: 'Sản phẩm', path: '/products' },
+        { label: isEdit ? 'Chỉnh sửa' : 'Thêm mới' }
+      ]}
+      actions={
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => navigate('/products')}
+            className="px-6 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 transition-all font-display"
+          >
+            Hủy
+          </button>
+          <Button 
+            className="px-8 h-11 rounded-xl shadow-lg shadow-primary/20 text-sm font-black uppercase tracking-widest font-display"
+            onClick={handleSave}
+            loading={isLoading}
+            icon="save"
+          >
+            Lưu sản phẩm
+          </Button>
         </div>
-      </header>
-
-      <main className="flex-1 overflow-y-auto py-10 px-6 bg-slate-50/50 dark:bg-slate-950/20">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Main Info */}
+      }
+    >
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8 font-display">
+        {/* Left Column: Main Info */}
           <div className="lg:col-span-2 space-y-8">
             {/* Thông tin cơ bản */}
             <section className="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-xl shadow-slate-200/20 dark:shadow-none border border-slate-200/60 dark:border-slate-800/60">
@@ -329,27 +312,8 @@ const ProductDetailPage = () => {
               </div>
             </div>
           </div>
-        </div>
-      </main>
-
-      {/* Mobile Footer */}
-      <footer className="bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-6 lg:hidden shadow-2xl">
-        <div className="flex gap-4">
-          <button 
-            onClick={() => navigate('/products')}
-            className="flex-1 py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-black uppercase tracking-widest text-xs"
-          >
-            Hủy
-          </button>
-          <button 
-            onClick={handleSave}
-            className="flex-2 py-4 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-primary/20"
-          >
-            Lưu sản phẩm
-          </button>
-        </div>
-      </footer>
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }
 

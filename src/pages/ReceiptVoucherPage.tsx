@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { mockUnpaidSalesOrders } from '../mock/voucher'
 import type { ReceiptCategory } from '../types/voucher'
+import { DashboardLayout } from '../layouts/DashboardLayout'
 
 const hoverTransition = 'transition-all duration-200 ease-in-out'
 
@@ -22,35 +23,9 @@ const ReceiptVoucherPage = () => {
   }
 
   return (
-    <div className="flex h-screen bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 overflow-hidden">
-      <div className="flex flex-col flex-1 h-full">
-        {/* Top Navigation Bar */}
-        <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-3 sticky top-0 z-50 shadow-sm">
-          <div className="flex items-center gap-4">
-            <div className="size-10 flex items-center justify-center bg-primary/10 rounded-xl text-primary">
-              <span className="material-symbols-outlined text-2xl">account_balance_wallet</span>
-            </div>
-            <div>
-              <h2 className="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight">CloudPOS - Lập phiếu thu</h2>
-              <p className="text-slate-500 text-xs font-medium">Quản lý dòng tiền</p>
-            </div>
-          </div>
-          <div className="flex gap-4 items-center">
-            <button className="flex items-center justify-center rounded-xl size-10 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
-            <button 
-              onClick={() => navigate('/cashbook')}
-              className="flex items-center justify-center rounded-xl size-10 bg-rose-50 dark:bg-rose-900/30 text-rose-600 hover:bg-rose-100 transition-colors"
-            >
-              <span className="material-symbols-outlined text-[20px]">close</span>
-            </button>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <main className="flex-1 overflow-y-auto w-full p-4 md:p-8 animate-fade-in">
-          <div className="max-w-[1000px] mx-auto flex flex-col gap-6 pb-20">
+    <DashboardLayout title="Lập phiếu thu" breadcrumb={[{ label: 'Sổ quỹ' }, { label: 'Lập phiếu thu' }]}>
+      <div className="animate-fade-in pb-20">
+        <div className="max-w-[1000px] mx-auto flex flex-col gap-6">
             {/* Page Header */}
             <div className="flex flex-wrap justify-between items-end gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
               <div className="flex flex-col gap-1">
@@ -216,10 +191,8 @@ const ReceiptVoucherPage = () => {
             </div>
             
           </div>
-        </main>
-
-      </div>
-    </div>
+        </div>
+    </DashboardLayout>
   )
 }
 

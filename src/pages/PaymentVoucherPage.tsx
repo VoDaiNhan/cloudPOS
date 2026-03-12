@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { mockUnpaidImportOrders, mockTreasuryData } from '../mock/voucher'
+import { DashboardLayout } from '../layouts/DashboardLayout'
 
 const PaymentVoucherPage = () => {
   const navigate = useNavigate()
@@ -35,10 +36,9 @@ const PaymentVoucherPage = () => {
   }
 
   return (
-    <div className="flex bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
-      <div className="flex h-full grow flex-col">
-        <main className="flex-1 w-full px-4 sm:px-8 py-8 overflow-y-auto animate-fade-in">
-          <div className="max-w-[1000px] mx-auto flex flex-col gap-6">
+    <DashboardLayout title="Lập phiếu chi" breadcrumb={[{ label: 'Sổ quỹ' }, { label: 'Lập phiếu chi' }]}>
+      <div className="animate-fade-in">
+        <div className="max-w-[1000px] mx-auto flex flex-col gap-6">
             
             {/* Header Area */}
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
@@ -240,9 +240,8 @@ const PaymentVoucherPage = () => {
             </div>
 
           </div>
-        </main>
-      </div>
-    </div>
+        </div>
+    </DashboardLayout>
   )
 }
 

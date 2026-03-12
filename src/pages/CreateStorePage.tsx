@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { InputField } from '../components/InputField'
 import { Button } from '../components/Button'
 import { mockStoreSectors } from '../mock/store'
 import type { StoreSector } from '../types/store'
+import { SetupLayout } from '../layouts/SetupLayout'
 
 const SectorCard = ({
   sector,
@@ -24,8 +24,8 @@ const SectorCard = ({
         checked={selected}
         onChange={() => onSelect(sector.id)}
       />
-      <div className="w-full h-full p-4 rounded-xl border-2 border-slate-100 bg-white shadow-sm transition-all duration-300 peer-checked:border-primary peer-checked:bg-primary/2 peer-checked:shadow-primary/10 group-hover:border-primary/50 group-hover:shadow-md relative overflow-hidden">
-        <div className="aspect-square w-full rounded-lg bg-slate-50 flex items-center justify-center mb-3">
+      <div className="w-full h-full p-4 rounded-xl border-2 border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm transition-all duration-300 peer-checked:border-primary peer-checked:bg-primary/2 peer-checked:shadow-primary/10 group-hover:border-primary/50 group-hover:shadow-md relative overflow-hidden">
+        <div className="aspect-square w-full rounded-lg bg-slate-50 dark:bg-slate-800 flex items-center justify-center mb-3">
           <div className="w-full h-full bg-linear-to-br from-primary/20 to-primary/5 flex items-center justify-center">
             <span className="material-symbols-outlined text-primary text-5xl">
               {sector.icon}
@@ -34,10 +34,10 @@ const SectorCard = ({
         </div>
         <div className="flex justify-between items-start">
           <div>
-            <p className="text-slate-900 text-lg font-bold">{sector.title}</p>
-            <p className="text-slate-500 text-sm">{sector.description}</p>
+            <p className="text-slate-900 dark:text-white text-lg font-bold">{sector.title}</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">{sector.description}</p>
           </div>
-          <div className="size-5 rounded-full border-2 border-slate-300 peer-checked:border-primary flex items-center justify-center bg-white">
+          <div className="size-5 rounded-full border-2 border-slate-300 dark:border-slate-600 peer-checked:border-primary flex items-center justify-center bg-white dark:bg-slate-800">
             <div className="size-2.5 rounded-full bg-primary hidden peer-checked:block" />
           </div>
         </div>
@@ -74,38 +74,20 @@ const CreateStorePage = () => {
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 2000))
     setIsLoading(false)
-    // Success - redirect to dashboard or onboarding
-    window.location.href = '/dashboard'
+    // Success - redirect to onboarding
+    window.location.href = '/onboarding'
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col font-display selection:bg-primary/20">
-      {/* ── Header ── */}
-      <header className="flex items-center justify-between whitespace-nowrap border-b border-slate-200 px-6 py-4 bg-white sticky top-0 z-50">
-        <Link to="/" className="flex items-center gap-3 text-primary">
-          <div className="size-8 flex items-center justify-center bg-primary/10 rounded-lg">
-            <span className="material-symbols-outlined text-primary text-2xl">
-              storefront
-            </span>
-          </div>
-          <h2 className="text-slate-900 text-xl font-bold leading-tight tracking-tight">
-            CloudPOS
-          </h2>
-        </Link>
-        <button className="flex items-center justify-center rounded-lg h-10 w-10 bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer">
-          <span className="material-symbols-outlined">help</span>
-        </button>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex flex-1 justify-center py-10 px-4">
+    <SetupLayout>
+      <div className="flex flex-1 justify-center py-10 px-4 animate-fade-in">
         <div className="flex flex-col max-w-[640px] flex-1">
           {/* Title Section */}
           <div className="flex flex-col gap-2 mb-8 text-center sm:text-left">
-            <h1 className="text-slate-900 text-3xl font-black leading-tight tracking-tight">
+            <h1 className="text-slate-900 dark:text-white text-3xl font-black leading-tight tracking-tight font-display">
               Thiết lập cửa hàng
             </h1>
-            <p className="text-slate-500 text-base">
+            <p className="text-slate-500 dark:text-slate-400 text-base font-medium">
               Chỉ mất 30 giây để bắt đầu quản lý kinh doanh của bạn
             </p>
           </div>
@@ -113,8 +95,8 @@ const CreateStorePage = () => {
           <form onSubmit={handleSubmit} className="flex flex-col gap-8">
             {/* Step 1: Sector Selection */}
             <section>
-              <h3 className="text-slate-900 text-lg font-bold mb-4 flex items-center gap-2">
-                <span className="bg-primary/10 text-primary w-6 h-6 flex items-center justify-center rounded-full text-xs">
+              <h3 className="text-slate-900 dark:text-white text-lg font-bold mb-4 flex items-center gap-2">
+                <span className="bg-primary/10 text-primary w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold">
                   1
                 </span>
                 Chọn ngành hàng kinh doanh
@@ -133,8 +115,8 @@ const CreateStorePage = () => {
 
             {/* Step 2: Store Details */}
             <section className="flex flex-col gap-5">
-              <h3 className="text-slate-900 text-lg font-bold flex items-center gap-2">
-                <span className="bg-primary/10 text-primary w-6 h-6 flex items-center justify-center rounded-full text-xs">
+              <h3 className="text-slate-900 dark:text-white text-lg font-bold flex items-center gap-2">
+                <span className="bg-primary/10 text-primary w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold">
                   2
                 </span>
                 Thông tin cửa hàng
@@ -158,7 +140,7 @@ const CreateStorePage = () => {
                   suffix=".cloudpos.vn"
                   required
                 />
-                <p className="-mt-3 text-xs text-slate-500">
+                <p className="-mt-3 text-xs text-slate-500 font-medium">
                   Đây là đường dẫn duy nhất để bạn truy cập vào trang quản trị.
                 </p>
 
@@ -178,12 +160,12 @@ const CreateStorePage = () => {
 
             {/* Submit Button */}
             <div className="pt-4 flex flex-col gap-4">
-              <Button type="submit" loading={isLoading} fullWidth icon="arrow_forward">
+              <Button type="submit" loading={isLoading} fullWidth icon="arrow_forward" className="h-14 font-bold text-base shadow-lg shadow-primary/20">
                 Hoàn tất khởi tạo
               </Button>
-              <p className="text-center text-sm text-slate-500">
+              <p className="text-center text-sm text-slate-500 font-medium">
                 Bằng cách nhấn nút, bạn đồng ý với{' '}
-                <a href="#" className="text-primary hover:underline">
+                <a href="#" className="text-primary font-bold hover:underline">
                   Điều khoản dịch vụ
                 </a>{' '}
                 của chúng tôi.
@@ -191,13 +173,8 @@ const CreateStorePage = () => {
             </div>
           </form>
         </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="py-6 text-center text-slate-400 text-sm border-t border-slate-200 mt-10">
-        © 2026 CloudPOS Ecosystem. All rights reserved.
-      </footer>
-    </div>
+      </div>
+    </SetupLayout>
   )
 }
 

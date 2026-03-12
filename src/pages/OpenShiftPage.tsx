@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { DashboardLayout } from '../layouts/DashboardLayout'
 
 const OpenShiftPage = () => {
   const navigate = useNavigate()
@@ -28,30 +29,8 @@ const OpenShiftPage = () => {
   }
 
   return (
-    <div className="bg-background min-h-screen flex flex-col font-display selection:bg-primary/20">
-      {/* Top Navigation */}
-      <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 px-6 py-3 sticky top-0 z-10 shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="size-9 bg-primary rounded-xl flex items-center justify-center text-white shadow-sm">
-            <span className="material-symbols-outlined text-xl">cloud_done</span>
-          </div>
-          <h2 className="text-lg font-black tracking-tight text-slate-900 dark:text-white">CloudPOS</h2>
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="size-10 rounded-xl bg-slate-50 dark:bg-slate-900 flex items-center justify-center text-slate-500 hover:text-primary hover:bg-primary/10 transition-all border border-slate-100 dark:border-slate-800">
-            <span className="material-symbols-outlined">notifications</span>
-          </button>
-          <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800">
-            <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs">
-              NV
-            </div>
-            <span className="text-sm font-bold text-slate-900 dark:text-white">Nguyễn Văn A</span>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 flex items-center justify-center p-6">
+    <DashboardLayout title="Mở ca bán hàng">
+      <div className="flex-1 flex items-center justify-center p-6 min-h-[calc(100vh-140px)]">
         <div className="w-full max-w-xl bg-white dark:bg-slate-950 rounded-3xl shadow-2xl shadow-slate-300/30 dark:shadow-none border border-slate-200/60 dark:border-slate-800/60 overflow-hidden">
           {/* Card Header */}
           <div className="bg-primary px-10 py-12 text-white relative overflow-hidden">
@@ -165,13 +144,8 @@ const OpenShiftPage = () => {
             </div>
           </form>
         </div>
-      </main>
-
-      {/* Footer */}
-      <footer className="p-6 text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest opacity-50">
-        <p>© 2024 CloudPOS System - Phiên bản 4.2.0</p>
-      </footer>
-    </div>
+      </div>
+    </DashboardLayout>
   )
 }
 

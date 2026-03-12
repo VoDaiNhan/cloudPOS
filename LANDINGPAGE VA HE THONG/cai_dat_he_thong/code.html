@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CloudPOS - Cài đặt hệ thống</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1351ec",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#101522",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex">
+<!-- Fixed Sidebar (240px) -->
+<aside class="fixed inset-y-0 left-0 w-[240px] bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col z-50">
+<div class="p-6 flex items-center gap-3">
+<div class="bg-primary rounded-lg p-2 text-white">
+<span class="material-symbols-outlined block">cloud</span>
+</div>
+<div>
+<h1 class="text-primary font-bold text-lg leading-tight">CloudPOS</h1>
+<p class="text-xs text-slate-500 dark:text-slate-400">Quản lý bán hàng</p>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-1 mt-4">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span class="text-sm font-medium">Tổng quan</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">shopping_cart</span>
+<span class="text-sm font-medium">Đơn hàng</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">inventory_2</span>
+<span class="text-sm font-medium">Sản phẩm</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">group</span>
+<span class="text-sm font-medium">Khách hàng</span>
+</a>
+<div class="pt-4 pb-2">
+<p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Cấu hình</p>
+</div>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+<span class="text-sm font-semibold">Cài đặt hệ thống</span>
+</a>
+</nav>
+<div class="p-4 border-t border-slate-200 dark:border-slate-800">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:text-red-500 transition-colors" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+<span class="text-sm font-medium">Đăng xuất</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 ml-[240px] flex flex-col min-h-screen">
+<!-- Topbar -->
+<header class="sticky top-0 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 h-16 flex items-center justify-between px-8">
+<div class="flex items-center gap-2">
+<h2 class="text-lg font-semibold">Cài đặt hệ thống</h2>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+<input class="pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-800 border-none rounded-lg text-sm w-64 focus:ring-2 focus:ring-primary" placeholder="Tìm kiếm cài đặt..." type="text"/>
+</div>
+<button class="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full relative">
+<span class="material-symbols-outlined text-[24px]">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+</button>
+<div class="flex items-center gap-3 pl-4 border-l border-slate-200 dark:border-slate-800">
+<div class="text-right hidden sm:block">
+<p class="text-sm font-semibold">Nguyễn Văn A</p>
+<p class="text-xs text-slate-500">Quản trị viên</p>
+</div>
+<img class="w-10 h-10 rounded-full border border-slate-200 dark:border-slate-700" data-alt="User profile avatar circle" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnU7hJbiiUuqnGyQKfzK4mR3_hquMaIZxC-9pYACziZXiFfv3O-b3cD8B7PyBfNu0yYwcGnbA3LDxToq2xj6IeOiu2wYS_OUAL5PaOCuhDa_QO0K7XUr8kQ69YZUe0IkCkgfqg6gnn9TnCO_0ShXTuboaFLPz2wkCj4tIyqpw5kIFvhK21o96DKg86rI6prGAc5lG_0_4reP01LLK6_L2NPqDDEu8VgIdl-wv1Mh3dxnOqbFbxiOif5Eh-EMbQpGTwSXWvZOOOHDE"/>
+</div>
+</div>
+</header>
+<!-- Page Content -->
+<div class="p-8 max-w-5xl mx-auto w-full">
+<!-- Tabs Navigation -->
+<div class="flex gap-8 border-b border-slate-200 dark:border-slate-800 mb-8 overflow-x-auto">
+<button class="pb-4 text-sm font-bold text-primary border-b-2 border-primary whitespace-nowrap">Cửa hàng</button>
+<button class="pb-4 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 whitespace-nowrap">Thuế &amp; Hóa đơn</button>
+<button class="pb-4 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 whitespace-nowrap">Thanh toán</button>
+<button class="pb-4 text-sm font-medium text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 whitespace-nowrap">Thiết bị</button>
+</div>
+<!-- Content Grid -->
+<div class="space-y-8">
+<!-- Section 1: Cửa hàng -->
+<section class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+<div>
+<h3 class="text-lg font-bold">Thông tin Cửa hàng</h3>
+<p class="text-sm text-slate-500">Cập nhật thông tin cơ bản và nhận diện thương hiệu của bạn.</p>
+</div>
+<button class="bg-primary text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">Lưu thay đổi</button>
+</div>
+<div class="p-6 space-y-6">
+<div class="flex flex-col md:flex-row gap-8 items-start">
+<div class="flex-shrink-0">
+<p class="text-sm font-medium mb-3">Logo Cửa hàng</p>
+<div class="relative group">
+<div class="w-32 h-32 rounded-xl bg-slate-100 dark:bg-slate-800 border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-750 transition-colors overflow-hidden">
+<img class="absolute inset-0 w-full h-full object-cover opacity-50" data-alt="Business logo placeholder preview" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClrIV0CgH-n_TIVgoUtuVl7AOn3A4VzxCfra7rqtKVAf5yrPtFfvtAUET7CtUnyq2TZizOagcWhHhdiOvLLi6S0KOqmHJ7MyX21czcVxGANZDlmRPSjUe04NPNKwHx-KZX1W0lEG_fpqYe_fIL3Av8fTPUsuMNms2Le-kntpjrgvBaL4bTdofUXvUeELTIqlbjdKaspLB39J6W4WqAS73J_p4fZg_TMMv0Y67Bj6eygadSm24TpceHPOxJ5rMr-joUqWfiaGvA1do"/>
+<span class="material-symbols-outlined text-slate-400 mb-1">add_a_photo</span>
+<span class="text-[10px] text-slate-500 font-medium">Tải ảnh lên</span>
+</div>
+</div>
+</div>
+<div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-slate-700 dark:text-slate-300">Tên cửa hàng</label>
+<input class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-primary" type="text" value="CloudPOS Premium Store"/>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-slate-700 dark:text-slate-300">Số điện thoại</label>
+<input class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-primary" type="text" value="090 123 4567"/>
+</div>
+<div class="space-y-1.5 md:col-span-2">
+<label class="text-sm font-medium text-slate-700 dark:text-slate-300">Địa chỉ</label>
+<input class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-primary" type="text" value="123 Đường ABC, Quận 1, TP. Hồ Chí Minh"/>
+</div>
+<div class="space-y-1.5 md:col-span-2">
+<label class="text-sm font-medium text-slate-700 dark:text-slate-300">Website</label>
+<div class="flex">
+<span class="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 text-sm">https://</span>
+<input class="w-full rounded-r-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-primary" type="text" value="cloudpos.vn/store-premium"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: Thuế & Hóa đơn -->
+<section class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+<div>
+<h3 class="text-lg font-bold">Thuế &amp; Hóa đơn</h3>
+<p class="text-sm text-slate-500">Thiết lập VAT và lựa chọn mẫu hóa đơn in cho khách hàng.</p>
+</div>
+<button class="bg-primary text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">Lưu cài đặt</button>
+</div>
+<div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-4">
+<h4 class="text-sm font-bold uppercase tracking-wider text-slate-400">Cấu hình VAT</h4>
+<div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg">
+<div>
+<p class="text-sm font-semibold">Áp dụng thuế VAT</p>
+<p class="text-xs text-slate-500">Tự động cộng VAT vào đơn hàng</p>
+</div>
+<div class="relative inline-block w-10 h-6">
+<input checked="" class="peer opacity-0 w-0 h-0" type="checkbox"/>
+<span class="absolute cursor-pointer inset-0 bg-slate-300 peer-checked:bg-primary rounded-full transition-all duration-300 before:absolute before:content-[''] before:h-4 before:w-4 before:left-1 before:bottom-1 before:bg-white before:rounded-full before:transition-all peer-checked:before:translate-x-4"></span>
+</div>
+</div>
+<div class="space-y-1.5">
+<label class="text-sm font-medium text-slate-700 dark:text-slate-300">Tỷ lệ VAT (%)</label>
+<input class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-sm focus:ring-primary" type="number" value="10"/>
+</div>
+</div>
+<div class="space-y-4">
+<h4 class="text-sm font-bold uppercase tracking-wider text-slate-400">Mẫu hóa đơn</h4>
+<div class="grid grid-cols-2 gap-3">
+<div class="relative border-2 border-primary bg-primary/5 rounded-lg p-3 cursor-pointer">
+<div class="aspect-[3/4] bg-white border border-slate-200 mb-2 rounded shadow-sm flex items-center justify-center p-2">
+<div class="w-full h-full border border-slate-100 bg-slate-50 p-2 space-y-1 overflow-hidden">
+<div class="h-2 w-1/2 bg-slate-200 mx-auto"></div>
+<div class="h-1 w-full bg-slate-100"></div>
+<div class="h-1 w-full bg-slate-100"></div>
+<div class="pt-2 flex justify-between"><div class="h-1 w-1/3 bg-slate-200"></div><div class="h-1 w-4 bg-slate-200"></div></div>
+<div class="flex justify-between"><div class="h-1 w-1/3 bg-slate-200"></div><div class="h-1 w-4 bg-slate-200"></div></div>
+</div>
+</div>
+<p class="text-[10px] font-bold text-center">Khổ 80mm (Mặc định)</p>
+<div class="absolute top-1 right-1">
+<span class="material-symbols-outlined text-primary text-[16px]">check_circle</span>
+</div>
+</div>
+<div class="relative border-2 border-transparent bg-slate-50 dark:bg-slate-800 rounded-lg p-3 cursor-pointer hover:border-slate-300 transition-all">
+<div class="aspect-[3/4] bg-white border border-slate-200 mb-2 rounded shadow-sm flex items-center justify-center p-2 opacity-60">
+<div class="w-full h-full border border-slate-100 bg-slate-50 p-2 space-y-1 overflow-hidden">
+<div class="h-1 w-1/4 bg-slate-200"></div>
+<div class="h-2 w-1/2 bg-slate-200 mx-auto"></div>
+<div class="h-4 w-full bg-slate-100 flex items-center justify-center text-[6px]">LOGO</div>
+<div class="pt-2 flex justify-between"><div class="h-1 w-1/3 bg-slate-200"></div><div class="h-1 w-4 bg-slate-200"></div></div>
+</div>
+</div>
+<p class="text-[10px] font-bold text-center text-slate-500">Khổ A5 (Ngang)</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 3: Thanh toán -->
+<section class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+<div>
+<h3 class="text-lg font-bold">Phương thức Thanh toán</h3>
+<p class="text-sm text-slate-500">Quản lý các hình thức thanh toán tại quầy.</p>
+</div>
+<button class="bg-primary text-white px-6 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 transition-colors">Cập nhật</button>
+</div>
+<div class="p-6 space-y-4">
+<div class="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-xl">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600">
+<span class="material-symbols-outlined">payments</span>
+</div>
+<div>
+<p class="font-semibold">Tiền mặt</p>
+<p class="text-xs text-slate-500">Thanh toán trực tiếp bằng tiền giấy</p>
+</div>
+</div>
+<span class="text-xs font-bold text-primary px-3 py-1 bg-primary/10 rounded-full">ĐANG BẬT</span>
+</div>
+<div class="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-xl">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600">
+<span class="material-symbols-outlined">qr_code_2</span>
+</div>
+<div>
+<p class="font-semibold">Chuyển khoản / QR Code</p>
+<p class="text-xs text-slate-500">VietQR, MoMo, ZaloPay...</p>
+</div>
+</div>
+<button class="text-xs font-bold text-slate-500 hover:text-primary transition-colors">CẤU HÌNH</button>
+</div>
+<div class="flex items-center justify-between p-4 border border-slate-200 dark:border-slate-700 rounded-xl opacity-60 grayscale">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600">
+<span class="material-symbols-outlined">credit_card</span>
+</div>
+<div>
+<p class="font-semibold">Máy quẹt thẻ (POS)</p>
+<p class="text-xs text-slate-500">Kết nối máy quẹt thẻ ngân hàng</p>
+</div>
+</div>
+<button class="text-xs font-bold text-primary px-3 py-1 border border-primary rounded-full hover:bg-primary hover:text-white transition-all">KÍCH HOẠT</button>
+</div>
+</div>
+</section>
+<!-- Section 4: Thiết bị -->
+<section class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+<div class="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+<div>
+<h3 class="text-lg font-bold">Thiết bị ngoại vi</h3>
+<p class="text-sm text-slate-500">Kết nối máy in hóa đơn, máy quét mã vạch và ngăn kéo đựng tiền.</p>
+</div>
+<button class="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 px-6 py-2 rounded-lg text-sm font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">Kiểm tra kết nối</button>
+</div>
+<div class="p-6">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl space-y-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">print</span>
+<h4 class="font-bold text-sm">Máy in hóa đơn</h4>
+</div>
+<div class="space-y-3">
+<div class="flex items-center justify-between text-xs">
+<span class="text-slate-500">Trạng thái:</span>
+<span class="text-green-500 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span> Sẵn sàng</span>
+</div>
+<select class="w-full rounded-lg border-slate-200 dark:border-slate-700 dark:bg-slate-800 text-xs py-2 focus:ring-primary">
+<option>Xprinter XP-N160II (USB)</option>
+<option>Bixolon SRP-330II (LAN)</option>
+</select>
+</div>
+</div>
+<div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl space-y-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">barcode_scanner</span>
+<h4 class="font-bold text-sm">Máy quét mã vạch</h4>
+</div>
+<div class="space-y-3">
+<div class="flex items-center justify-between text-xs">
+<span class="text-slate-500">Kiểu kết nối:</span>
+<span class="font-bold">HID Keyboard (USB)</span>
+</div>
+<div class="flex items-center gap-2">
+<input checked="" class="rounded text-primary focus:ring-primary" type="checkbox"/>
+<span class="text-xs text-slate-700 dark:text-slate-300">Tự động xuống dòng sau khi quét</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer spacer -->
+<div class="h-10"></div>
+</div>
+</div>
+</main>
+</body></html>
