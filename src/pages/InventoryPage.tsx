@@ -35,7 +35,7 @@ const InventoryPage = () => {
   })
 
   return (
-    <DashboardLayout title="Quản lý Tồn kho" breadcrumb={[{ label: 'Sản phẩm' }, { label: 'Tồn kho hiện tại' }]}>
+    <DashboardLayout title="Quản lý Tồn kho" breadcrumb={[{ label: 'Hàng hóa' }, { label: 'Tồn kho' }]}>
       <div className="space-y-8 animate-fade-in">
         {/* Page Header Actions */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

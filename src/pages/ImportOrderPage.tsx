@@ -134,7 +134,7 @@ const ImportOrderPage = () => {
   }
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Tạo phiếu nhập kho" breadcrumb={[{ label: 'Hàng hóa' }, { label: 'Nhập kho' }]}>
       {/* Top Header Bar */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">

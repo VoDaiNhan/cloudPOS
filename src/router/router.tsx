@@ -1,5 +1,6 @@
-import { useRoutes } from 'react-router-dom'
+import { useLocation, useRoutes, Navigate } from 'react-router-dom'
 import type { RouteObject } from 'react-router-dom'
+import { MODAL_ROUTES } from './modalRoutes'
 import AuthLayout from '../layouts/AuthLayout'
 import PublicLayout from '../layouts/PublicLayout'
 import LandingPage from '../pages/LandingPage'
@@ -33,8 +34,16 @@ import ExpiryDatePage from '../pages/ExpiryDatePage'
 import StockHistoryPage from '../pages/StockHistoryPage'
 import OnboardingPage from '../pages/OnboardingPage'
 import CheckoutPage from '../pages/CheckoutPage'
+import AccountPage from '../pages/AccountPage'
+import StaffPermissionsPage from '../pages/StaffPermissionsPage'
+import SystemSettingsPage from '../pages/SystemSettingsPage'
+import PaymentSuccessPage from '../pages/PaymentSuccessPage'
+import NotFoundPage from '../pages/NotFoundPage'
 
-const routes: RouteObject[] = [
+// Modal routes are defined in modalRoutes.ts
+// They are rendered as overlays using background location pattern
+
+const mainRoutes: RouteObject[] = [
   {
     element: <PublicLayout />,
     children: [
@@ -45,131 +54,66 @@ const routes: RouteObject[] = [
   {
     element: <AuthLayout />,
     children: [
-      {
-        path: '/login',
-        element: <LoginPage />,
-      },
+      { path: '/login', element: <LoginPage /> },
     ],
   },
-  {
-    path: '/receipt-voucher',
-    element: <ReceiptVoucherPage />
-  },
-  {
-    path: '/payment-voucher',
-    element: <PaymentVoucherPage />
-  },
-  {
-    path: '/debt',
-    element: <DebtPage />
-  },
-  {
-    path: '/choose-workplace',
-    element: <ChooseWorkplacePage />,
-  },
-  {
-    path: '/dashboard',
-    element: <DashboardPage />
-  },
-  {
-    path: '/end-shift-report',
-    element: <EndShiftReportPage />
-  },
-  {
-    path: '/expiry',
-    element: <ExpiryDatePage />
-  },
-  {
-    path: '/stock-history',
-    element: <StockHistoryPage />
-  },
-  {
-    path: '/categories',
-    element: <CategoryPage />,
-  },
-  {
-    path: '/products',
-    element: <ProductListPage />,
-  },
-  {
-    path: '/products/new',
-    element: <ProductDetailPage />,
-  },
-  {
-    path: '/products/:id',
-    element: <ProductDetailPage />,
-  },
-  {
-    path: '/customers',
-    element: <CustomerListPage />,
-  },
-  {
-    path: '/suppliers',
-    element: <SupplierListPage />,
-  },
-  {
-    path: '/open-shift',
-    element: <OpenShiftPage />,
-  },
-  {
-    path: '/pos',
-    element: <POSPage />,
-  },
-  {
-    path: '/close-shift',
-    element: <CloseShiftPage />,
-  },
-  {
-    path: '/import-order',
-    element: <ImportOrderPage />,
-  },
-  {
-    path: '/inventory',
-    element: <InventoryPage />,
-  },
-  {
-    path: '/stock-audit',
-    element: <StockAuditPage />,
-  },
-  {
-    path: '/supplier-return',
-    element: <SupplierReturnPage />,
-  },
-  {
-    path: '/customer-return',
-    element: <CustomerReturnPage />,
-  },
-  {
-    path: '/stock-cancellation',
-    element: <StockCancellationPage />,
-  },
-  {
-    path: '/cashbook',
-    element: <CashbookPage />,
-  },
-  {
-    path: '/store-access',
-    element: <StoreAccessPage />,
-  },
-  {
-    path: '/register',
-    element: <RegisterPage />,
-  },
-  {
-    path: '/create-store',
-    element: <CreateStorePage />,
-  },
-  {
-    path: '/onboarding',
-    element: <OnboardingPage />,
-  },
-  {
-    path: '/checkout',
-    element: <CheckoutPage />,
-  },
+  { path: '/debt', element: <DebtPage /> },
+  { path: '/choose-workplace', element: <ChooseWorkplacePage /> },
+  { path: '/dashboard', element: <DashboardPage /> },
+  { path: '/expiry', element: <ExpiryDatePage /> },
+  { path: '/stock-history', element: <StockHistoryPage /> },
+  { path: '/categories', element: <CategoryPage /> },
+  { path: '/products', element: <ProductListPage /> },
+  { path: '/products/new', element: <ProductDetailPage /> },
+  { path: '/products/:id', element: <ProductDetailPage /> },
+  { path: '/customers', element: <CustomerListPage /> },
+  { path: '/suppliers', element: <SupplierListPage /> },
+  { path: '/pos', element: <POSPage /> },
+  { path: '/import-order', element: <ImportOrderPage /> },
+  { path: '/inventory', element: <InventoryPage /> },
+  { path: '/stock-audit', element: <StockAuditPage /> },
+  { path: '/supplier-return', element: <SupplierReturnPage /> },
+  { path: '/customer-return', element: <CustomerReturnPage /> },
+  { path: '/stock-cancellation', element: <StockCancellationPage /> },
+  { path: '/cashbook', element: <CashbookPage /> },
+  { path: '/store-access', element: <StoreAccessPage /> },
+  { path: '/register', element: <RegisterPage /> },
+  { path: '/create-store', element: <CreateStorePage /> },
+  { path: '/onboarding', element: <OnboardingPage /> },
+  { path: '/checkout', element: <CheckoutPage /> },
+  { path: '/account', element: <AccountPage /> },
+  { path: '/staff-permissions', element: <StaffPermissionsPage /> },
+  { path: '/settings', element: <SystemSettingsPage /> },
+  { path: '/checkout/success', element: <PaymentSuccessPage /> },
+  { path: '/reports', element: <Navigate to="/dashboard" replace /> },
+  { path: '*', element: <NotFoundPage /> },
+]
+
+// Modal routes — these are rendered separately as overlays
+const modalRoutes: RouteObject[] = [
+  { path: '/open-shift', element: <OpenShiftPage /> },
+  { path: '/close-shift', element: <CloseShiftPage /> },
+  { path: '/end-shift-report', element: <EndShiftReportPage /> },
+  { path: '/receipt-voucher', element: <ReceiptVoucherPage /> },
+  { path: '/payment-voucher', element: <PaymentVoucherPage /> },
 ]
 
 export default function AppRouter() {
-  const element = useRoutes(routes)
-  return element
+  const location = useLocation()
+  // background is the page behind the modal (if navigated with state.background)
+  const background = (location.state as { background?: Location })?.background
+
+  // Render the "main" page using the background location (or current if no background)
+  const mainElement = useRoutes(mainRoutes, background || location)
+
+  // Render the modal overlay (only when we are on a modal route)
+  const modalElement = useRoutes(modalRoutes, location)
+  const isModalRoute = MODAL_ROUTES.some(r => location.pathname.startsWith(r))
+
+  return (
+    <>
+      {mainElement}
+      {isModalRoute && modalElement}
+    </>
+  )
 }

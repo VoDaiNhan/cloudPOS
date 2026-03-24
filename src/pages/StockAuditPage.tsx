@@ -6,6 +6,16 @@ import type { StockAuditItem } from '../types/stockAudit'
 const StockAuditPage = () => {
   const [items, setItems] = useState<StockAuditItem[]>(initialStockAuditItems)
   const [isLoading, setIsLoading] = useState(false)
+  const [searchTerm, setSearchTerm] = useState('')
+
+  const filteredItems = useMemo(
+    () => items.filter(item =>
+      !searchTerm ||
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.sku.toLowerCase().includes(searchTerm.toLowerCase())
+    ),
+    [items, searchTerm]
+  )
 
   const totalDifference = useMemo(() => {
     return items.reduce((sum, item) => sum + (item.actualCount - item.systemCount), 0)
@@ -37,7 +47,7 @@ const StockAuditPage = () => {
   }
 
   return (
-    <DashboardLayout title="Kiểm kê kho hàng" breadcrumb={[{ label: 'Kho hàng' }, { label: 'Kiểm kê' }]}>
+    <DashboardLayout title="Kiểm kê kho hàng" breadcrumb={[{ label: 'Hàng hóa' }, { label: 'Kiểm kho' }]}>
       <div className="space-y-8 animate-fade-in">
         {/* Header Actions */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -86,6 +96,18 @@ const StockAuditPage = () => {
 
                 {/* Inventory Table */}
                 <div className="overflow-x-auto border border-slate-100 dark:border-slate-800 rounded-2xl">
+                  {/* Search filter */}
+                  <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+                    <div className="relative max-w-sm">
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
+                      <input
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 h-9 border border-slate-200 dark:border-slate-700 rounded-xl text-sm bg-white dark:bg-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition"
+                        placeholder="Tìm sản phẩm theo tên hoặc SKU..."
+                      />
+                    </div>
+                  </div>
                   <table className="w-full text-left">
                     <thead>
                       <tr className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 font-black text-slate-400 uppercase tracking-widest text-[10px]">
@@ -97,7 +119,11 @@ const StockAuditPage = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50 dark:divide-slate-900">
-                      {items.map((item) => (
+                      {filteredItems.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="text-center py-10 text-slate-400 text-sm">Không tìm thấy sản phẩm nào.</td>
+                        </tr>
+                      ) : filteredItems.map((item) => (
                         <tr key={item.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/10 transition-colors">
                           <td className="px-6 py-5">
                             <div className="flex flex-col">

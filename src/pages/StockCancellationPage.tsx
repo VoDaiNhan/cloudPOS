@@ -41,7 +41,7 @@ const StockCancellationPage = () => {
   }
 
   return (
-    <DashboardLayout title="Tạo phiếu hủy hàng" breadcrumb={[{ label: 'Kiểm kho' }, { label: 'Tạo phiếu hủy hàng' }]}>
+    <DashboardLayout title="Tạo phiếu hủy hàng" breadcrumb={[{ label: 'Hàng hóa' }, { label: 'Hủy hàng' }]}>
       <div className="grid grid-cols-12 gap-8 pb-12 animate-fade-in">
         
         {/* Left Column: Product Selection & Table */}

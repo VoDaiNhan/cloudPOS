@@ -48,7 +48,7 @@ const plans: PricingPlan[] = [
     priceYearly: '280.000đ',
     period: '/tháng',
     cta: 'Đăng ký ngay',
-    ctaLink: '/checkout?plan=pro',
+    ctaLink: '/checkout',
     highlighted: true,
     ctaStyle: 'primary',
     features: [

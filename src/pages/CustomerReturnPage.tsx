@@ -50,7 +50,7 @@ const CustomerReturnPage = () => {
   }
 
   return (
-    <DashboardLayout title="Tạo đơn đổi trả" breadcrumb={[{ label: 'Bán hàng' }, { label: 'Đổi trả hàng' }]}>
+    <DashboardLayout title="Tạo đơn đổi trả" breadcrumb={[{ label: 'Đối tác' }, { label: 'Đổi trả KH' }]}>
       <div className="grid grid-cols-12 gap-8 pb-12 animate-fade-in">
         
         {/* Left Column: Invoice Details & Items */}

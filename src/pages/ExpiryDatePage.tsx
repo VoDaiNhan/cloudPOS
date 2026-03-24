@@ -5,7 +5,7 @@ const ExpiryDatePage = () => {
   const summary = mockExpirySummary
   
   return (
-    <DashboardLayout title="Hạn sử dụng" breadcrumb={[{ label: 'Lô hàng & Hạn dùng' }]}>
+    <DashboardLayout title="Hạn sử dụng" breadcrumb={[{ label: 'Hàng hóa' }, { label: 'Hạn sử dụng' }]}>
       <div className="flex flex-col gap-8 animate-fade-in pb-12">
         
         {/* Page Header */}

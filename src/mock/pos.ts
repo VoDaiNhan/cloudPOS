@@ -3,6 +3,7 @@ import type { POSProduct } from '../types/posProduct'
 export const posCategories = ['Tất cả', 'Đồ uống', 'Thức ăn', 'Combo']
 
 export const posProducts: POSProduct[] = [
+  // ── Đồ uống ──────────────────────────────
   {
     id: 'pos1',
     name: 'Cà phê Muối',
@@ -18,14 +19,6 @@ export const posProducts: POSProduct[] = [
     image: '/images/pos/peach_tea.png',
     stock: 15,
     category: 'Đồ uống',
-  },
-  {
-    id: 'pos3',
-    name: 'Bánh Mì Bơ Tỏi',
-    price: 35000,
-    image: '/images/pos/bread.png',
-    stock: 8,
-    category: 'Thức ăn',
   },
   {
     id: 'pos4',
@@ -44,11 +37,119 @@ export const posProducts: POSProduct[] = [
     category: 'Đồ uống',
   },
   {
+    id: 'pos7',
+    name: 'Sinh Tố Bơ',
+    price: 35000,
+    image: '/images/pos/avocado_smoothie.png',
+    stock: 18,
+    category: 'Đồ uống',
+  },
+  {
+    id: 'pos8',
+    name: 'Cà Phê Sữa Đá',
+    price: 22000,
+    image: '/images/pos/iced_coffee.png',
+    stock: 55,
+    category: 'Đồ uống',
+  },
+  {
+    id: 'pos9',
+    name: 'Trà Chanh Mật Ong',
+    price: 28000,
+    image: '/images/pos/honey_lemon.png',
+    stock: 30,
+    category: 'Đồ uống',
+  },
+  {
+    id: 'pos10',
+    name: 'Soda Việt Quất',
+    price: 32000,
+    image: '/images/pos/blueberry_soda.png',
+    stock: 25,
+    category: 'Đồ uống',
+  },
+
+  // ── Thức ăn ──────────────────────────────
+  {
+    id: 'pos3',
+    name: 'Bánh Mì Bơ Tỏi',
+    price: 35000,
+    image: '/images/pos/bread.png',
+    stock: 8,
+    category: 'Thức ăn',
+  },
+  {
     id: 'pos6',
     name: 'Bánh Quy Bơ',
     price: 15000,
     image: '/images/pos/cookies.png',
     stock: 50,
     category: 'Thức ăn',
+  },
+  {
+    id: 'pos11',
+    name: 'Sandwich Gà',
+    price: 45000,
+    image: '/images/pos/sandwich.png',
+    stock: 14,
+    category: 'Thức ăn',
+  },
+  {
+    id: 'pos12',
+    name: 'Croissant Bơ',
+    price: 28000,
+    image: '/images/pos/croissant.png',
+    stock: 22,
+    category: 'Thức ăn',
+  },
+  {
+    id: 'pos13',
+    name: 'Bánh Flan',
+    price: 18000,
+    image: '/images/pos/flan.png',
+    stock: 35,
+    category: 'Thức ăn',
+  },
+  {
+    id: 'pos14',
+    name: 'Salad Trộn',
+    price: 42000,
+    image: '/images/pos/salad.png',
+    stock: 10,
+    category: 'Thức ăn',
+  },
+
+  // ── Combo ────────────────────────────────
+  {
+    id: 'pos15',
+    name: 'Combo Sáng Năng Động',
+    price: 55000,
+    image: '/images/pos/combo_morning.png',
+    stock: 20,
+    category: 'Combo',
+  },
+  {
+    id: 'pos16',
+    name: 'Combo Trà Chiều',
+    price: 65000,
+    image: '/images/pos/combo_afternoon.png',
+    stock: 15,
+    category: 'Combo',
+  },
+  {
+    id: 'pos17',
+    name: 'Combo Đôi Bạn',
+    price: 89000,
+    image: '/images/pos/combo_duo.png',
+    stock: 12,
+    category: 'Combo',
+  },
+  {
+    id: 'pos18',
+    name: 'Combo Gia Đình',
+    price: 120000,
+    image: '/images/pos/combo_family.png',
+    stock: 8,
+    category: 'Combo',
   },
 ]

@@ -117,8 +117,8 @@ const CustomerListPage = () => {
   return (
     <DashboardLayout
       breadcrumb={[
+        { label: 'Đối tác' },
         { label: 'Khách hàng' },
-        { label: 'Danh sách khách hàng' },
       ]}
     >
       <div className="space-y-6">

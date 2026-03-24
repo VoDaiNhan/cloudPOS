@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import { mockDebtSummary, mockCustomerDebts, mockSupplierDebts } from '../mock/debt'
 
@@ -6,7 +7,22 @@ type TabType = 'CUSTOMER' | 'SUPPLIER' | 'HISTORY'
 
 const DebtPage = () => {
   const [activeTab, setActiveTab] = useState<TabType>('CUSTOMER')
+  const [showVoucherMenu, setShowVoucherMenu] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
+  const location = useLocation()
   const summary = mockDebtSummary
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowVoucherMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -24,7 +40,7 @@ const DebtPage = () => {
   }
 
   return (
-    <DashboardLayout title="Đối soát Công nợ" breadcrumb={[{ label: 'Công nợ' }]}>
+    <DashboardLayout title="Đối soát Công nợ" breadcrumb={[{ label: 'Sổ quỹ', path: '/cashbook' }, { label: 'Công nợ' }]}>
       <div className="space-y-8 animate-fade-in pb-12 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header Actions */}
@@ -38,10 +54,40 @@ const DebtPage = () => {
               <span className="material-symbols-outlined text-[18px]">download</span>
               Xuất báo cáo
             </button>
-            <button className="flex items-center gap-2 bg-primary text-white border border-transparent px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-primary/90 hover:-translate-y-0.5 shadow-xl shadow-primary/20 transition-all">
-              <span className="material-symbols-outlined text-[18px]">add_circle</span>
-              Tạo phiếu thu/chi
-            </button>
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setShowVoucherMenu(!showVoucherMenu)}
+                className="flex items-center gap-2 bg-primary text-white border border-transparent px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-primary/90 hover:-translate-y-0.5 shadow-xl shadow-primary/20 transition-all"
+              >
+                <span className="material-symbols-outlined text-[18px]">add_circle</span>
+                Tạo phiếu thu/chi
+                <span className="material-symbols-outlined text-[16px] ml-1">expand_more</span>
+              </button>
+              {showVoucherMenu && (
+                <div className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 overflow-hidden animate-fade-in">
+                  <button
+                    onClick={() => {
+                      setShowVoucherMenu(false)
+                      navigate('/receipt-voucher', { state: { background: location } })
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-primary/5 hover:text-primary transition-colors text-left"
+                  >
+                    <span className="material-symbols-outlined text-emerald-500">request_quote</span>
+                    Tạo phiếu thu
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowVoucherMenu(false)
+                      navigate('/payment-voucher', { state: { background: location } })
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-primary/5 hover:text-primary transition-colors text-left border-t border-slate-100 dark:border-slate-800"
+                  >
+                    <span className="material-symbols-outlined text-rose-500">payments</span>
+                    Tạo phiếu chi
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -200,7 +246,13 @@ const DebtPage = () => {
                         )}
                       </td>
                       <td className="px-6 py-5 text-right">
-                        <button className="bg-primary/10 text-primary hover:bg-primary hover:text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm">
+                        <button
+                          onClick={() => navigate(
+                            activeTab === 'CUSTOMER' ? '/receipt-voucher' : '/payment-voucher',
+                            { state: { background: location } }
+                          )}
+                          className="bg-primary/10 text-primary hover:bg-primary hover:text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm"
+                        >
                           {activeTab === 'CUSTOMER' ? 'Thu nợ' : 'Trả nợ'}
                         </button>
                       </td>

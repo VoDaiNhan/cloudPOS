@@ -1,6 +1,6 @@
-import { useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { SetupLayout } from '../layouts/SetupLayout'
+import { mockUser } from '../mock/auth'
 
 const WorkModeCard = ({
   title,
@@ -44,6 +44,7 @@ const WorkModeCard = ({
 
 const ChooseWorkplacePage = () => {
   const navigate = useNavigate()
+  const [user] = useState(mockUser)
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -55,8 +56,30 @@ const ChooseWorkplacePage = () => {
   }, [navigate])
 
   return (
-    <SetupLayout hideFooter>
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-12 md:py-20 lg:px-20">
+    <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden bg-background">
+      {/* Header */}
+      <header className="flex items-center justify-between border-b border-slate-200 px-6 py-4 md:px-10 lg:px-20 bg-white">
+        <div className="flex items-center gap-3 text-primary">
+          <div className="size-8 flex items-center justify-center bg-primary rounded-lg text-white">
+            <span className="material-symbols-outlined text-2xl">cloud_done</span>
+          </div>
+          <h2 className="text-slate-900 text-xl font-bold leading-tight tracking-tight">
+            CloudPOS
+          </h2>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="text-right hidden sm:block">
+            <p className="text-sm font-semibold text-slate-900">{user.name}</p>
+            <p className="text-xs text-slate-500 capitalize">{user.role}</p>
+          </div>
+          <div className="bg-primary/10 rounded-full size-10 border border-primary/5 flex items-center justify-center overflow-hidden">
+            <span className="material-symbols-outlined text-primary">person</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-12 md:py-20 lg:px-20">
         <div className="max-w-[1000px] w-full">
           <div className="text-center mb-16">
             <h1 className="text-slate-900 text-3xl md:text-5xl font-black leading-tight tracking-tight mb-4">
@@ -92,12 +115,19 @@ const ChooseWorkplacePage = () => {
               <span className="material-symbols-outlined text-base">info</span>
               <span>Mẹo: Bạn có thể sử dụng phím tắt (1) và (2) để chọn nhanh</span>
             </div>
+            
+            <div className="w-full h-px bg-slate-200" />
+            
+            <div className="flex flex-wrap justify-center gap-10 text-slate-400 text-xs font-bold uppercase tracking-widest">
+              <a href="#" className="hover:text-primary transition-colors">Hỗ trợ</a>
+              <a href="#" className="hover:text-primary transition-colors">Hướng dẫn</a>
+              <a href="#" className="hover:text-primary transition-colors">Điều khoản</a>
+            </div>
           </div>
         </div>
-      </div>
-    </SetupLayout>
+      </main>
+    </div>
   )
 }
-
 
 export default ChooseWorkplacePage

@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { DashboardLayout } from '../layouts/DashboardLayout'
 
 type BillingCycle = 'monthly' | 'yearly'
 type PaymentMethod = 'vietqr' | 'atm' | 'international'
@@ -30,16 +29,40 @@ const CheckoutPage = () => {
     new Intl.NumberFormat('vi-VN').format(amount) + 'đ'
 
   return (
-    <DashboardLayout
-      title="Thanh toán dịch vụ"
-      breadcrumb={[
-        { label: 'Cài đặt', path: '/settings' },
-        { label: 'Thanh toán' }
-      ]}
-    >
-      <div className="max-w-7xl mx-auto py-4">
+    <div className="min-h-screen bg-background font-sans text-slate-900">
+      {/* Header */}
+      <header className="sticky top-0 z-50 w-full bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link to="/" className="flex items-center gap-3">
+              <div className="bg-primary p-1.5 rounded-lg text-white">
+                <span className="material-symbols-outlined text-2xl">point_of_sale</span>
+              </div>
+              <h1 className="text-xl font-bold tracking-tight text-slate-900 uppercase">CloudPOS</h1>
+            </Link>
+            <div className="hidden md:flex items-center gap-8">
+              <Link className="text-sm font-medium text-slate-600 hover:text-primary" to="/#features">Sản phẩm</Link>
+              <Link className="text-sm font-medium text-slate-600 hover:text-primary" to="/pricing">Bảng giá</Link>
+              <a className="text-sm font-medium text-slate-600 hover:text-primary" href="#">Hỗ trợ</a>
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20">
+                <span className="material-symbols-outlined text-primary text-sm">person</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb & Header */}
         <div className="mb-8">
-          <p className="text-slate-500 text-lg">Hoàn tất đăng ký gói CloudPOS của bạn để bắt đầu kinh doanh.</p>
+          <nav className="flex items-center gap-2 text-sm text-slate-500 mb-4">
+            <Link className="hover:text-primary" to="/">Trang chủ</Link>
+            <span className="material-symbols-outlined text-xs">chevron_right</span>
+            <span className="text-slate-900 font-medium">Thanh toán</span>
+          </nav>
+          <h2 className="text-3xl font-extrabold tracking-tight">Thanh toán dịch vụ</h2>
+          <p className="text-slate-500 mt-1">Hoàn tất đăng ký gói CloudPOS của bạn để bắt đầu kinh doanh.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -346,8 +369,15 @@ const CheckoutPage = () => {
             </div>
           </div>
         </div>
-      </div>
-    </DashboardLayout>
+      </main>
+
+      {/* Footer */}
+      <footer className="mt-16 py-8 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 text-center">
+          <p className="text-sm text-slate-500">© 2024 CloudPOS SaaS Solution. Tất cả các quyền được bảo lưu.</p>
+        </div>
+      </footer>
+    </div>
   )
 }
 

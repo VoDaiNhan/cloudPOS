@@ -24,7 +24,7 @@ const getMovementStyles = (type: StockMovementType) => {
 
 const StockHistoryPage = () => {
   return (
-    <DashboardLayout title="Lịch sử kho" breadcrumb={[{ label: 'Lô hàng & Hạn dùng', path: '/expiry' }, { label: 'Lịch sử biến động' }]}>
+    <DashboardLayout title="Lịch sử kho" breadcrumb={[{ label: 'Hàng hóa' }, { label: 'Hạn sử dụng', path: '/expiry' }, { label: 'Lịch sử biến động' }]}>
       <div className="flex flex-col gap-8 animate-fade-in pb-12">
         
         {/* Page Header */}

@@ -1,8 +1,26 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { posProducts, posCategories } from '../mock/pos'
-import type { POSProduct, CartItem, PaymentMethod } from '../types/posProduct'
+import type { POSProduct, CartItem, PaymentMethod, DiscountType } from '../types/posProduct'
 import VoiceOverlay from '../components/VoiceOverlay'
 import { DashboardLayout } from '../layouts/DashboardLayout'
+
+// ── Product Card ──────────────────────────────────
+const ProductCard = ({ product, onAdd }: { product: POSProduct; onAdd: (p: POSProduct) => void }) => (
+  <button
+    onClick={() => onAdd(product)}
+    className="group cursor-pointer rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-3 transition-all hover:border-primary hover:bg-white hover:shadow-md text-left"
+  >
+    <div
+      className="mb-3 aspect-square w-full rounded-xl bg-slate-200 bg-cover bg-center"
+      style={{ backgroundImage: `url('${product.image}')` }}
+    />
+    <p className="text-sm font-black line-clamp-1 text-slate-900 dark:text-white">{product.name}</p>
+    <div className="mt-1.5 flex items-center justify-between">
+      <span className="text-sm font-black text-primary">{product.price.toLocaleString('vi-VN')}đ</span>
+      <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">SL: {product.stock}</span>
+    </div>
+  </button>
+)
 
 const POSPage = () => {
   // ── State ──────────────────────────────────────
@@ -11,10 +29,13 @@ const POSPage = () => {
   const [cart, setCart] = useState<CartItem[]>([])
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash')
   const [vatRate, setVatRate] = useState(5)
-  const [invoiceDiscount] = useState(5000)
+  const [invoiceDiscountValue, setInvoiceDiscountValue] = useState(0)
+  const [invoiceDiscountType, setInvoiceDiscountType] = useState<DiscountType>('fixed')
   const [cashReceived, setCashReceived] = useState(0)
   const [customerSearch, setCustomerSearch] = useState('')
   const [voiceOpen, setVoiceOpen] = useState(false)
+  const [editingDiscount, setEditingDiscount] = useState<string | null>(null)
+  const [customVat, setCustomVat] = useState(false)
 
   // ── Refs ───────────────────────────────────────
   const productSearchRef = useRef<HTMLInputElement>(null)
@@ -45,18 +66,75 @@ const POSPage = () => {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [cart])
 
-  // ── Filtered Products ──────────────────────────
-  const filteredProducts = useMemo(() => {
-    let filtered = posProducts
-    if (activeCategory !== 'Tất cả') {
-      filtered = filtered.filter((p) => p.category === activeCategory)
+  // ── Refs for scroll-spy ─────────────────────────
+  const productScrollRef = useRef<HTMLDivElement>(null)
+  const sectionRefs = useRef<Map<string, HTMLDivElement>>(new Map())
+  const isUserScrolling = useRef(true)
+
+  // ── Categories (without 'Tất cả') ──────────────
+  const actualCategories = useMemo(() => posCategories.filter(c => c !== 'Tất cả'), []) 
+
+  // ── Products grouped by category ───────────────
+  const groupedProducts = useMemo(() => {
+    const groups: Record<string, typeof posProducts> = {}
+    for (const cat of actualCategories) {
+      const items = posProducts.filter(p => p.category === cat)
+      if (items.length > 0) groups[cat] = items
     }
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
-      filtered = filtered.filter((p) => p.name.toLowerCase().includes(term))
+    return groups
+  }, [actualCategories])
+
+  // ── Filtered (for search) ──────────────────────
+  const searchFiltered = useMemo(() => {
+    if (!searchTerm) return null
+    const term = searchTerm.toLowerCase()
+    return posProducts.filter(p => p.name.toLowerCase().includes(term))
+  }, [searchTerm])
+
+  // ── IntersectionObserver scroll-spy ─────────────
+  useEffect(() => {
+    const scrollContainer = productScrollRef.current
+    if (!scrollContainer) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!isUserScrolling.current) return
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const cat = entry.target.getAttribute('data-category')
+            if (cat) setActiveCategory(cat)
+          }
+        }
+      },
+      {
+        root: scrollContainer,
+        rootMargin: '-10% 0px -70% 0px',
+        threshold: 0,
+      }
+    )
+
+    sectionRefs.current.forEach((el) => observer.observe(el))
+    return () => observer.disconnect()
+  }, [groupedProducts])
+
+  // ── Click tab → scroll to section ──────────────
+  const scrollToCategory = useCallback((cat: string) => {
+    if (cat === 'Tất cả') {
+      setActiveCategory('Tất cả')
+      productScrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+      // Re-enable scroll-spy after animation
+      isUserScrolling.current = false
+      setTimeout(() => { isUserScrolling.current = true }, 600)
+      return
     }
-    return filtered
-  }, [searchTerm, activeCategory])
+    const el = sectionRefs.current.get(cat)
+    if (el && productScrollRef.current) {
+      isUserScrolling.current = false
+      setActiveCategory(cat)
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      setTimeout(() => { isUserScrolling.current = true }, 600)
+    }
+  }, [])
 
   // ── Cart Operations ────────────────────────────
   const addToCart = useCallback((product: POSProduct) => {
@@ -69,7 +147,7 @@ const POSPage = () => {
             : item
         )
       }
-      return [...prev, { product, quantity: 1, discount: 0 }]
+      return [...prev, { product, quantity: 1, discountValue: 0, discountType: 'fixed' as DiscountType }]
     })
   }, [])
 
@@ -85,20 +163,66 @@ const POSPage = () => {
     )
   }, [])
 
+  const updateItemDiscount = useCallback((productId: string, value: number, type?: DiscountType) => {
+    setCart((prev) =>
+      prev.map((item) =>
+        item.product.id === productId
+          ? {
+              ...item,
+              discountValue: type === 'percent' ? Math.min(100, Math.max(0, value)) : Math.max(0, value),
+              discountType: type ?? item.discountType,
+            }
+          : item
+      )
+    )
+  }, [])
+
+  const toggleItemDiscountType = useCallback((productId: string) => {
+    setCart((prev) =>
+      prev.map((item) =>
+        item.product.id === productId
+          ? { ...item, discountType: item.discountType === 'percent' ? 'fixed' : 'percent', discountValue: 0 }
+          : item
+      )
+    )
+  }, [])
+
   const removeFromCart = useCallback((productId: string) => {
     setCart((prev) => prev.filter((item) => item.product.id !== productId))
   }, [])
 
   const clearCart = useCallback(() => setCart([]), [])
 
-  // ── Calculations ───────────────────────────────
+  // ── Discount Calculations ───────────────────────
+  const calcItemDiscount = useCallback((item: CartItem) => {
+    const lineTotal = item.product.price * item.quantity
+    if (item.discountType === 'percent') {
+      return Math.round(lineTotal * item.discountValue / 100)
+    }
+    return Math.min(item.discountValue, lineTotal)
+  }, [])
+
   const subtotal = useMemo(
-    () => cart.reduce((sum, item) => sum + item.product.price * item.quantity - item.discount, 0),
+    () => cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
     [cart]
   )
 
-  const vatAmount = Math.round(subtotal * vatRate / 100)
-  const total = subtotal - invoiceDiscount + vatAmount
+  const totalItemDiscount = useMemo(
+    () => cart.reduce((sum, item) => sum + calcItemDiscount(item), 0),
+    [cart, calcItemDiscount]
+  )
+
+  const afterItemDiscount = subtotal - totalItemDiscount
+
+  const invoiceDiscountAmount = useMemo(() => {
+    if (invoiceDiscountType === 'percent') {
+      return Math.round(afterItemDiscount * invoiceDiscountValue / 100)
+    }
+    return Math.min(invoiceDiscountValue, afterItemDiscount)
+  }, [afterItemDiscount, invoiceDiscountValue, invoiceDiscountType])
+
+  const vatAmount = Math.round((afterItemDiscount - invoiceDiscountAmount) * vatRate / 100)
+  const total = afterItemDiscount - invoiceDiscountAmount + vatAmount
   const change = cashReceived > 0 ? cashReceived - total : 0
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
@@ -111,7 +235,7 @@ const POSPage = () => {
   ]
 
   return (
-    <DashboardLayout title="Bán hàng (POS)" breadcrumb={[{ label: 'Bán hàng' }]}>
+    <DashboardLayout title="Bán hàng (POS)" breadcrumb={[{ label: 'Giao dịch' }, { label: 'Bán hàng (POS)' }]}>
       {/* ═══ Main 3-Column Layout ═══ */}
       <div className="flex overflow-hidden gap-4 font-display" style={{ height: 'calc(100vh - 10rem)' }}>
         {/* ─── LEFT: Product Browser (30%) ─────── */}
@@ -147,12 +271,12 @@ const POSPage = () => {
             </button>
           </div>
 
-          {/* Category Filter */}
+          {/* Category Filter — scroll-spy tabs */}
           <div className="flex gap-2 overflow-x-auto pb-1 shrink-0">
             {posCategories.map((cat) => (
               <button
                 key={cat}
-                onClick={() => setActiveCategory(cat)}
+                onClick={() => scrollToCategory(cat)}
                 className={`shrink-0 rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-widest transition-all ${
                   activeCategory === cat
                     ? 'bg-primary text-white shadow-sm'
@@ -164,25 +288,45 @@ const POSPage = () => {
             ))}
           </div>
 
-          {/* Product Grid */}
-          <div className="grid grid-cols-2 gap-3 overflow-y-auto pr-1 flex-1">
-            {filteredProducts.map((product) => (
-              <button
-                key={product.id}
-                onClick={() => addToCart(product)}
-                className="group cursor-pointer rounded-2xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 p-3 transition-all hover:border-primary hover:bg-white hover:shadow-md text-left"
-              >
+          {/* Product Grid — grouped by category with scroll-spy */}
+          <div ref={productScrollRef} className="overflow-y-auto pr-1 flex-1 scroll-smooth">
+            {searchFiltered ? (
+              /* Search results — flat grid */
+              <div className="grid grid-cols-2 gap-3">
+                {searchFiltered.length === 0 ? (
+                  <div className="col-span-2 flex flex-col items-center justify-center py-12 text-slate-300">
+                    <span className="material-symbols-outlined text-4xl mb-2">search_off</span>
+                    <p className="text-sm font-bold">Không tìm thấy sản phẩm</p>
+                  </div>
+                ) : (
+                  searchFiltered.map((product) => (
+                    <ProductCard key={product.id} product={product} onAdd={addToCart} />
+                  ))
+                )}
+              </div>
+            ) : (
+              /* Grouped by category */
+              Object.entries(groupedProducts).map(([category, products]) => (
                 <div
-                  className="mb-3 aspect-square w-full rounded-xl bg-slate-200 bg-cover bg-center"
-                  style={{ backgroundImage: `url('${product.image}')` }}
-                />
-                <p className="text-sm font-black line-clamp-1 text-slate-900 dark:text-white">{product.name}</p>
-                <div className="mt-1.5 flex items-center justify-between">
-                  <span className="text-sm font-black text-primary">{product.price.toLocaleString('vi-VN')}đ</span>
-                  <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">SL: {product.stock}</span>
+                  key={category}
+                  data-category={category}
+                  ref={(el) => { if (el) sectionRefs.current.set(category, el) }}
+                >
+                  <div className="sticky top-0 z-10 bg-white/90 dark:bg-slate-950/90 backdrop-blur-sm py-2 mb-2 border-b border-slate-100 dark:border-slate-800">
+                    <h4 className="text-[11px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                      <span className="size-1.5 rounded-full bg-primary" />
+                      {category}
+                      <span className="text-slate-300 font-bold">({products.length})</span>
+                    </h4>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    {products.map((product) => (
+                      <ProductCard key={product.id} product={product} onAdd={addToCart} />
+                    ))}
+                  </div>
                 </div>
-              </button>
-            ))}
+              ))
+            )}
           </div>
         </section>
 
@@ -229,38 +373,81 @@ const POSPage = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
-                  {cart.map((item) => (
+                  {cart.map((item) => {
+                    const itemDiscountAmt = calcItemDiscount(item)
+                    const lineTotal = item.product.price * item.quantity - itemDiscountAmt
+                    return (
                     <tr key={item.product.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="px-4 py-4">
+                      <td className="px-4 py-3">
                         <p className="text-sm font-bold text-slate-900 dark:text-white">{item.product.name}</p>
                         <p className="text-[11px] text-slate-400 font-medium">{item.product.price.toLocaleString('vi-VN')}đ</p>
                       </td>
-                      <td className="px-2 py-4">
-                        <div className="flex items-center justify-center gap-2">
+                      <td className="px-2 py-3">
+                        <div className="flex items-center justify-center gap-1">
                           <button
                             onClick={() => updateQuantity(item.product.id, -1)}
-                            className="size-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-100 transition-all"
+                            className="size-6 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-100 transition-all"
                           >
-                            <span className="material-symbols-outlined text-sm">remove</span>
+                            <span className="material-symbols-outlined text-xs">remove</span>
                           </button>
                           <span className="text-sm font-black w-6 text-center">{item.quantity}</span>
                           <button
                             onClick={() => updateQuantity(item.product.id, 1)}
-                            className="size-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-100 transition-all text-primary"
+                            className="size-6 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-100 transition-all text-primary"
                           >
-                            <span className="material-symbols-outlined text-sm">add</span>
+                            <span className="material-symbols-outlined text-xs">add</span>
                           </button>
                         </div>
                       </td>
-                      <td className="px-2 py-4 text-right">
-                        <span className="text-sm text-slate-400 font-medium">{item.discount > 0 ? item.discount.toLocaleString('vi-VN') + 'đ' : '0đ'}</span>
+                      <td className="px-2 py-3">
+                        {editingDiscount === item.product.id ? (
+                          <div className="flex items-center gap-1 justify-end">
+                            <input
+                              autoFocus
+                              className="w-16 text-right rounded-lg border border-primary/30 bg-white dark:bg-slate-900 px-2 py-1 text-xs font-bold focus:ring-2 focus:ring-primary/20 focus:outline-none"
+                              type="text"
+                              value={item.discountValue > 0 ? item.discountValue : ''}
+                              placeholder="0"
+                              onChange={(e) => {
+                                const raw = e.target.value.replace(/\D/g, '')
+                                updateItemDiscount(item.product.id, Number(raw))
+                              }}
+                              onBlur={() => setEditingDiscount(null)}
+                              onKeyDown={(e) => { if (e.key === 'Enter') setEditingDiscount(null) }}
+                            />
+                            <button
+                              onClick={() => toggleItemDiscountType(item.product.id)}
+                              className="shrink-0 h-6 px-1.5 rounded-md bg-primary/10 text-primary text-[10px] font-black hover:bg-primary/20 transition-all"
+                              title="Chuyển đổi % / đ"
+                            >
+                              {item.discountType === 'percent' ? '%' : 'đ'}
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setEditingDiscount(item.product.id)}
+                            className="w-full text-right group/disc"
+                          >
+                            {itemDiscountAmt > 0 ? (
+                              <span className="text-xs font-bold text-rose-500">
+                                -{itemDiscountAmt.toLocaleString('vi-VN')}đ
+                                <span className="text-[9px] text-slate-400 ml-1">({item.discountValue}{item.discountType === 'percent' ? '%' : 'đ'})</span>
+                              </span>
+                            ) : (
+                              <span className="text-xs text-slate-300 group-hover/disc:text-primary transition-colors flex items-center justify-end gap-0.5">
+                                <span className="material-symbols-outlined text-[14px]">add_circle</span>
+                                Giảm
+                              </span>
+                            )}
+                          </button>
+                        )}
                       </td>
-                      <td className="px-4 py-4 text-right">
+                      <td className="px-3 py-3 text-right">
                         <span className="text-sm font-black text-slate-900 dark:text-white">
-                          {(item.product.price * item.quantity - item.discount).toLocaleString('vi-VN')}đ
+                          {lineTotal.toLocaleString('vi-VN')}đ
                         </span>
                       </td>
-                      <td className="px-4 py-4 text-right">
+                      <td className="px-2 py-3 text-right">
                         <button
                           onClick={() => removeFromCart(item.product.id)}
                           className="text-slate-300 hover:text-rose-500 transition-colors"
@@ -269,7 +456,8 @@ const POSPage = () => {
                         </button>
                       </td>
                     </tr>
-                  ))}
+                    )
+                  })}
                 </tbody>
               </table>
             )}
@@ -331,23 +519,88 @@ const POSPage = () => {
                 <span className="text-slate-400 font-bold">Tổng tiền hàng</span>
                 <span className="font-black text-slate-900 dark:text-white">{subtotal.toLocaleString('vi-VN')}đ</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400 font-bold">Giảm giá hóa đơn</span>
-                <span className="font-black text-rose-500">-{invoiceDiscount.toLocaleString('vi-VN')}đ</span>
-              </div>
+              {totalItemDiscount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-400 font-bold">Giảm giá sản phẩm</span>
+                  <span className="font-black text-rose-500">-{totalItemDiscount.toLocaleString('vi-VN')}đ</span>
+                </div>
+              )}
               <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-400 font-bold">Thuế VAT</span>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={vatRate}
-                    onChange={(e) => setVatRate(Number(e.target.value))}
-                    className="h-8 rounded-lg border-none bg-slate-50 dark:bg-slate-900 text-xs font-bold py-0 pr-8 focus:ring-2 focus:ring-primary/20"
+                <span className="text-slate-400 font-bold">Giảm giá hóa đơn</span>
+                <div className="flex items-center gap-1">
+                  <input
+                    className="w-20 text-right rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-xs font-bold focus:ring-2 focus:ring-primary/20 focus:outline-none"
+                    type="text"
+                    value={invoiceDiscountValue > 0 ? invoiceDiscountValue.toLocaleString('vi-VN') : ''}
+                    placeholder="0"
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/\D/g, '')
+                      const val = Number(raw)
+                      setInvoiceDiscountValue(invoiceDiscountType === 'percent' ? Math.min(100, val) : val)
+                    }}
+                  />
+                  <button
+                    onClick={() => {
+                      setInvoiceDiscountType(prev => prev === 'percent' ? 'fixed' : 'percent')
+                      setInvoiceDiscountValue(0)
+                    }}
+                    className="shrink-0 h-6 px-2 rounded-md bg-primary/10 text-primary text-[10px] font-black hover:bg-primary/20 transition-all"
+                    title="Chuyển đổi % / đ"
                   >
-                    <option value={0}>0%</option>
-                    <option value={5}>5%</option>
-                    <option value={10}>10%</option>
-                  </select>
-                  <span className="font-black text-slate-900 dark:text-white">{vatAmount.toLocaleString('vi-VN')}đ</span>
+                    {invoiceDiscountType === 'percent' ? '%' : 'đ'}
+                  </button>
+                  {invoiceDiscountAmount > 0 && (
+                    <span className="text-xs font-black text-rose-500 ml-1 whitespace-nowrap">-{invoiceDiscountAmount.toLocaleString('vi-VN')}đ</span>
+                  )}
+                </div>
+              </div>
+              <div className="text-sm space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 font-bold">Thuế VAT</span>
+                  <span className="font-black text-slate-900 dark:text-white">{vatAmount > 0 && '+'}{vatAmount.toLocaleString('vi-VN')}đ</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  {[0, 5, 8, 10].map((rate) => (
+                    <button
+                      key={rate}
+                      onClick={() => { setVatRate(rate); setCustomVat(false) }}
+                      className={`h-7 px-2.5 rounded-lg text-[11px] font-black transition-all ${
+                        vatRate === rate && !customVat
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'
+                      }`}
+                    >
+                      {rate}%
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCustomVat(!customVat)}
+                    className={`h-7 px-2 rounded-lg text-[11px] font-black transition-all flex items-center gap-0.5 ${
+                      customVat
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                    title="Nhập thuế suất tùy chỉnh"
+                  >
+                    <span className="material-symbols-outlined text-xs">edit</span>
+                  </button>
+                  {customVat && (
+                    <div className="flex items-center gap-1 ml-1">
+                      <input
+                        autoFocus
+                        className="w-12 text-right rounded-lg border border-primary/30 bg-white dark:bg-slate-900 px-2 py-1 text-xs font-bold focus:ring-2 focus:ring-primary/20 focus:outline-none"
+                        type="text"
+                        value={vatRate > 0 ? vatRate : ''}
+                        placeholder="0"
+                        onChange={(e) => {
+                          const raw = e.target.value.replace(/[^\d.]/g, '')
+                          const val = parseFloat(raw) || 0
+                          setVatRate(Math.min(100, Math.max(0, val)))
+                        }}
+                      />
+                      <span className="text-[10px] font-black text-slate-400">%</span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex justify-between items-end pt-3">

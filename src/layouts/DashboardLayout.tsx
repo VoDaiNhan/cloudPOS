@@ -1,12 +1,12 @@
-import { useState, type ReactNode } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useState, useRef, useEffect, useCallback, type ReactNode, type KeyboardEvent } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { mockUser } from '../mock/auth'
+import { MODAL_ROUTES } from '../router/modalRoutes'
 
 interface DashboardLayoutProps {
   children: ReactNode
   title?: string
   breadcrumb?: { label: string; path?: string }[]
-  actions?: ReactNode
 }
 
 const NavLink = ({
@@ -21,32 +21,111 @@ const NavLink = ({
   label: string
   active: boolean
   collapsed: boolean
-}) => (
-  <Link
-    to={to}
-    title={collapsed ? label : undefined}
-    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${
-      active
-        ? 'bg-primary text-white shadow-lg shadow-primary/20'
-        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
-    } ${collapsed ? 'justify-center' : ''}`}
-  >
-    <span className="material-symbols-outlined text-[22px] shrink-0">{icon}</span>
-    {!collapsed && (
-      <span className={`text-[14.5px] font-semibold whitespace-nowrap overflow-hidden ${active ? '' : 'group-hover:text-primary transition-colors'}`}>{label}</span>
-    )}
-  </Link>
-)
+}) => {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const isModal = MODAL_ROUTES.some((r: string) => to.startsWith(r))
+
+  const className = `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all group ${
+    active
+      ? 'bg-primary text-white shadow-lg shadow-primary/20'
+      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+  } ${collapsed ? 'justify-center' : ''}`
+
+  const content = (
+    <>
+      <span className="material-symbols-outlined text-[22px] shrink-0">{icon}</span>
+      {!collapsed && (
+        <span className={`text-[14.5px] font-semibold whitespace-nowrap overflow-hidden ${active ? '' : 'group-hover:text-primary transition-colors'}`}>{label}</span>
+      )}
+    </>
+  )
+
+  if (isModal) {
+    return (
+      <button
+        title={collapsed ? label : undefined}
+        className={`${className} w-full text-left`}
+        onClick={() => navigate(to, { state: { background: location } })}
+      >
+        {content}
+      </button>
+    )
+  }
+
+  return (
+    <Link
+      to={to}
+      title={collapsed ? label : undefined}
+      className={className}
+    >
+      {content}
+    </Link>
+  )
+}
+
+// Persist sidebar state across re-mounts (page navigations)
+let savedScrollTop = 0
+let savedCollapsed = false
 
 export const DashboardLayout = ({
   children,
   title,
   breadcrumb,
-  actions,
 }: DashboardLayoutProps) => {
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   const user = mockUser
-  const [collapsed, setCollapsed] = useState(false)
+  const [collapsed, setCollapsed] = useState(savedCollapsed)
+  const [globalSearch, setGlobalSearch] = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
+  const navRef = useRef<HTMLElement>(null)
+
+  // F2 focuses the global search input
+  useEffect(() => {
+    const handleF2 = (e: KeyboardEvent) => {
+      if (e.key === 'F2') {
+        e.preventDefault()
+        searchRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', handleF2)
+    return () => window.removeEventListener('keydown', handleF2)
+  }, [])
+
+  const handleGlobalSearch = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && globalSearch.trim()) {
+      navigate(`/products?q=${encodeURIComponent(globalSearch.trim())}`)
+      setGlobalSearch('')
+      searchRef.current?.blur()
+    }
+    if (e.key === 'Escape') {
+      setGlobalSearch('')
+      searchRef.current?.blur()
+    }
+  }
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    if (navRef.current) {
+      navRef.current.scrollTop = savedScrollTop
+    }
+  }, [])
+
+  // Save scroll position on scroll
+  const handleNavScroll = useCallback(() => {
+    if (navRef.current) {
+      savedScrollTop = navRef.current.scrollTop
+    }
+  }, [])
+
+  // Persist collapsed state
+  const toggleCollapsed = useCallback(() => {
+    setCollapsed(prev => {
+      savedCollapsed = !prev
+      return !prev
+    })
+  }, [])
 
   const menuGroups = [
     {
@@ -58,12 +137,19 @@ export const DashboardLayout = ({
     {
       title: 'Giao dịch',
       items: [
-        { to: '/pos', icon: 'point_of_sale', label: 'Bán lẻ (POS)' },
-        { to: '/open-shift', icon: 'login', label: 'Mở ca' },
+        { to: '/pos', icon: 'point_of_sale', label: 'Bán hàng (POS)' },
+        { to: '/open-shift', icon: 'storefront', label: 'Mở ca' },
         { to: '/close-shift', icon: 'logout', label: 'Đóng ca' },
-        { to: '/import-order', icon: 'input', label: 'Nhập hàng' },
-        { to: '/customer-return', icon: 'keyboard_return', label: 'Trả hàng khách' },
-        { to: '/supplier-return', icon: 'assignment_return', label: 'Trả hàng nhập' },
+        { to: '/end-shift-report', icon: 'receipt_long', label: 'Báo cáo ca' },
+      ],
+    },
+    {
+      title: 'Sổ quỹ',
+      items: [
+        { to: '/cashbook', icon: 'account_balance_wallet', label: 'Sổ quỹ' },
+        { to: '/receipt-voucher', icon: 'request_quote', label: 'Phiếu thu' },
+        { to: '/payment-voucher', icon: 'payments', label: 'Phiếu chi' },
+        { to: '/debt', icon: 'account_balance', label: 'Công nợ' },
       ],
     },
     {
@@ -71,36 +157,28 @@ export const DashboardLayout = ({
       items: [
         { to: '/products', icon: 'inventory_2', label: 'Sản phẩm' },
         { to: '/categories', icon: 'category', label: 'Danh mục' },
-        { to: '/stock-audit', icon: 'fact_check', label: 'Kiểm kho' },
+        { to: '/import-order', icon: 'local_shipping', label: 'Nhập kho' },
+        { to: '/supplier-return', icon: 'assignment_return', label: 'Trả hàng NCC' },
         { to: '/inventory', icon: 'warehouse', label: 'Tồn kho' },
-        { to: '/stock-cancellation', icon: 'delete_sweep', label: 'Hủy hàng' },
-        { to: '/stock-history', icon: 'history', label: 'Lịch sử kho' },
-      ],
-    },
-    {
-      title: 'Sổ quỹ',
-      items: [
-        { to: '/cashbook', icon: 'account_balance_wallet', label: 'Sổ quỹ' },
-        { to: '/payment-voucher', icon: 'payments', label: 'Phiếu chi' },
-        { to: '/receipt-voucher', icon: 'receipt_long', label: 'Phiếu thu' },
-        { to: '/debt', icon: 'account_balance', label: 'Công nợ' },
+        { to: '/stock-audit', icon: 'rule_folder', label: 'Kiểm kho' },
+        { to: '/stock-cancellation', icon: 'remove_shopping_cart', label: 'Hủy hàng' },
+        { to: '/expiry', icon: 'history_toggle_off', label: 'Hạn sử dụng' },
       ],
     },
     {
       title: 'Đối tác',
       items: [
         { to: '/customers', icon: 'person', label: 'Khách hàng' },
+        { to: '/customer-return', icon: 'keyboard_return', label: 'Đổi trả KH' },
         { to: '/suppliers', icon: 'local_shipping', label: 'Nhà cung cấp' },
       ],
     },
     {
       title: 'Hệ thống',
       items: [
-        { to: '/dashboard', icon: 'bar_chart', label: 'Báo cáo' },
-        { to: '/end-shift-report', icon: 'summarize', label: 'Báo cáo ca' },
-        { to: '/onboarding', icon: 'rocket_launch', label: 'Khởi tạo' },
-        { to: '/checkout', icon: 'credit_score', label: 'Gói dịch vụ' },
         { to: '/settings', icon: 'settings', label: 'Cài đặt' },
+        { to: '/account', icon: 'manage_accounts', label: 'Tài khoản & Gói' },
+        { to: '/staff-permissions', icon: 'group', label: 'Phân quyền nhân viên' },
       ],
     },
   ]
@@ -109,7 +187,7 @@ export const DashboardLayout = ({
     <div className="flex h-screen bg-background overflow-hidden selection:bg-primary/20 selection:text-primary">
       {/* Sidebar */}
       <aside
-        className={`${collapsed ? 'w-[72px]' : 'w-[280px]'} bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col z-50 transition-all duration-300 ease-in-out shrink-0`}
+        className={`${collapsed ? 'w-[72px]' : 'w-[240px]'} bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col z-50 transition-all duration-300 ease-in-out shrink-0`}
       >
         <div className={`${collapsed ? 'p-3 flex justify-center' : 'p-6'} transition-all duration-300`}>
           <Link to="/" className="flex items-center gap-3 text-primary">
@@ -122,7 +200,11 @@ export const DashboardLayout = ({
           </Link>
         </div>
 
-        <nav className={`flex-1 ${collapsed ? 'px-2' : 'px-4'} py-4 space-y-1.5 overflow-y-auto overflow-x-hidden scrollbar-hide transition-all duration-300`}>
+        <nav
+          ref={navRef}
+          onScroll={handleNavScroll}
+          className={`flex-1 ${collapsed ? 'px-2' : 'px-4'} py-4 space-y-1.5 overflow-y-auto overflow-x-hidden scrollbar-hide transition-all duration-300`}
+        >
           {!collapsed && (
             <div className="px-3 mb-4">
               <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest opacity-60">QUẢN LÝ CỬA HÀNG</h3>
@@ -152,7 +234,7 @@ export const DashboardLayout = ({
         {/* Toggle Button */}
         <div className={`${collapsed ? 'px-2' : 'px-4'} py-2 transition-all duration-300`}>
           <button
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={toggleCollapsed}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-primary hover:bg-slate-50 dark:hover:bg-slate-800 transition-all group ${collapsed ? 'justify-center' : ''}`}
             title={collapsed ? 'Mở rộng sidebar' : 'Thu gọn sidebar'}
           >
@@ -203,27 +285,27 @@ export const DashboardLayout = ({
              {title && <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{title}</h2>}
           </div>
 
-          <div className="flex items-center gap-4">
-            {actions ? actions : (
-              <>
-                <div className="relative group">
-                  <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-all text-xl">search</span>
-                  <input 
-                    className="bg-slate-100 dark:bg-slate-900 border-none rounded-xl pl-11 pr-4 h-11 text-sm focus:ring-2 focus:ring-primary/20 transition-all w-80 font-medium" 
-                    placeholder="Tìm kiếm nhanh sản phẩm (F2)..." 
-                    type="text"
-                  />
-                </div>
-                <div className="flex items-center gap-2 pr-1 ml-2">
-                   <button className="h-11 w-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-primary hover:border-primary transition-all shadow-sm flex items-center justify-center">
-                     <span className="material-symbols-outlined">notifications</span>
-                   </button>
-                   <button className="h-11 w-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-primary hover:border-primary transition-all shadow-sm flex items-center justify-center">
-                     <span className="material-symbols-outlined">help</span>
-                   </button>
-                </div>
-              </>
-            )}
+           <div className="flex items-center gap-4">
+             <div className="relative group">
+               <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-all text-xl">search</span>
+               <input
+                 ref={searchRef}
+                 value={globalSearch}
+                 onChange={(e) => setGlobalSearch(e.target.value)}
+                 onKeyDown={handleGlobalSearch}
+                 className="bg-slate-100 dark:bg-slate-900 border-none rounded-xl pl-11 pr-4 h-11 text-sm focus:ring-2 focus:ring-primary/20 transition-all w-80 font-medium"
+                 placeholder="Tìm kiếm nhanh sản phẩm (F2)..."
+                 type="text"
+               />
+             </div>
+             <div className="flex items-center gap-2 pr-1 ml-2">
+                <button className="h-11 w-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-primary hover:border-primary transition-all shadow-sm flex items-center justify-center">
+                  <span className="material-symbols-outlined">notifications</span>
+                </button>
+                <button className="h-11 w-11 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-primary hover:border-primary transition-all shadow-sm flex items-center justify-center">
+                  <span className="material-symbols-outlined">help</span>
+                </button>
+             </div>
           </div>
         </header>
 

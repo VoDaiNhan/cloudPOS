@@ -32,7 +32,7 @@ const SupplierReturnPage = () => {
   }
 
   return (
-    <DashboardLayout title="Tạo phiếu trả hàng nhà cung cấp" breadcrumb={[{ label: 'Quản lý kho' }, { label: 'Trả hàng nhà cung cấp' }]}>
+    <DashboardLayout title="Tạo phiếu trả hàng nhà cung cấp" breadcrumb={[{ label: 'Hàng hóa' }, { label: 'Trả hàng NCC' }]}>
       <div className="grid grid-cols-12 gap-8 pb-12 animate-fade-in">
         {/* Left Column: Form & Product List */}
         <div className="col-span-12 lg:col-span-8 space-y-6">

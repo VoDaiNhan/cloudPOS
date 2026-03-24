@@ -13,7 +13,7 @@ const DashboardPage = () => {
   const stats = mockDashboardStats
 
   return (
-    <DashboardLayout title="Tổng quan" breadcrumb={[{ label: 'Báo cáo' }]}>
+    <DashboardLayout title="Tổng quan" breadcrumb={[{ label: 'Tổng quan' }]}>
       <div className="flex flex-col gap-8 animate-fade-in pb-12">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
