@@ -3,6 +3,7 @@ import { posProducts, posCategories } from '../mock/pos'
 import type { POSProduct, CartItem, PaymentMethod, DiscountType } from '../types/posProduct'
 import VoiceOverlay from '../components/VoiceOverlay'
 import { DashboardLayout } from '../layouts/DashboardLayout'
+import { SmartDiscountInput } from '../components/SmartDiscountInput'
 
 // ── Product Card ──────────────────────────────────
 const ProductCard = ({ product, onAdd }: { product: POSProduct; onAdd: (p: POSProduct) => void }) => (
@@ -34,7 +35,6 @@ const POSPage = () => {
   const [cashReceived, setCashReceived] = useState(0)
   const [customerSearch, setCustomerSearch] = useState('')
   const [voiceOpen, setVoiceOpen] = useState(false)
-  const [editingDiscount, setEditingDiscount] = useState<string | null>(null)
   const [customVat, setCustomVat] = useState(false)
 
   // ── Refs ───────────────────────────────────────
@@ -172,16 +172,6 @@ const POSPage = () => {
               discountValue: type === 'percent' ? Math.min(100, Math.max(0, value)) : Math.max(0, value),
               discountType: type ?? item.discountType,
             }
-          : item
-      )
-    )
-  }, [])
-
-  const toggleItemDiscountType = useCallback((productId: string) => {
-    setCart((prev) =>
-      prev.map((item) =>
-        item.product.id === productId
-          ? { ...item, discountType: item.discountType === 'percent' ? 'fixed' : 'percent', discountValue: 0 }
           : item
       )
     )
@@ -400,47 +390,17 @@ const POSPage = () => {
                         </div>
                       </td>
                       <td className="px-2 py-3">
-                        {editingDiscount === item.product.id ? (
-                          <div className="flex items-center gap-1 justify-end">
-                            <input
-                              autoFocus
-                              className="w-16 text-right rounded-lg border border-primary/30 bg-white dark:bg-slate-900 px-2 py-1 text-xs font-bold focus:ring-2 focus:ring-primary/20 focus:outline-none"
-                              type="text"
-                              value={item.discountValue > 0 ? item.discountValue : ''}
-                              placeholder="0"
-                              onChange={(e) => {
-                                const raw = e.target.value.replace(/\D/g, '')
-                                updateItemDiscount(item.product.id, Number(raw))
-                              }}
-                              onBlur={() => setEditingDiscount(null)}
-                              onKeyDown={(e) => { if (e.key === 'Enter') setEditingDiscount(null) }}
-                            />
-                            <button
-                              onClick={() => toggleItemDiscountType(item.product.id)}
-                              className="shrink-0 h-6 px-1.5 rounded-md bg-primary/10 text-primary text-[10px] font-black hover:bg-primary/20 transition-all"
-                              title="Chuyển đổi % / đ"
-                            >
-                              {item.discountType === 'percent' ? '%' : 'đ'}
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setEditingDiscount(item.product.id)}
-                            className="w-full text-right group/disc"
-                          >
-                            {itemDiscountAmt > 0 ? (
-                              <span className="text-xs font-bold text-rose-500">
-                                -{itemDiscountAmt.toLocaleString('vi-VN')}đ
-                                <span className="text-[9px] text-slate-400 ml-1">({item.discountValue}{item.discountType === 'percent' ? '%' : 'đ'})</span>
-                              </span>
-                            ) : (
-                              <span className="text-xs text-slate-300 group-hover/disc:text-primary transition-colors flex items-center justify-end gap-0.5">
-                                <span className="material-symbols-outlined text-[14px]">add_circle</span>
-                                Giảm
-                              </span>
-                            )}
-                          </button>
-                        )}
+                        <div className="relative pb-5">
+                          <SmartDiscountInput
+                            value={item.discountValue}
+                            type={item.discountType}
+                            maxAmount={item.product.price * item.quantity}
+                            onApply={(value, type) => updateItemDiscount(item.product.id, value, type)}
+                            placeholder="Giảm"
+                            className="w-full"
+                            showTypeIndicator={true}
+                          />
+                        </div>
                       </td>
                       <td className="px-3 py-3 text-right">
                         <span className="text-sm font-black text-slate-900 dark:text-white">
@@ -465,6 +425,48 @@ const POSPage = () => {
 
           {/* Shortcut Hints */}
           <div className="border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/20 p-4 shrink-0">
+            {/* Discount Summary */}
+            {(totalItemDiscount > 0 || invoiceDiscountAmount > 0) && (
+              <div className="mb-3 pb-3 border-b border-slate-200 dark:border-slate-700">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="material-symbols-outlined text-xs text-primary">savings</span>
+                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                    Tổng quan giảm giá
+                  </span>
+                </div>
+                <div className="space-y-1.5">
+                  {totalItemDiscount > 0 && (
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <span className="size-1.5 rounded-full bg-rose-500"></span>
+                        <span className="text-slate-600 dark:text-slate-400 font-medium">
+                          Giảm giá {cart.filter(item => item.discountValue > 0).length} sản phẩm
+                        </span>
+                      </div>
+                      <span className="font-black text-rose-600">-{totalItemDiscount.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                  )}
+                  {invoiceDiscountAmount > 0 && (
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5">
+                        <span className="size-1.5 rounded-full bg-amber-500"></span>
+                        <span className="text-slate-600 dark:text-slate-400 font-medium">
+                          Giảm giá hóa đơn ({invoiceDiscountValue}{invoiceDiscountType === 'percent' ? '%' : 'đ'})
+                        </span>
+                      </div>
+                      <span className="font-black text-amber-600">-{invoiceDiscountAmount.toLocaleString('vi-VN')}đ</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between text-xs pt-1.5 border-t border-slate-200 dark:border-slate-700">
+                    <span className="text-slate-700 dark:text-slate-300 font-bold">Tổng tiết kiệm</span>
+                    <span className="font-black text-emerald-600 text-sm">
+                      -{(totalItemDiscount + invoiceDiscountAmount).toLocaleString('vi-VN')}đ
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             <div className="flex items-center gap-2 text-slate-400">
               <span className="material-symbols-outlined text-sm text-primary">info</span>
               <p className="text-[10px] font-bold uppercase tracking-widest">
@@ -520,39 +522,42 @@ const POSPage = () => {
                 <span className="font-black text-slate-900 dark:text-white">{subtotal.toLocaleString('vi-VN')}đ</span>
               </div>
               {totalItemDiscount > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-slate-400 font-bold">Giảm giá sản phẩm</span>
-                  <span className="font-black text-rose-500">-{totalItemDiscount.toLocaleString('vi-VN')}đ</span>
+                <div className="flex justify-between items-center text-sm bg-rose-50 dark:bg-rose-900/10 -mx-4 px-4 py-2 border-y border-rose-100 dark:border-rose-900/30">
+                  <div className="flex items-center gap-2">
+                    <span className="material-symbols-outlined text-rose-500 text-sm">sell</span>
+                    <span className="text-rose-700 dark:text-rose-300 font-bold">Giảm giá sản phẩm</span>
+                  </div>
+                  <span className="font-black text-rose-600">-{totalItemDiscount.toLocaleString('vi-VN')}đ</span>
                 </div>
               )}
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-slate-400 font-bold">Giảm giá hóa đơn</span>
-                <div className="flex items-center gap-1">
-                  <input
-                    className="w-20 text-right rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-2 py-1 text-xs font-bold focus:ring-2 focus:ring-primary/20 focus:outline-none"
-                    type="text"
-                    value={invoiceDiscountValue > 0 ? invoiceDiscountValue.toLocaleString('vi-VN') : ''}
-                    placeholder="0"
-                    onChange={(e) => {
-                      const raw = e.target.value.replace(/\D/g, '')
-                      const val = Number(raw)
-                      setInvoiceDiscountValue(invoiceDiscountType === 'percent' ? Math.min(100, val) : val)
-                    }}
-                  />
-                  <button
-                    onClick={() => {
-                      setInvoiceDiscountType(prev => prev === 'percent' ? 'fixed' : 'percent')
-                      setInvoiceDiscountValue(0)
-                    }}
-                    className="shrink-0 h-6 px-2 rounded-md bg-primary/10 text-primary text-[10px] font-black hover:bg-primary/20 transition-all"
-                    title="Chuyển đổi % / đ"
-                  >
-                    {invoiceDiscountType === 'percent' ? '%' : 'đ'}
-                  </button>
-                  {invoiceDiscountAmount > 0 && (
-                    <span className="text-xs font-black text-rose-500 ml-1 whitespace-nowrap">-{invoiceDiscountAmount.toLocaleString('vi-VN')}đ</span>
-                  )}
+              
+              {/* Invoice Discount Section - Highlighted */}
+              <div className="bg-amber-50 dark:bg-amber-900/10 -mx-4 px-4 py-3 border-y border-amber-100 dark:border-amber-900/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="material-symbols-outlined text-amber-600 text-sm">receipt_long</span>
+                  <span className="text-[10px] font-black text-amber-700 dark:text-amber-300 uppercase tracking-widest">
+                    Giảm giá toàn hóa đơn
+                  </span>
                 </div>
+                <SmartDiscountInput
+                  value={invoiceDiscountValue}
+                  type={invoiceDiscountType}
+                  maxAmount={afterItemDiscount}
+                  onApply={(value, type) => {
+                    setInvoiceDiscountValue(value)
+                    setInvoiceDiscountType(type)
+                  }}
+                  placeholder="Nhập giảm giá hóa đơn"
+                  className="w-full"
+                  showTypeIndicator={true}
+                />
+                {invoiceDiscountAmount > 0 && (
+                  <div className="mt-2 text-right">
+                    <span className="text-xs font-bold text-amber-600">
+                      Tiết kiệm: {invoiceDiscountAmount.toLocaleString('vi-VN')}đ
+                    </span>
+                  </div>
+                )}
               </div>
               <div className="text-sm space-y-2">
                 <div className="flex justify-between items-center">

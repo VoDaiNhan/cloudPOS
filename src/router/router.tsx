@@ -39,6 +39,10 @@ import StaffPermissionsPage from '../pages/StaffPermissionsPage'
 import SystemSettingsPage from '../pages/SystemSettingsPage'
 import PaymentSuccessPage from '../pages/PaymentSuccessPage'
 import NotFoundPage from '../pages/NotFoundPage'
+import SmartDiscountDemo from '../pages/SmartDiscountDemo'
+import DiscountComparisonDemo from '../pages/DiscountComparisonDemo'
+import UnitManagementDemo from '../pages/UnitManagementDemo'
+import PricingManagementDemo from '../pages/PricingManagementDemo'
 
 // Modal routes are defined in modalRoutes.ts
 // They are rendered as overlays using background location pattern
@@ -85,6 +89,10 @@ const mainRoutes: RouteObject[] = [
   { path: '/staff-permissions', element: <StaffPermissionsPage /> },
   { path: '/settings', element: <SystemSettingsPage /> },
   { path: '/checkout/success', element: <PaymentSuccessPage /> },
+  { path: '/demo/smart-discount', element: <SmartDiscountDemo /> },
+  { path: '/demo/discount-comparison', element: <DiscountComparisonDemo /> },
+  { path: '/demo/unit-management', element: <UnitManagementDemo /> },
+  { path: '/demo/pricing-management', element: <PricingManagementDemo /> },
   { path: '/reports', element: <Navigate to="/dashboard" replace /> },
   { path: '*', element: <NotFoundPage /> },
 ]
