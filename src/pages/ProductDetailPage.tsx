@@ -2,23 +2,27 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '../components/Button'
 import type { Product, UnitConversion } from '../types/product'
-import { mockProducts } from '../mock/product'
+import { useProductStore } from '../store/productStore'
 
 const ProductDetailPage = () => {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const isEdit = !!id
+  const { products, saveProduct } = useProductStore()
 
   // Find product if edit
-  const existingProduct = isEdit ? mockProducts.find(p => p.id === id) : null
+  const existingProduct = isEdit ? products.find(p => p.id === id) : null
 
   const [formData, setFormData] = useState<Partial<Product>>(
     existingProduct || {
+      code: '',
       name: '',
       barcode: '',
       categoryName: '',
       price: 0,
       costPrice: 0,
+      stock: 0,
+      status: 'active',
       baseUnit: 'Lon',
       conversions: [],
       tax: 0,
@@ -26,11 +30,36 @@ const ProductDetailPage = () => {
   )
 
   const [conversions, setConversions] = useState<UnitConversion[]>(formData.conversions || [])
+  const [linkedProductId, setLinkedProductId] = useState(existingProduct?.id || '')
   const [isLoading, setIsLoading] = useState(false)
+
+  const handleSelectExistingProduct = (productId: string) => {
+    setLinkedProductId(productId)
+    if (!productId) {
+      setFormData((prev) => ({
+        ...prev,
+        code: '',
+        name: '',
+        barcode: '',
+      }))
+      setConversions([])
+      return
+    }
+
+    const selected = products.find((product) => product.id === productId)
+    if (!selected) return
+
+    setFormData({ ...selected })
+    setConversions(selected.conversions || [])
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    const numericFields: Array<keyof Product> = ['price', 'costPrice', 'tax', 'stock']
+    setFormData(prev => ({
+      ...prev,
+      [name]: numericFields.includes(name as keyof Product) ? Number(value) : value,
+    }))
   }
 
   const addConversion = () => {
@@ -50,7 +79,17 @@ const ProductDetailPage = () => {
     setIsLoading(true)
     // Simulate save
     await new Promise(resolve => setTimeout(resolve, 1000))
-    console.log('Saved product:', { ...formData, conversions })
+    const payload: Partial<Product> = {
+      ...formData,
+      id: linkedProductId || existingProduct?.id,
+      conversions,
+      stock: Number(formData.stock ?? existingProduct?.stock ?? 0),
+      price: Number(formData.price ?? existingProduct?.price ?? 0),
+      costPrice: Number(formData.costPrice ?? existingProduct?.costPrice ?? 0),
+      tax: Number(formData.tax ?? existingProduct?.tax ?? 0),
+      status: (formData.status ?? existingProduct?.status ?? 'active') as Product['status'],
+    }
+    saveProduct(payload)
     setIsLoading(false)
     navigate('/products')
   }
@@ -108,6 +147,26 @@ const ProductDetailPage = () => {
                 <span className="material-symbols-outlined text-primary text-2xl">info</span>
                 Thông tin cơ bản
               </h2>
+              {!isEdit && (
+                <div className="mb-8 p-5 rounded-2xl bg-primary/5 border border-primary/15 space-y-3">
+                  <label className="text-xs font-black text-primary uppercase tracking-widest ml-1">Chọn nhanh từ tồn kho</label>
+                  <select
+                    value={linkedProductId}
+                    onChange={(e) => handleSelectExistingProduct(e.target.value)}
+                    className="w-full h-12 px-4 rounded-xl border-none bg-white dark:bg-slate-900 text-sm font-bold focus:ring-2 focus:ring-primary/20"
+                  >
+                    <option value="">Nhập mới hoàn toàn</option>
+                    {products.map((product) => (
+                      <option key={product.id} value={product.id}>
+                        {product.code} - {product.name}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest ml-1">
+                    Chọn sản phẩm có sẵn để tự điền dữ liệu và cập nhật trực tiếp tồn kho.
+                  </p>
+                </div>
+              )}
               <div className="grid grid-cols-1 gap-8">
                 <div className="space-y-3">
                   <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Tên sản phẩm *</label>
@@ -121,6 +180,18 @@ const ProductDetailPage = () => {
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-3">
+                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Mã sản phẩm (SKU)</label>
+                    <input
+                      name="code"
+                      value={formData.code || ''}
+                      onChange={handleInputChange}
+                      className="w-full h-14 px-5 rounded-2xl border-none bg-slate-50 dark:bg-slate-800/50 focus:ring-2 focus:ring-primary/20 outline-none transition-all font-mono font-bold uppercase text-slate-900 dark:text-white placeholder:text-slate-400"
+                      placeholder="Ví dụ: SP006"
+                      type="text"
+                    />
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1">Để trống hệ thống sẽ tự tạo mã</p>
+                  </div>
                   <div className="space-y-3">
                     <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Mã vạch (Barcode)</label>
                     <div className="relative group">
@@ -146,7 +217,7 @@ const ProductDetailPage = () => {
                         onChange={handleInputChange}
                         className="w-full h-14 px-5 rounded-2xl border-none bg-slate-50 dark:bg-slate-800/50 focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none cursor-pointer font-bold text-slate-900 dark:text-white"
                       >
-                        <option value="">Chọn khách hàng</option>
+                        <option value="">Chọn nhóm hàng</option>
                         <option value="Nước giải khát">Nước giải khát</option>
                         <option value="Bánh kẹo">Bánh kẹo</option>
                         <option value="Đồ uống">Đồ uống</option>
@@ -277,6 +348,44 @@ const ProductDetailPage = () => {
                       type="number"
                     />
                     <span className="absolute right-5 top-4 text-primary opacity-50 font-bold">₫</span>
+                  </div>
+                </div>
+                <div className="space-y-5 pt-2">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Tồn đầu kỳ</label>
+                  <div className="relative group">
+                    <input
+                      name="stock"
+                      value={formData.stock ?? 0}
+                      onChange={handleInputChange}
+                      className="w-full h-14 px-5 rounded-2xl border-none bg-slate-50 dark:bg-slate-800/50 focus:ring-2 focus:ring-primary/20 outline-none transition-all text-right font-black pr-20 text-slate-900 dark:text-white"
+                      placeholder="0"
+                      type="number"
+                      min={0}
+                    />
+                    <span className="absolute right-5 top-4 text-slate-400 font-bold">{formData.baseUnit || 'đv'}</span>
+                  </div>
+                </div>
+                <div className="space-y-5 pt-2">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Trạng thái kinh doanh</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { key: 'active', label: 'Đang kinh doanh' },
+                      { key: 'inactive', label: 'Tạm ngưng' },
+                    ].map((statusOption) => (
+                      <label key={statusOption.key} className="cursor-pointer group">
+                        <input
+                          type="radio"
+                          name="status"
+                          value={statusOption.key}
+                          checked={(formData.status || 'active') === statusOption.key}
+                          onChange={() => setFormData(prev => ({ ...prev, status: statusOption.key as Product['status'] }))}
+                          className="peer hidden"
+                        />
+                        <div className="w-full text-center py-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary peer-checked:shadow-lg peer-checked:shadow-primary/20 transition-all text-sm font-black text-slate-500 group-hover:border-primary/30">
+                          {statusOption.label}
+                        </div>
+                      </label>
+                    ))}
                   </div>
                 </div>
                 <div className="space-y-5 pt-2">

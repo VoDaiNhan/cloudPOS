@@ -1,18 +1,27 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
-import { mockInventory } from '../mock/inventory'
 import type { InventoryStatus } from '../types/inventory'
 import { exportToExcel } from '../utils/exportUtils'
+import { useProductStore } from '../store/productStore'
 
 const InventoryPage = () => {
+  const { inventoryItems } = useProductStore()
   const [filter, setFilter] = useState<'all' | 'low' | 'out'>('all')
   const [category, setCategory] = useState('Tất cả')
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 6
+
+  const totalItems = inventoryItems.length
+  const totalStock = inventoryItems.reduce((sum, item) => sum + item.stockLevel, 0)
+  const totalValue = inventoryItems.reduce((sum, item) => sum + item.stockValue, 0)
+  const expiringCount = inventoryItems.filter((item) => item.expiringQuantity > 0).length
+  const categories = Array.from(new Set(inventoryItems.map((item) => item.category)))
 
   const stats = [
-    { label: 'Tổng mặt hàng', value: '1,250', icon: 'category', color: 'text-primary', trend: '+12 mặt hàng mới', trendColor: 'text-emerald-600' },
-    { label: 'Tổng số lượng tồn', value: '45,800', icon: 'inventory', color: 'text-primary', subtext: 'Đơn vị: Sản phẩm' },
-    { label: 'Tổng giá trị tồn', value: '2,450,000,000', icon: 'account_balance_wallet', color: 'text-primary', subtext: 'VNĐ' },
-    { label: 'Sản phẩm tồn thấp', value: '42', icon: 'warning', color: 'text-rose-500', subtext: 'Cần nhập hàng gấp', subtextColor: 'text-rose-500', ring: 'ring-2 ring-rose-500/20' },
+    { label: 'Tổng mặt hàng', value: totalItems.toLocaleString('vi-VN'), icon: 'category', color: 'text-primary', trend: 'Dữ liệu realtime', trendColor: 'text-emerald-600' },
+    { label: 'Tổng số lượng tồn', value: totalStock.toLocaleString('vi-VN'), icon: 'inventory', color: 'text-primary', subtext: 'Đơn vị: Sản phẩm' },
+    { label: 'Tổng giá trị tồn', value: totalValue.toLocaleString('vi-VN'), icon: 'account_balance_wallet', color: 'text-primary', subtext: 'VNĐ' },
+    { label: 'Sản phẩm cận hạn', value: expiringCount.toLocaleString('vi-VN'), icon: 'schedule', color: 'text-amber-500', subtext: 'Ưu tiên xuất theo FEFO', subtextColor: 'text-amber-600', ring: 'ring-2 ring-amber-500/20' },
   ]
 
   const getStatusBadge = (status: InventoryStatus) => {
@@ -23,16 +32,53 @@ const InventoryPage = () => {
         return <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-rose-50 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400 italic">Tồn thấp</span>
       case 'under_limit':
         return <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">Dưới định mức</span>
+      case 'expiring':
+        return <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-50 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">Cận hạn</span>
       default:
         return null
     }
   }
 
-  const filteredInventory = mockInventory.filter(item => {
-    if (filter === 'low') return item.status === 'low'
-    if (filter === 'out') return item.stockLevel === 0
-    return true
+  const filteredInventory = inventoryItems.filter(item => {
+    const byStatus =
+      filter === 'low'
+        ? item.status === 'low' || item.status === 'under_limit'
+        : filter === 'out'
+          ? item.stockLevel === 0
+          : true
+
+    const byCategory = category === 'Tất cả' ? true : item.category === category
+    return byStatus && byCategory
   })
+
+  const totalPages = Math.max(1, Math.ceil(filteredInventory.length / pageSize))
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [filter, category])
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
+
+  const paginatedInventory = useMemo(() => {
+    const start = (currentPage - 1) * pageSize
+    return filteredInventory.slice(start, start + pageSize)
+  }, [currentPage, filteredInventory])
+
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1)
+
+    const start = Math.max(1, currentPage - 2)
+    const end = Math.min(totalPages, start + 4)
+    const adjustedStart = Math.max(1, end - 4)
+    return Array.from({ length: end - adjustedStart + 1 }, (_, i) => adjustedStart + i)
+  }, [currentPage, totalPages])
+
+  const startIndex = filteredInventory.length === 0 ? 0 : (currentPage - 1) * pageSize + 1
+  const endIndex = Math.min(currentPage * pageSize, filteredInventory.length)
 
   return (
     <DashboardLayout title="Quản lý Tồn kho" breadcrumb={[{ label: 'Hàng hóa' }, { label: 'Tồn kho' }]}>
@@ -109,10 +155,10 @@ const InventoryPage = () => {
                   onChange={(e) => setCategory(e.target.value)}
                   className="bg-slate-50 dark:bg-slate-900 border-none rounded-2xl text-[11px] font-black uppercase tracking-widest pl-10 pr-10 py-2.5 focus:ring-2 focus:ring-primary/20 appearance-none"
                 >
-                  <option>Nhóm hàng: Tất cả</option>
-                  <option>Điện thoại</option>
-                  <option>Phụ kiện</option>
-                  <option>Laptop</option>
+                  <option value="Tất cả">Tất cả</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -132,14 +178,38 @@ const InventoryPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50 dark:divide-slate-900">
-                {filteredInventory.map((item) => (
+                {paginatedInventory.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-900/30 transition-all group">
                     <td className="px-8 py-6 text-xs font-mono font-bold text-slate-500 tracking-wider">
                       {item.sku}
                     </td>
                     <td className="px-6 py-6">
-                      <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors">{item.name}</div>
-                      <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 opacity-60">Danh mục: {item.category}</div>
+                      <div className="flex items-start gap-3">
+                        <div className="size-10 rounded-xl bg-slate-100 border border-slate-200 dark:bg-slate-900 dark:border-slate-800 overflow-hidden shrink-0">
+                          <img
+                            src={item.image || 'https://images.unsplash.com/photo-1560393464-5c69a73c5770?w=100&h=100&fit=crop'}
+                            alt={item.name}
+                            className="size-full object-cover"
+                            loading="lazy"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate">{item.name}</div>
+                          <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1 opacity-60">Danh mục: {item.category}</div>
+                          <div className="mt-2 flex flex-wrap gap-2 text-[10px] font-black uppercase tracking-widest">
+                            {item.issuePolicy === 'FEFO' && (
+                              <span className="inline-flex rounded-full px-2.5 py-1 bg-primary/10 text-primary">
+                                FEFO
+                              </span>
+                            )}
+                            {item.nextExpiryDate && (
+                              <span className="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-amber-600">
+                                HSD gần nhất: {item.nextExpiryDate}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </td>
                     <td className="px-6 py-6 text-xs font-bold text-slate-500">
                       {item.unit}
@@ -161,15 +231,35 @@ const InventoryPage = () => {
 
           {/* Pagination */}
           <div className="px-8 py-6 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between mt-auto">
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Hiển thị 1 - 5 của 1,250 sản phẩm</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+              Hiển thị {startIndex}-{endIndex} / {filteredInventory.length} sản phẩm
+            </p>
             <div className="flex gap-2">
-              <button className="size-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className="size-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              >
                 <span className="material-symbols-outlined text-lg">chevron_left</span>
               </button>
-              <button className="size-8 flex items-center justify-center rounded-lg bg-primary text-white text-[10px] font-black shadow-md shadow-primary/20">1</button>
-              <button className="size-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all text-[10px] font-black">2</button>
-              <button className="size-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all text-[10px] font-black">3</button>
-              <button className="size-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all">
+              {pageNumbers.map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`size-8 flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${
+                    page === currentPage
+                      ? 'bg-primary text-white shadow-md shadow-primary/20'
+                      : 'border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900'
+                  }`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages}
+                className="size-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              >
                 <span className="material-symbols-outlined text-lg">chevron_right</span>
               </button>
             </div>

@@ -58,9 +58,9 @@ export const mockSupplierDebts: SupplierDebt[] = [
   {
     id: 'sd1',
     supplierId: 'NCC001',
-    supplierName: 'Công ty TNHH Vinamilk',
+    supplierName: 'NCC Do Uong CloudPOS',
     supplierPhone: '1900 1568',
-    avatarLetters: 'VM',
+    avatarLetters: 'DU',
     totalDebt: 45000000,
     dueDate: '10/11/2023',
     status: 'ON_TIME'
@@ -68,9 +68,9 @@ export const mockSupplierDebts: SupplierDebt[] = [
   {
     id: 'sd2',
     supplierId: 'NCC002',
-    supplierName: 'Nhà phân phối Coca-Cola',
+    supplierName: 'NCC Thuc An CloudPOS',
     supplierPhone: '1900 5555',
-    avatarLetters: 'CC',
+    avatarLetters: 'TA',
     totalDebt: 15500000,
     dueDate: '20/10/2023',
     status: 'OVERDUE',

@@ -1,54 +1,24 @@
 import type { InventoryItem } from '../types/inventory'
+import { posProducts } from './pos'
 
-export const mockInventory: InventoryItem[] = [
-  {
-    id: '1',
-    sku: 'IPH15PM-256-BLK',
-    name: 'iPhone 15 Pro Max 256GB',
-    category: 'Điện thoại',
-    unit: 'Cái',
-    stockLevel: 15,
-    stockValue: 435000000,
-    status: 'stable',
-  },
-  {
-    id: '2',
-    sku: 'SAM-S24U-512-GRY',
-    name: 'Samsung Galaxy S24 Ultra',
-    category: 'Điện thoại',
-    unit: 'Cái',
-    stockLevel: 3,
-    stockValue: 90000000,
-    status: 'low',
-  },
-  {
-    id: '3',
-    sku: 'LOG-MXM3-MS',
-    name: 'Chuột Logitech MX Master 3S',
-    category: 'Phụ kiện',
-    unit: 'Hộp',
-    stockLevel: 45,
-    stockValue: 112500000,
-    status: 'stable',
-  },
-  {
-    id: '4',
-    sku: 'APP-AIRP3',
-    name: 'Tai nghe Apple AirPods Pro 2',
-    category: 'Phụ kiện',
-    unit: 'Cái',
-    stockLevel: 8,
-    stockValue: 48000000,
-    status: 'under_limit',
-  },
-  {
-    id: '5',
-    sku: 'MAC-M3-14-SLV',
-    name: 'MacBook Pro 14 M3 Chip',
-    category: 'Laptop',
-    unit: 'Cái',
-    stockLevel: 12,
-    stockValue: 540000000,
-    status: 'stable',
-  },
-]
+export const mockInventory: InventoryItem[] = posProducts.map((product, index) => {
+  const stockLevel = product.stockInBaseUnit
+  const costPrice = Math.round(product.price * 0.6)
+  const status: InventoryItem['status'] =
+    stockLevel <= 0 ? 'under_limit' : stockLevel < 10 ? 'low' : 'stable'
+
+  return {
+    id: String(index + 1),
+    sku: `SP${String(index + 1).padStart(3, '0')}`,
+    name: product.name,
+    category: product.category,
+    unit: product.baseUnit,
+    stockLevel,
+    stockValue: stockLevel * costPrice,
+    status,
+    issuePolicy: 'FIFO',
+    trackedBatchCount: 1,
+    expiringQuantity: 0,
+    expiredQuantity: 0,
+  }
+})

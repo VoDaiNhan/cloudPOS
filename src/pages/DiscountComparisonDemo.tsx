@@ -61,7 +61,7 @@ const DiscountComparisonDemo = () => {
         {/* Explanation Cards */}
         <div className="grid md:grid-cols-2 gap-6">
           {/* Product Discount */}
-          <div className="bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 rounded-2xl border-2 border-rose-200 dark:border-rose-800 p-6">
+          <div className="bg-linear-to-br from-rose-50 to-pink-50 dark:from-rose-900/20 dark:to-pink-900/20 rounded-2xl border-2 border-rose-200 dark:border-rose-800 p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="size-12 rounded-xl bg-rose-500 flex items-center justify-center">
                 <span className="material-symbols-outlined text-white text-2xl">sell</span>
@@ -101,7 +101,7 @@ const DiscountComparisonDemo = () => {
           </div>
 
           {/* Invoice Discount */}
-          <div className="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-2xl border-2 border-amber-200 dark:border-amber-800 p-6">
+          <div className="bg-linear-to-br from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-2xl border-2 border-amber-200 dark:border-amber-800 p-6">
             <div className="flex items-center gap-3 mb-4">
               <div className="size-12 rounded-xl bg-amber-500 flex items-center justify-center">
                 <span className="material-symbols-outlined text-white text-2xl">receipt_long</span>
@@ -143,7 +143,7 @@ const DiscountComparisonDemo = () => {
 
         {/* Interactive Demo */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-primary to-blue-600 p-6 text-white">
+          <div className="bg-linear-to-r from-primary to-blue-600 p-6 text-white">
             <h2 className="text-2xl font-black mb-2">Demo Tương tác</h2>
             <p className="text-sm opacity-90">Thử nghiệm và xem sự khác biệt ngay lập tức</p>
           </div>
@@ -281,7 +281,7 @@ const DiscountComparisonDemo = () => {
             </div>
 
             {/* Final Total */}
-            <div className="bg-gradient-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-xl p-6 border-2 border-emerald-200 dark:border-emerald-800">
+            <div className="bg-linear-to-r from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-xl p-6 border-2 border-emerald-200 dark:border-emerald-800">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-emerald-700 dark:text-emerald-300 font-bold uppercase tracking-widest mb-1">

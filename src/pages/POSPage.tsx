@@ -16,10 +16,14 @@ const ProductCard = ({ product, onAdd }: { product: POSProduct; onAdd: (p: POSPr
       style={{ backgroundImage: `url('${product.image}')` }}
     />
     <p className="text-sm font-black line-clamp-1 text-slate-900 dark:text-white">{product.name}</p>
-    <div className="mt-1.5 flex items-center justify-between">
-      <span className="text-sm font-black text-primary">{product.price.toLocaleString('vi-VN')}đ</span>
-      <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">SL: {product.stock}</span>
+    <div className="mt-1.5">
+      <span className="text-sm font-black text-primary">{product.price.toLocaleString('vi-VN')}đ/{product.baseUnit}</span>
     </div>
+    {product.importConversion && (
+      <p className="mt-1 text-[10px] text-slate-400 font-bold">
+        1 {product.importConversion.importUnit} = {product.importConversion.baseUnits} {product.baseUnit}
+      </p>
+    )}
   </button>
 )
 
@@ -91,6 +95,11 @@ const POSPage = () => {
     return posProducts.filter(p => p.name.toLowerCase().includes(term))
   }, [searchTerm])
 
+  const productStockMap = useMemo(
+    () => new Map(posProducts.map((product) => [product.id, product.stockInBaseUnit])),
+    []
+  )
+
   // ── IntersectionObserver scroll-spy ─────────────
   useEffect(() => {
     const scrollContainer = productScrollRef.current
@@ -138,8 +147,20 @@ const POSPage = () => {
 
   // ── Cart Operations ────────────────────────────
   const addToCart = useCallback((product: POSProduct) => {
+    let hitStockLimit = false
     setCart((prev) => {
       const existing = prev.find((item) => item.product.id === product.id)
+
+      if (existing && existing.quantity >= product.stockInBaseUnit) {
+        hitStockLimit = true
+        return prev
+      }
+
+      if (!existing && product.stockInBaseUnit <= 0) {
+        hitStockLimit = true
+        return prev
+      }
+
       if (existing) {
         return prev.map((item) =>
           item.product.id === product.id
@@ -149,19 +170,33 @@ const POSPage = () => {
       }
       return [...prev, { product, quantity: 1, discountValue: 0, discountType: 'fixed' as DiscountType }]
     })
+    if (hitStockLimit) {
+      alert(`Sản phẩm ${product.name} đã hết tồn khả dụng theo đơn vị ${product.baseUnit}.`)
+    }
   }, [])
 
   const updateQuantity = useCallback((productId: string, delta: number) => {
+    let hitStockLimit = false
     setCart((prev) =>
       prev
-        .map((item) =>
-          item.product.id === productId
-            ? { ...item, quantity: Math.max(0, item.quantity + delta) }
-            : item
-        )
+        .map((item) => {
+          if (item.product.id !== productId) return item
+
+          const maxStock = productStockMap.get(productId) ?? 0
+          const nextQuantity = Math.max(0, item.quantity + delta)
+          if (delta > 0 && nextQuantity > maxStock) {
+            hitStockLimit = true
+            return item
+          }
+
+          return { ...item, quantity: nextQuantity }
+        })
         .filter((item) => item.quantity > 0)
     )
-  }, [])
+    if (hitStockLimit) {
+      alert('Số lượng bán vượt tồn kho quy đổi hiện tại.')
+    }
+  }, [productStockMap])
 
   const updateItemDiscount = useCallback((productId: string, value: number, type?: DiscountType) => {
     setCart((prev) =>
@@ -356,7 +391,7 @@ const POSPage = () => {
                 <thead className="sticky top-0 bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
                   <tr>
                     <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Sản phẩm</th>
-                    <th className="px-2 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Số lượng</th>
+                    <th className="px-2 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Số lượng bán</th>
                     <th className="px-2 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Giảm giá</th>
                     <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Thành tiền</th>
                     <th className="w-10 px-4 py-3" />
@@ -370,7 +405,12 @@ const POSPage = () => {
                     <tr key={item.product.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                       <td className="px-4 py-3">
                         <p className="text-sm font-bold text-slate-900 dark:text-white">{item.product.name}</p>
-                        <p className="text-[11px] text-slate-400 font-medium">{item.product.price.toLocaleString('vi-VN')}đ</p>
+                        <p className="text-[11px] text-slate-400 font-medium">{item.product.price.toLocaleString('vi-VN')}đ/{item.product.baseUnit}</p>
+                        {item.product.importConversion && (
+                          <p className="text-[10px] text-slate-300 font-bold">
+                            Nhập: 1 {item.product.importConversion.importUnit} = {item.product.importConversion.baseUnits} {item.product.baseUnit}
+                          </p>
+                        )}
                       </td>
                       <td className="px-2 py-3">
                         <div className="flex items-center justify-center gap-1">
@@ -380,7 +420,7 @@ const POSPage = () => {
                           >
                             <span className="material-symbols-outlined text-xs">remove</span>
                           </button>
-                          <span className="text-sm font-black w-6 text-center">{item.quantity}</span>
+                          <span className="text-sm font-black min-w-16 text-center">{item.quantity} {item.product.baseUnit}</span>
                           <button
                             onClick={() => updateQuantity(item.product.id, 1)}
                             className="size-6 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex items-center justify-center hover:bg-slate-100 transition-all text-primary"

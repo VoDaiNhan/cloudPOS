@@ -2,70 +2,96 @@ import { useState, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import VoiceOverlay from '../components/VoiceOverlay'
-
-interface ImportItem {
-  id: string
-  name: string
-  sku: string
-  unit: string
-  unitOptions: string[]
-  quantity: number
-  conversionRate: number
-  conversionUnit: string
-  unitPrice: number
-  expiryDate: string
-  batchNumber: string
-}
-
-const defaultItems: ImportItem[] = [
-  {
-    id: '1',
-    name: 'Sữa tươi TH True Milk 1L',
-    sku: 'Milk-001',
-    unit: 'Thùng (12 hộp)',
-    unitOptions: ['Thùng (12 hộp)', 'Vỉ (4 hộp)', 'Hộp'],
-    quantity: 10,
-    conversionRate: 12,
-    conversionUnit: 'hộp',
-    unitPrice: 340000,
-    expiryDate: '2024-12-31',
-    batchNumber: 'BATCH-202',
-  },
-  {
-    id: '2',
-    name: 'Gạo ST25 Túi 5kg',
-    sku: 'Rice-ST25',
-    unit: 'Bao (10 túi)',
-    unitOptions: ['Bao (10 túi)', 'Túi'],
-    quantity: 5,
-    conversionRate: 10,
-    conversionUnit: 'túi',
-    unitPrice: 1450000,
-    expiryDate: '2025-06-20',
-    batchNumber: 'L-G25-01',
-  },
-]
-
-const suppliers = [
-  'Công ty TNHH Thực phẩm Sạch',
-  'Nhà máy Sữa ABC',
-  'Nông trại VietGAP',
-  'Đại lý Gạo Miền Tây',
-]
+import { useProductStore } from '../store/productStore'
+import type { Product } from '../types/product'
+import type { ImportItem } from '../types/importOrder'
+import { mockSuppliers, mockDefaultImportItems } from '../mock/importOrders'
+import { units, conversionTemplates, unitConversions } from '../mock/units'
 
 const ImportOrderPage = () => {
   const navigate = useNavigate()
+  const { products, importStocks } = useProductStore()
   const [selectedSupplier, setSelectedSupplier] = useState('')
   const [importDate, setImportDate] = useState(() => {
     const d = new Date()
     return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`
   })
-  const [items, setItems] = useState<ImportItem[]>(defaultItems)
+  const [items, setItems] = useState<ImportItem[]>(mockDefaultImportItems)
   const [note, setNote] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [voiceOpen, setVoiceOpen] = useState(false)
 
   const orderCode = `PNK-${importDate.replace(/-/g, '')}-001`
+
+  const productByCode = useMemo(
+    () => new Map(products.map((product) => [product.code.toUpperCase(), product])),
+    [products]
+  )
+
+  const buildUnitDataFromProduct = useCallback((product: Product) => {
+    const baseUnit = product.baseUnit?.trim() || 'cái'
+    const rates: Record<string, number> = { [baseUnit]: 1 }
+    product.conversions?.forEach((conversion) => {
+      if (!conversion.unitName?.trim()) return
+      rates[conversion.unitName] = Math.max(1, Number(conversion.value) || 1)
+    })
+
+    const sortedUnits = Object.entries(rates)
+      .sort((a, b) => b[1] - a[1])
+      .map(([unitName]) => unitName)
+    const selectedUnit = sortedUnits[0] || baseUnit
+
+    const allUnits = Array.from(new Set([...sortedUnits, ...units.map(u => u.name)]))
+
+    let initialRate = rates[selectedUnit] ?? 1
+    let initialConversionUnit = baseUnit
+
+    // If it's a 1:1 mapping (usually base unit), try to expand it globally
+    if (initialRate === 1 && initialConversionUnit.toLowerCase() === selectedUnit.toLowerCase()) {
+      const unitObj = units.find(u => u.name.toLowerCase() === selectedUnit.toLowerCase())
+      if (unitObj) {
+        const userConfiguredConv = unitConversions.find(c => c.fromUnitId === unitObj.id)
+        if (userConfiguredConv) {
+          const toUnitObj = units.find(u => u.id === userConfiguredConv.toUnitId)
+          if (toUnitObj) {
+            initialRate = userConfiguredConv.conversionRate
+            initialConversionUnit = toUnitObj.name
+          }
+        }
+      }
+      
+      // generic fallback if still 1:1
+      if (initialRate === 1 && initialConversionUnit.toLowerCase() === selectedUnit.toLowerCase()) {
+        const genericFallback = conversionTemplates.flatMap(t => t.conversions).find(
+          c => c.fromUnit.toLowerCase() === selectedUnit.toLowerCase()
+        )
+        if (genericFallback) {
+          initialRate = genericFallback.rate
+          initialConversionUnit = genericFallback.toUnit
+        }
+      }
+    }
+
+    return {
+      unit: selectedUnit,
+      unitOptions: allUnits,
+      unitRates: rates,
+      conversionRate: initialRate,
+      conversionUnit: initialConversionUnit,
+      unitPrice: Math.round(product.costPrice ?? product.price ?? 0),
+    }
+  }, [])
+
+  const applyProductToItem = useCallback((item: ImportItem, product: Product): ImportItem => {
+    const unitData = buildUnitDataFromProduct(product)
+    return {
+      ...item,
+      linkedProductId: product.id,
+      name: product.name,
+      sku: product.code,
+      ...unitData,
+    }
+  }, [buildUnitDataFromProduct])
 
   // Update item field
   const updateItem = useCallback((id: string, field: keyof ImportItem, value: string | number) => {
@@ -74,6 +100,95 @@ const ImportOrderPage = () => {
     )
   }, [])
 
+  const updateItemSku = useCallback((id: string, rawSku: string) => {
+    const sku = rawSku.trim().toUpperCase()
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) return item
+
+        const matched = productByCode.get(sku)
+        if (matched) {
+          return applyProductToItem(item, matched)
+        }
+
+        return {
+          ...item,
+          linkedProductId: undefined,
+          sku,
+        }
+      })
+    )
+  }, [applyProductToItem, productByCode])
+
+  const selectProductForItem = useCallback((id: string, productId: string) => {
+    if (!productId) {
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? { ...item, linkedProductId: undefined, name: '', sku: '' }
+            : item
+        )
+      )
+      return
+    }
+
+    const product = products.find((candidate) => candidate.id === productId)
+    if (!product) return
+
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? applyProductToItem(item, product) : item))
+    )
+  }, [applyProductToItem, products])
+
+  const updateItemUnit = useCallback((id: string, unit: string) => {
+    setItems((prev) =>
+      prev.map((item) => {
+        if (item.id !== id) return item
+        let nextRate = item.unitRates[unit]
+        let nextConversionUnit = item.conversionUnit
+
+        if (nextRate === undefined || (nextRate === 1 && nextConversionUnit.toLowerCase() === unit.toLowerCase())) {
+          // 1. Lookup globally configured conversions
+          const unitObj = units.find(u => u.name.toLowerCase() === unit.toLowerCase())
+          if (unitObj) {
+            const userConfiguredConv = unitConversions.find(c => c.fromUnitId === unitObj.id)
+            if (userConfiguredConv) {
+              const toUnitObj = units.find(u => u.id === userConfiguredConv.toUnitId)
+              if (toUnitObj) {
+                nextRate = userConfiguredConv.conversionRate
+                nextConversionUnit = toUnitObj.name
+              }
+            }
+          }
+
+          // 2. Fallback to generic templates
+          if (nextRate === undefined || (nextRate === 1 && nextConversionUnit.toLowerCase() === unit.toLowerCase())) {
+            const genericFallback = conversionTemplates.flatMap(t => t.conversions).find(
+              c => c.fromUnit.toLowerCase() === unit.toLowerCase()
+            )
+            if (genericFallback) {
+              nextRate = genericFallback.rate
+              nextConversionUnit = genericFallback.toUnit
+            } else {
+              if (nextRate === undefined) {
+                nextRate = 1
+                nextConversionUnit = item.linkedProductId ? item.conversionUnit : unit
+              }
+            }
+          }
+        }
+
+        return {
+          ...item,
+          unit,
+          conversionRate: nextRate,
+          conversionUnit: nextConversionUnit,
+        }
+      })
+    )
+  }, [])
+
+
   // Remove item
   const removeItem = useCallback((id: string) => {
     setItems((prev) => prev.filter((item) => item.id !== id))
@@ -81,15 +196,17 @@ const ImportOrderPage = () => {
 
   // Add new empty item
   const addItem = useCallback(() => {
+    const allUnits = units.map(u => u.name)
     const newItem: ImportItem = {
       id: Date.now().toString(),
       name: '',
       sku: '',
       unit: 'Cái',
-      unitOptions: ['Cái', 'Hộp', 'Thùng'],
+      unitOptions: Array.from(new Set(['Cái', 'Hộp', 'Thùng', ...allUnits])),
+      unitRates: {},
       quantity: 1,
       conversionRate: 1,
-      conversionUnit: 'cái',
+      conversionUnit: 'Cái',
       unitPrice: 0,
       expiryDate: '',
       batchNumber: '',
@@ -103,8 +220,12 @@ const ImportOrderPage = () => {
       id: Date.now().toString(),
       name: 'Nước mắm Phú Quốc 500ml',
       sku: 'NM-PQ500',
-      unit: 'Thùng (24 chai)',
-      unitOptions: ['Thùng (24 chai)', 'Chai'],
+      unit: 'Thùng',
+      unitOptions: ['Thùng', 'Chai'],
+      unitRates: {
+        Thùng: 24,
+        Chai: 1,
+      },
       quantity: 3,
       conversionRate: 24,
       conversionUnit: 'chai',
@@ -120,17 +241,85 @@ const ImportOrderPage = () => {
     () => items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0),
     [items]
   )
+  const totalConvertedUnits = useMemo(
+    () => items.reduce((sum, item) => sum + item.quantity * item.conversionRate, 0),
+    [items]
+  )
   const discount = 0
   const vatRate = 10
   const vatAmount = Math.round((subtotal - discount) * vatRate / 100)
   const grandTotal = subtotal - discount + vatAmount
 
   const handleSave = async () => {
+    const invalidItem = items.find(
+      (item) =>
+        !item.name.trim() ||
+        !item.sku.trim() ||
+        !item.batchNumber.trim() ||
+        item.quantity <= 0 ||
+        item.conversionRate <= 0
+    )
+
+    if (invalidItem) {
+      alert('Mỗi dòng nhập phải có tên, mã SKU, số lô và số lượng hợp lệ để theo dõi FIFO/FEFO.')
+      return
+    }
+
+    const invalidExpiry = items.find(
+      (item) => item.expiryDate && item.expiryDate < importDate
+    )
+
+    if (invalidExpiry) {
+      alert('Hạn sử dụng không được sớm hơn ngày nhập kho.')
+      return
+    }
+
+    const seenBatches = new Set<string>()
+    const duplicatedBatch = items.find((item) => {
+      const key = `${item.sku.trim().toUpperCase()}::${item.batchNumber.trim().toUpperCase()}`
+      if (seenBatches.has(key)) return true
+      seenBatches.add(key)
+      return false
+    })
+
+    if (duplicatedBatch) {
+      alert('Không thể lưu hai dòng trùng SKU và số lô trong cùng một phiếu nhập.')
+      return
+    }
+
     setIsLoading(true)
     await new Promise((resolve) => setTimeout(resolve, 1500))
-    console.log('Import order saved:', { selectedSupplier, orderCode, importDate, items, note, grandTotal })
+    const normalizedItems = items.map((item) => ({
+      ...item,
+      sku: item.sku || `NEW-${Date.now()}-${item.id.slice(-4)}`,
+      normalizedQuantity: item.quantity * item.conversionRate,
+      normalizedUnit: item.conversionUnit,
+    }))
+
+    const result = importStocks(
+      normalizedItems.map((item) => ({
+        sku: item.sku,
+        name: item.name,
+        quantityInBaseUnit: item.normalizedQuantity,
+        baseUnit: item.normalizedUnit,
+        costPrice: item.unitPrice > 0 && item.conversionRate > 0 ? Math.round(item.unitPrice / item.conversionRate) : 0,
+        batchNumber: item.batchNumber.trim(),
+        expiryDate: item.expiryDate || undefined,
+        receivedDate: importDate,
+      }))
+    )
+
+    console.log('Import order saved:', {
+      selectedSupplier,
+      orderCode,
+      importDate,
+      items: normalizedItems,
+      note,
+      grandTotal,
+    })
     setIsLoading(false)
-    navigate('/suppliers')
+    alert(`Đã nhập kho thành công. Cập nhật ${result.updated} sản phẩm, tạo mới ${result.created} sản phẩm.`)
+    navigate('/inventory')
   }
 
   return (
@@ -141,6 +330,22 @@ const ImportOrderPage = () => {
           <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
             Tạo Phiếu Nhập Kho
           </h2>
+        </div>
+      </div>
+
+      <div className="mb-6 rounded-3xl border border-amber-200 bg-amber-50/80 p-5 text-sm text-amber-900 shadow-sm">
+        <div className="flex items-start gap-3">
+          <span className="material-symbols-outlined text-amber-600">schedule</span>
+          <div className="space-y-1">
+            <p className="text-[11px] font-black uppercase tracking-widest text-amber-700">
+              Quy tắc xuất kho theo date
+            </p>
+            <p className="font-medium leading-relaxed">
+              CloudPOS sẽ ưu tiên <span className="font-black">FEFO</span> cho hàng có hạn sử dụng và
+              <span className="font-black"> FIFO</span> cho hàng không theo dõi hạn. Vì vậy mỗi dòng nhập cần có số lô,
+              ngày nhập và hạn dùng hợp lệ để tránh tồn đọng hàng cận date.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -159,7 +364,7 @@ const ImportOrderPage = () => {
                 className="w-full rounded-2xl border-none bg-slate-50 dark:bg-slate-900 text-sm font-bold focus:ring-2 focus:ring-primary/20 py-3.5"
               >
                 <option value="">Chọn nhà cung cấp</option>
-                {suppliers.map((s) => (
+                {mockSuppliers.map((s) => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
@@ -221,12 +426,12 @@ const ImportOrderPage = () => {
             <table className="w-full text-left">
               <thead className="bg-slate-50/50 dark:bg-slate-800/30">
                 <tr>
-                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Sản phẩm</th>
-                  <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Đơn vị</th>
-                  <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-24">Số lượng</th>
-                  <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Quy đổi</th>
-                  <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-32">Đơn giá</th>
-                  <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Hạn SD / Lô</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest min-w-[250px] w-1/3">Sản phẩm</th>
+                  <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest min-w-[150px]">Đơn vị</th>
+                  <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-24 min-w-[100px]">Số lượng</th>
+                  <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest min-w-[120px]">Quy đổi</th>
+                  <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest w-32 min-w-[120px]">Đơn giá</th>
+                  <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest min-w-[140px]">Hạn SD / Lô</th>
                   <th className="px-4 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Thành tiền</th>
                   <th className="px-4 py-4 w-10" />
                 </tr>
@@ -235,53 +440,100 @@ const ImportOrderPage = () => {
                 {items.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-800/20 transition-colors">
                     <td className="px-6 py-5">
-                      {item.name ? (
-                        <>
-                          <div className="text-sm font-black text-slate-900 dark:text-white">{item.name}</div>
-                          <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">SKU: {item.sku}</div>
-                        </>
-                      ) : (
-                        <input
-                          type="text"
-                          placeholder="Tên sản phẩm"
-                          className="w-full border-none bg-transparent p-0 text-sm font-bold focus:ring-0 placeholder:text-slate-300"
-                          onChange={(e) => updateItem(item.id, 'name', e.target.value)}
-                        />
-                      )}
+                      <div className="space-y-2">
+                        <select
+                          value={item.linkedProductId || ''}
+                          onChange={(e) => selectProductForItem(item.id, e.target.value)}
+                          className="w-full max-w-[300px] bg-slate-50 dark:bg-slate-900 border-none rounded-xl p-2.5 text-sm font-bold focus:ring-2 focus:ring-primary/20 truncate"
+                        >
+                          <option value="">Chọn từ danh sách tồn kho</option>
+                          {products.map((product) => (
+                            <option key={product.id} value={product.id}>
+                              {product.code} - {product.name}
+                            </option>
+                          ))}
+                        </select>
+
+                        {item.linkedProductId ? (
+                          <div className="min-w-0 max-w-[300px]">
+                            <div className="text-sm font-black text-slate-900 dark:text-white truncate" title={item.name}>{item.name}</div>
+                            <div className="text-[10px] text-emerald-600 font-black uppercase tracking-widest mt-0.5 truncate" title={`SKU: ${item.sku}`}>Đã liên kết tồn kho • SKU: {item.sku}</div>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              value={item.name}
+                              placeholder="Tên sản phẩm mới"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl p-2.5 text-sm font-bold focus:ring-2 focus:ring-primary/20 placeholder:text-slate-300"
+                              onChange={(e) => updateItem(item.id, 'name', e.target.value)}
+                            />
+                            <input
+                              type="text"
+                              value={item.sku}
+                              placeholder="SKU (có thể để trống)"
+                              className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl p-2.5 text-sm font-bold uppercase focus:ring-2 focus:ring-primary/20 placeholder:text-slate-300"
+                              onChange={(e) => updateItemSku(item.id, e.target.value)}
+                            />
+                          </div>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-5">
-                      <select
-                        value={item.unit}
-                        onChange={(e) => updateItem(item.id, 'unit', e.target.value)}
-                        className="w-full border-none bg-transparent p-0 text-sm font-bold focus:ring-0"
-                      >
-                        {item.unitOptions.map((opt) => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
+                      <div className="relative">
+                        <select
+                          value={item.unit}
+                          onChange={(e) => updateItemUnit(item.id, e.target.value)}
+                          className="w-full appearance-none rounded-xl bg-slate-50 dark:bg-slate-900 border-none p-2.5 text-sm font-bold focus:ring-2 focus:ring-primary/20 pr-8"
+                        >
+                          {item.unitOptions.map((opt) => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                        <span className="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-lg">
+                          expand_more
+                        </span>
+                      </div>
                     </td>
                     <td className="px-4 py-5">
                       <input
                         type="number"
                         value={item.quantity}
-                        onChange={(e) => updateItem(item.id, 'quantity', Number(e.target.value))}
+                        onChange={(e) => {
+                          const parsed = Number(e.target.value)
+                          updateItem(item.id, 'quantity', Number.isFinite(parsed) ? parsed : 0)
+                        }}
                         className="w-full bg-slate-50 dark:bg-slate-900 border-none rounded-xl p-2.5 text-sm text-center font-black focus:ring-2 focus:ring-primary/20"
                       />
                     </td>
                     <td className="px-4 py-5">
-                      <span className="inline-flex items-center px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-50 dark:bg-slate-800 text-slate-500">
-                        {item.quantity * item.conversionRate} {item.conversionUnit}
-                      </span>
+                      <div className="space-y-2">
+                        <div className="bg-blue-50/50 dark:bg-blue-900/10 p-3 rounded-xl border border-blue-100/50 dark:border-blue-800/50 flex flex-col justify-center">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-black text-blue-700 dark:text-blue-400">
+                              1 {item.unit || '?'}
+                            </span>
+                            <span className="material-symbols-outlined text-blue-300 dark:text-blue-700 text-sm">arrow_forward</span>
+                            <span className="text-xs font-black text-blue-700 dark:text-blue-400">
+                              {item.conversionRate} {item.conversionUnit}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 pl-1 mt-1">
+                          Tổng: {(item.quantity * item.conversionRate).toLocaleString('vi-VN')} {item.conversionUnit}
+                        </p>
+                      </div>
                     </td>
                     <td className="px-4 py-5">
                       <input
-                        type="text"
-                        value={item.unitPrice.toLocaleString('vi-VN')}
+                        type="number"
+                        min={0}
+                        value={item.unitPrice}
                         onChange={(e) => {
-                          const raw = e.target.value.replace(/\D/g, '')
-                          updateItem(item.id, 'unitPrice', Number(raw))
+                          const parsed = Number(e.target.value)
+                          updateItem(item.id, 'unitPrice', Number.isFinite(parsed) ? Math.max(0, parsed) : 0)
                         }}
-                        className="w-full border-none bg-transparent p-0 text-sm font-black focus:ring-0"
+                        className="w-full rounded-xl bg-slate-50 dark:bg-slate-900 border-none p-2.5 text-sm font-black focus:ring-2 focus:ring-primary/20"
                       />
                     </td>
                     <td className="px-4 py-5 space-y-2">
@@ -354,6 +606,10 @@ const ImportOrderPage = () => {
               <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-400 font-bold">Chiết khấu</span>
                 <span className="font-black text-rose-500">-{discount.toLocaleString('vi-VN')} đ</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="text-slate-400 font-bold">Tổng SL quy đổi</span>
+                <span className="font-black text-slate-900 dark:text-white">{totalConvertedUnits.toLocaleString('vi-VN')} đơn vị nhỏ</span>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-slate-400 font-bold">Thuế GTGT ({vatRate}%)</span>

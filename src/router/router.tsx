@@ -43,6 +43,7 @@ import SmartDiscountDemo from '../pages/SmartDiscountDemo'
 import DiscountComparisonDemo from '../pages/DiscountComparisonDemo'
 import UnitManagementDemo from '../pages/UnitManagementDemo'
 import PricingManagementDemo from '../pages/PricingManagementDemo'
+import UnitConversionPage from '../pages/UnitConversionPage'
 
 // Modal routes are defined in modalRoutes.ts
 // They are rendered as overlays using background location pattern
@@ -93,6 +94,7 @@ const mainRoutes: RouteObject[] = [
   { path: '/demo/discount-comparison', element: <DiscountComparisonDemo /> },
   { path: '/demo/unit-management', element: <UnitManagementDemo /> },
   { path: '/demo/pricing-management', element: <PricingManagementDemo /> },
+  { path: '/unit-conversions', element: <UnitConversionPage /> },
   { path: '/reports', element: <Navigate to="/dashboard" replace /> },
   { path: '*', element: <NotFoundPage /> },
 ]

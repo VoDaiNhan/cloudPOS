@@ -37,6 +37,22 @@ export function Table<T>({
     return (record as any)[rowKey]
   }
 
+  const pagedDataSource = pagination
+    ? dataSource.slice(
+        (pagination.current - 1) * pagination.pageSize,
+        pagination.current * pagination.pageSize
+      )
+    : dataSource
+
+  const rangeStart =
+    !pagination || pagination.total === 0
+      ? 0
+      : (pagination.current - 1) * pagination.pageSize + 1
+  const rangeEnd =
+    !pagination || pagination.total === 0
+      ? 0
+      : Math.min(pagination.current * pagination.pageSize, pagination.total)
+
   return (
     <div className="w-full">
       <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm">
@@ -65,7 +81,7 @@ export function Table<T>({
                   ))}
                 </tr>
               ))
-            ) : dataSource.length === 0 ? (
+            ) : pagedDataSource.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length}
@@ -75,7 +91,7 @@ export function Table<T>({
                 </td>
               </tr>
             ) : (
-              dataSource.map((record, index) => (
+              pagedDataSource.map((record, index) => (
                 <tr
                   key={getRowKey(record)}
                   onClick={() => onRowClick?.(record)}
@@ -112,11 +128,7 @@ export function Table<T>({
           <p className="text-sm text-slate-500 order-2 sm:order-1">
             Hiển thị{' '}
             <span className="font-semibold text-slate-900 dark:text-white">
-              {(pagination.current - 1) * pagination.pageSize + 1}-
-              {Math.min(
-                pagination.current * pagination.pageSize,
-                pagination.total
-              )}
+              {rangeStart}-{rangeEnd}
             </span>{' '}
             trong số{' '}
             <span className="font-semibold text-slate-900 dark:text-white">

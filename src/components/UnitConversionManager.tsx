@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
-import type { Unit, UnitConversion, ConversionTemplate } from '../types/unit'
+import type { UnitConversion, ConversionTemplate } from '../types/unit'
 import { units, conversionTemplates } from '../mock/units'
+import { createPortal } from 'react-dom'
 
 interface UnitConversionManagerProps {
   productId: string
@@ -26,9 +27,8 @@ export const UnitConversionManager = ({
   const [toUnitId, setToUnitId] = useState('')
   const [rate, setRate] = useState('')
 
-  // Get base units (smallest units)
-  const baseUnits = useMemo(() => units.filter(u => u.isBaseUnit), [])
-  const largerUnits = useMemo(() => units.filter(u => !u.isBaseUnit), [])
+  // Get all units for maximum flexibility
+  const availableUnits = useMemo(() => [...units], [])
 
   const addConversion = () => {
     if (!fromUnitId || !toUnitId || !rate || parseFloat(rate) <= 0) {
@@ -112,11 +112,11 @@ export const UnitConversionManager = ({
     return units.find(u => u.id === unitId)?.name || unitId
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-9999 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-primary to-blue-600 p-6 text-white">
+        <div className="bg-linear-to-r from-primary to-blue-600 p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-black mb-1">Quản lý đơn vị tính & Quy đổi</h2>
@@ -178,8 +178,8 @@ export const UnitConversionManager = ({
                   className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:outline-none"
                 >
                   <option value="">Chọn đơn vị</option>
-                  <optgroup label="Đơn vị lớn">
-                    {largerUnits.map((unit) => (
+                  <optgroup label="Tất cả đơn vị">
+                    {availableUnits.map((unit) => (
                       <option key={unit.id} value={unit.id}>
                         {unit.name}
                       </option>
@@ -198,8 +198,8 @@ export const UnitConversionManager = ({
                   className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:outline-none"
                 >
                   <option value="">Chọn đơn vị</option>
-                  <optgroup label="Đơn vị cơ bản">
-                    {baseUnits.map((unit) => (
+                  <optgroup label="Tất cả đơn vị">
+                    {availableUnits.map((unit) => (
                       <option key={unit.id} value={unit.id}>
                         {unit.name}
                       </option>
@@ -341,6 +341,7 @@ export const UnitConversionManager = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

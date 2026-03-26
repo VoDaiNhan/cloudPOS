@@ -1,25 +1,39 @@
-import { useState, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import { Table } from '../components/Table'
 import type { Column } from '../components/Table'
 import { Button } from '../components/Button'
-import { mockProducts } from '../mock/product'
 import type { Product } from '../types/product'
+import { useProductStore } from '../store/productStore'
 
 const ProductListPage = () => {
   const navigate = useNavigate()
+  const { products, deleteProduct } = useProductStore()
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [isLoading] = useState(false)
+  const pageSize = 6
 
   const filteredProducts = useMemo(() => {
-    return mockProducts.filter((p) =>
+    return products.filter((p) =>
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.barcode.includes(searchTerm)
     )
+  }, [products, searchTerm])
+
+  const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize))
+
+  useEffect(() => {
+    setCurrentPage(1)
   }, [searchTerm])
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
 
   const columns: Column<Product>[] = [
     {
@@ -27,7 +41,7 @@ const ProductListPage = () => {
       title: 'STT',
       width: '60px',
       align: 'center',
-      render: (_, __, index) => <span className="text-slate-500">{(currentPage - 1) * 10 + index + 1}</span>,
+      render: (_, __, index) => <span className="text-slate-500">{(currentPage - 1) * pageSize + index + 1}</span>,
     },
     {
       key: 'name',
@@ -101,7 +115,12 @@ const ProductListPage = () => {
             <span className="material-symbols-outlined text-[18px]">edit</span>
           </button>
           <button 
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              const confirmed = window.confirm(`Xóa sản phẩm ${product.name}?`)
+              if (!confirmed) return
+              deleteProduct(product.id)
+            }}
             className="size-8 flex items-center justify-center text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
           >
             <span className="material-symbols-outlined text-[18px]">delete</span>
@@ -168,7 +187,7 @@ const ProductListPage = () => {
             onRowClick={(product) => console.log('View product', product.id)}
             pagination={{
               current: currentPage,
-              pageSize: 10,
+              pageSize,
               total: filteredProducts.length,
               onChange: setCurrentPage
             }}

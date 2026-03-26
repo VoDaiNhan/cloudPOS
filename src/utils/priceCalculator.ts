@@ -1,4 +1,4 @@
-import type { PriceCalculation, PricingStrategy } from '../types/pricing'
+import type { PriceCalculation } from '../types/pricing'
 
 /**
  * Calculate all prices based on import price and strategy

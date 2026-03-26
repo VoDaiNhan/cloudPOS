@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import type { PricingStrategy } from '../types/pricing'
 import { calculatePrices, validatePrices, formatPrice } from '../utils/priceCalculator'
 import { pricingStrategies } from '../mock/pricing'
@@ -26,36 +26,36 @@ export const PriceManager = ({
   const [selectedStrategy, setSelectedStrategy] = useState<PricingStrategy | null>(null)
   const [useStrategy, setUseStrategy] = useState(false)
 
-  // Apply strategy when selected
-  useEffect(() => {
-    if (useStrategy && selectedStrategy && importPrice > 0) {
-      const calculated = calculatePrices(importPrice, selectedStrategy)
-      setRetailPrice(calculated.retailPrice)
-      setWholesalePrice(calculated.wholesalePrice)
-    }
-  }, [useStrategy, selectedStrategy, importPrice])
+  let displayRetailPrice = retailPrice
+  let displayWholesalePrice = wholesalePrice
+
+  if (useStrategy && selectedStrategy && importPrice > 0) {
+    const calculated = calculatePrices(importPrice, selectedStrategy)
+    displayRetailPrice = calculated.retailPrice
+    displayWholesalePrice = calculated.wholesalePrice
+  }
 
   const handleSave = () => {
-    const validation = validatePrices(importPrice, retailPrice, wholesalePrice)
+    const validation = validatePrices(importPrice, displayRetailPrice, displayWholesalePrice)
     if (!validation.valid) {
       alert(validation.errors.join('\n'))
       return
     }
-    onSave({ importPrice, retailPrice, wholesalePrice })
+    onSave({ importPrice, retailPrice: displayRetailPrice, wholesalePrice: displayWholesalePrice })
   }
 
-  const retailMargin = retailPrice - importPrice
+  const retailMargin = displayRetailPrice - importPrice
   const retailMarginPercent = importPrice > 0 ? ((retailMargin / importPrice) * 100).toFixed(2) : 0
-  const wholesaleMargin = wholesalePrice - importPrice
+  const wholesaleMargin = displayWholesalePrice - importPrice
   const wholesaleMarginPercent = importPrice > 0 ? ((wholesaleMargin / importPrice) * 100).toFixed(2) : 0
-  const wholesaleDiscount = retailPrice - wholesalePrice
-  const wholesaleDiscountPercent = retailPrice > 0 ? ((wholesaleDiscount / retailPrice) * 100).toFixed(2) : 0
+  const wholesaleDiscount = displayRetailPrice - displayWholesalePrice
+  const wholesaleDiscountPercent = displayRetailPrice > 0 ? ((wholesaleDiscount / displayRetailPrice) * 100).toFixed(2) : 0
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-500 to-green-600 p-6 text-white">
+        <div className="bg-linear-to-r from-emerald-500 to-green-600 p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-black mb-1">Quản lý giá bán</h2>
@@ -132,7 +132,7 @@ export const PriceManager = ({
               </label>
               <input
                 type="number"
-                value={retailPrice || ''}
+                value={displayRetailPrice || ''}
                 onChange={(e) => setRetailPrice(parseFloat(e.target.value) || 0)}
                 placeholder="0"
                 disabled={useStrategy}
@@ -155,7 +155,7 @@ export const PriceManager = ({
               </label>
               <input
                 type="number"
-                value={wholesalePrice || ''}
+                value={displayWholesalePrice || ''}
                 onChange={(e) => setWholesalePrice(parseFloat(e.target.value) || 0)}
                 placeholder="0"
                 disabled={useStrategy}
@@ -181,7 +181,7 @@ export const PriceManager = ({
           </div>
 
           {/* Price Comparison */}
-          {importPrice > 0 && retailPrice > 0 && wholesalePrice > 0 && (
+          {importPrice > 0 && displayRetailPrice > 0 && displayWholesalePrice > 0 && (
             <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-4">
               <h4 className="text-sm font-black text-slate-900 dark:text-white mb-3">So sánh giá</h4>
               <div className="space-y-2">
@@ -191,11 +191,11 @@ export const PriceManager = ({
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600 dark:text-slate-400">Giá bán lẻ</span>
-                  <span className="text-sm font-bold text-blue-600">{formatPrice(retailPrice)}</span>
+                  <span className="text-sm font-bold text-blue-600">{formatPrice(displayRetailPrice)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-slate-600 dark:text-slate-400">Giá bán sỉ</span>
-                  <span className="text-sm font-bold text-amber-600">{formatPrice(wholesalePrice)}</span>
+                  <span className="text-sm font-bold text-amber-600">{formatPrice(displayWholesalePrice)}</span>
                 </div>
               </div>
             </div>

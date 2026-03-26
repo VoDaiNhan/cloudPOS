@@ -1,16 +1,49 @@
+import { useMemo } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import { 
   mockDashboardStats, 
   mockChartData, 
   mockCategoryRevenue, 
   mockTopProducts, 
-  mockIncomeExpense, 
-  mockInventoryAlerts 
-} from '../mock/dashboard'
+  mockIncomeExpense 
+} from '../mock/dashboard-data'
 import { exportToExcel } from '../utils/exportUtils'
+import { useProductStore } from '../store/productStore'
 
 const DashboardPage = () => {
-  const stats = mockDashboardStats
+  const { inventoryItems } = useProductStore()
+
+  const stats = useMemo(() => {
+    const inventoryValue = inventoryItems.reduce((sum, item) => sum + item.stockValue, 0)
+    return {
+      ...mockDashboardStats,
+      inventoryValue: {
+        ...mockDashboardStats.inventoryValue,
+        value: inventoryValue,
+      },
+    }
+  }, [inventoryItems])
+
+  const inventoryAlerts = useMemo(
+    () =>
+      inventoryItems
+        .filter((item) => item.status === 'low' || item.status === 'under_limit' || item.status === 'expiring')
+        .sort((a, b) => a.stockLevel - b.stockLevel)
+        .slice(0, 5)
+        .map((item) => {
+          const threshold = item.status === 'low' ? 8 : item.status === 'under_limit' ? 12 : Math.max(15, item.stockLevel + item.expiringQuantity)
+
+          return {
+            id: item.id,
+            name: item.name,
+            remaining: item.stockLevel,
+            threshold,
+            unit: item.unit,
+            status: item.status === 'low' ? 'critical' as const : 'warning' as const,
+          }
+        }),
+    [inventoryItems]
+  )
 
   return (
     <DashboardLayout title="Tổng quan" breadcrumb={[{ label: 'Tổng quan' }]}>
@@ -295,7 +328,11 @@ const DashboardPage = () => {
             </div>
             
             <div className="flex-1 space-y-4">
-              {mockInventoryAlerts.map(alert => (
+              {inventoryAlerts.length === 0 ? (
+                <div className="rounded-2xl border border-emerald-100 bg-emerald-50/30 p-4 text-sm font-bold text-emerald-600 dark:border-emerald-500/20 dark:bg-emerald-500/5 dark:text-emerald-400">
+                  Kho dang o muc on dinh, khong co mat hang canh bao.
+                </div>
+              ) : inventoryAlerts.map(alert => (
                 <div key={alert.id} className={`p-4 rounded-2xl border transition-all hover:shadow-md cursor-pointer ${
                   alert.status === 'critical' 
                     ? 'border-rose-100 dark:border-rose-500/20 bg-rose-50/30 dark:bg-rose-500/5 hover:bg-rose-50/50 hover:border-rose-200' 

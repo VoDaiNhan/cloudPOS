@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, type ReactNode, type KeyboardEvent } from 'react'
+import { useState, useRef, useEffect, useCallback, type ReactNode, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { mockUser } from '../mock/auth'
 import { MODAL_ROUTES } from '../router/modalRoutes'
@@ -83,7 +83,7 @@ export const DashboardLayout = ({
 
   // F2 focuses the global search input
   useEffect(() => {
-    const handleF2 = (e: KeyboardEvent) => {
+    const handleF2 = (e: globalThis.KeyboardEvent) => {
       if (e.key === 'F2') {
         e.preventDefault()
         searchRef.current?.focus()
@@ -93,7 +93,7 @@ export const DashboardLayout = ({
     return () => window.removeEventListener('keydown', handleF2)
   }, [])
 
-  const handleGlobalSearch = (e: KeyboardEvent<HTMLInputElement>) => {
+  const handleGlobalSearch = (e: ReactKeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && globalSearch.trim()) {
       navigate(`/products?q=${encodeURIComponent(globalSearch.trim())}`)
       setGlobalSearch('')
@@ -162,6 +162,7 @@ export const DashboardLayout = ({
         { to: '/inventory', icon: 'warehouse', label: 'Tồn kho' },
         { to: '/stock-audit', icon: 'rule_folder', label: 'Kiểm kho' },
         { to: '/stock-cancellation', icon: 'remove_shopping_cart', label: 'Hủy hàng' },
+        { to: '/unit-conversions', icon: 'sync_alt', label: 'Quy đổi đơn vị' },
         { to: '/expiry', icon: 'history_toggle_off', label: 'Hạn sử dụng' },
       ],
     },

@@ -1,9 +1,16 @@
+export interface ImportUnitConversion {
+  importUnit: string
+  baseUnits: number
+}
+
 export interface POSProduct {
   id: string
   name: string
   price: number
   image: string
-  stock: number
+  stockInBaseUnit: number
+  baseUnit: string
+  importConversion?: ImportUnitConversion
   category: string
 }
 

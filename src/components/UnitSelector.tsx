@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react'
-import type { Unit, UnitConversion } from '../types/unit'
+import { useState, useMemo } from 'react'
+import type { UnitConversion } from '../types/unit'
 import { units, convertQuantity } from '../mock/units'
 
 interface UnitSelectorProps {
@@ -22,7 +22,6 @@ export const UnitSelector = ({
   className = '',
 }: UnitSelectorProps) => {
   const [localUnitId, setLocalUnitId] = useState(selectedUnitId)
-  const [baseQuantity, setBaseQuantity] = useState(0)
 
   // Get available units for this product
   const availableUnits = units.filter((unit) => {
@@ -33,17 +32,16 @@ export const UnitSelector = ({
   })
 
   // Calculate base quantity when unit or quantity changes
-  useEffect(() => {
+  const baseQuantity = useMemo(() => {
     if (!quantity || quantity <= 0) {
-      setBaseQuantity(0)
-      return
+      return 0
     }
 
     if (localUnitId === baseUnitId) {
-      setBaseQuantity(quantity)
+      return quantity
     } else {
       const converted = convertQuantity(quantity, localUnitId, baseUnitId, productId)
-      setBaseQuantity(converted || 0)
+      return converted || 0
     }
   }, [quantity, localUnitId, baseUnitId, productId])
 

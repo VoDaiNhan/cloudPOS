@@ -46,7 +46,7 @@ const PricingManagementDemo = () => {
 
         {/* Feature Overview */}
         <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl border-2 border-blue-200 dark:border-blue-800 p-6">
+          <div className="bg-linear-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl border-2 border-blue-200 dark:border-blue-800 p-6">
             <div className="size-12 rounded-xl bg-blue-500 flex items-center justify-center mb-4">
               <span className="material-symbols-outlined text-white text-2xl">payments</span>
             </div>
@@ -58,7 +58,7 @@ const PricingManagementDemo = () => {
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-2xl border-2 border-emerald-200 dark:border-emerald-800 p-6">
+          <div className="bg-linear-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-2xl border-2 border-emerald-200 dark:border-emerald-800 p-6">
             <div className="size-12 rounded-xl bg-emerald-500 flex items-center justify-center mb-4">
               <span className="material-symbols-outlined text-white text-2xl">calculate</span>
             </div>
@@ -70,7 +70,7 @@ const PricingManagementDemo = () => {
             </p>
           </div>
 
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl border-2 border-amber-200 dark:border-amber-800 p-6">
+          <div className="bg-linear-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl border-2 border-amber-200 dark:border-amber-800 p-6">
             <div className="size-12 rounded-xl bg-amber-500 flex items-center justify-center mb-4">
               <span className="material-symbols-outlined text-white text-2xl">trending_up</span>
             </div>
@@ -120,7 +120,7 @@ const PricingManagementDemo = () => {
 
         {/* Inventory Table */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
-          <div className="bg-gradient-to-r from-primary to-blue-600 p-6 text-white">
+          <div className="bg-linear-to-r from-primary to-blue-600 p-6 text-white">
             <h2 className="text-2xl font-black mb-2">Danh sách hàng tồn kho</h2>
             <p className="text-sm opacity-90">Quản lý giá và xem giá trị tồn kho theo từng loại giá</p>
           </div>
@@ -211,7 +211,7 @@ const PricingManagementDemo = () => {
 
         {/* Profit Analysis */}
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-2xl border-2 border-emerald-200 dark:border-emerald-800 p-6">
+          <div className="bg-linear-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 rounded-2xl border-2 border-emerald-200 dark:border-emerald-800 p-6">
             <h3 className="text-lg font-black text-emerald-900 dark:text-emerald-100 mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined">trending_up</span>
               Lợi nhuận tiềm năng (Bán lẻ)
@@ -243,7 +243,7 @@ const PricingManagementDemo = () => {
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl border-2 border-amber-200 dark:border-amber-800 p-6">
+          <div className="bg-linear-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 rounded-2xl border-2 border-amber-200 dark:border-amber-800 p-6">
             <h3 className="text-lg font-black text-amber-900 dark:text-amber-100 mb-4 flex items-center gap-2">
               <span className="material-symbols-outlined">local_shipping</span>
               Lợi nhuận tiềm năng (Bán sỉ)
