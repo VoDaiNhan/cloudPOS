@@ -6,7 +6,7 @@ import { useProductStore } from '../store/productStore'
 import type { Product } from '../types/product'
 import type { ImportItem } from '../types/importOrder'
 import { mockSuppliers, mockDefaultImportItems } from '../mock/importOrders'
-import { units, conversionTemplates, unitConversions } from '../mock/units'
+import { standardUnits as units, sampleConversions as unitConversions } from '../mock/units'
 
 const ImportOrderPage = () => {
   const navigate = useNavigate()
@@ -50,11 +50,11 @@ const ImportOrderPage = () => {
     if (initialRate === 1 && initialConversionUnit.toLowerCase() === selectedUnit.toLowerCase()) {
       const unitObj = units.find(u => u.name.toLowerCase() === selectedUnit.toLowerCase())
       if (unitObj) {
-        const userConfiguredConv = unitConversions.find(c => c.fromUnitId === unitObj.id)
+        const userConfiguredConv = unitConversions.find(c => c.fromUnit === unitObj.id)
         if (userConfiguredConv) {
-          const toUnitObj = units.find(u => u.id === userConfiguredConv.toUnitId)
+          const toUnitObj = units.find(u => u.id === userConfiguredConv.toUnit)
           if (toUnitObj) {
-            initialRate = userConfiguredConv.conversionRate
+            initialRate = userConfiguredConv.rate
             initialConversionUnit = toUnitObj.name
           }
         }
@@ -62,7 +62,7 @@ const ImportOrderPage = () => {
       
       // generic fallback if still 1:1
       if (initialRate === 1 && initialConversionUnit.toLowerCase() === selectedUnit.toLowerCase()) {
-        const genericFallback = conversionTemplates.flatMap(t => t.conversions).find(
+        const genericFallback = sampleConversions.find(
           c => c.fromUnit.toLowerCase() === selectedUnit.toLowerCase()
         )
         if (genericFallback) {
@@ -151,11 +151,11 @@ const ImportOrderPage = () => {
           // 1. Lookup globally configured conversions
           const unitObj = units.find(u => u.name.toLowerCase() === unit.toLowerCase())
           if (unitObj) {
-            const userConfiguredConv = unitConversions.find(c => c.fromUnitId === unitObj.id)
+            const userConfiguredConv = unitConversions.find(c => c.fromUnit === unitObj.id)
             if (userConfiguredConv) {
-              const toUnitObj = units.find(u => u.id === userConfiguredConv.toUnitId)
+              const toUnitObj = units.find(u => u.id === userConfiguredConv.toUnit)
               if (toUnitObj) {
-                nextRate = userConfiguredConv.conversionRate
+                nextRate = userConfiguredConv.rate
                 nextConversionUnit = toUnitObj.name
               }
             }
@@ -163,7 +163,7 @@ const ImportOrderPage = () => {
 
           // 2. Fallback to generic templates
           if (nextRate === undefined || (nextRate === 1 && nextConversionUnit.toLowerCase() === unit.toLowerCase())) {
-            const genericFallback = conversionTemplates.flatMap(t => t.conversions).find(
+            const genericFallback = sampleConversions.find(
               c => c.fromUnit.toLowerCase() === unit.toLowerCase()
             )
             if (genericFallback) {

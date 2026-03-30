@@ -39,16 +39,20 @@ import StaffPermissionsPage from '../pages/StaffPermissionsPage'
 import SystemSettingsPage from '../pages/SystemSettingsPage'
 import PaymentSuccessPage from '../pages/PaymentSuccessPage'
 import NotFoundPage from '../pages/NotFoundPage'
+import TestPage from '../pages/TestPage'
 import SmartDiscountDemo from '../pages/SmartDiscountDemo'
-import DiscountComparisonDemo from '../pages/DiscountComparisonDemo'
-import UnitManagementDemo from '../pages/UnitManagementDemo'
+// import DiscountComparisonDemo from '../pages/DiscountComparisonDemo' // Temporarily disabled
+// import UnitManagementDemo from '../pages/UnitManagementDemo' // Temporarily disabled due to import errors
 import PricingManagementDemo from '../pages/PricingManagementDemo'
-import UnitConversionPage from '../pages/UnitConversionPage'
+// import UnitConversionPage from '../pages/UnitConversionPage' // Temporarily disabled due to import errors
+import { BatchManagementDemo } from '../pages/BatchManagementDemo'
+import { ReturnExchangePage } from '../pages/ReturnExchangePage'
 
 // Modal routes are defined in modalRoutes.ts
 // They are rendered as overlays using background location pattern
 
 const mainRoutes: RouteObject[] = [
+  { path: '/test', element: <TestPage /> }, // Test page to verify React is working
   {
     element: <PublicLayout />,
     children: [
@@ -74,8 +78,13 @@ const mainRoutes: RouteObject[] = [
   { path: '/customers', element: <CustomerListPage /> },
   { path: '/suppliers', element: <SupplierListPage /> },
   { path: '/pos', element: <POSPage /> },
+  { path: '/pos/discount', element: <SmartDiscountDemo /> },
+  { path: '/pos/return-exchange', element: <ReturnExchangePage /> },
   { path: '/import-order', element: <ImportOrderPage /> },
   { path: '/inventory', element: <InventoryPage /> },
+  { path: '/inventory/batches', element: <BatchManagementDemo /> },
+  { path: '/inventory/pricing', element: <PricingManagementDemo /> },
+  // { path: '/inventory/units', element: <UnitManagementDemo /> }, // Temporarily disabled
   { path: '/stock-audit', element: <StockAuditPage /> },
   { path: '/supplier-return', element: <SupplierReturnPage /> },
   { path: '/customer-return', element: <CustomerReturnPage /> },
@@ -90,11 +99,7 @@ const mainRoutes: RouteObject[] = [
   { path: '/staff-permissions', element: <StaffPermissionsPage /> },
   { path: '/settings', element: <SystemSettingsPage /> },
   { path: '/checkout/success', element: <PaymentSuccessPage /> },
-  { path: '/demo/smart-discount', element: <SmartDiscountDemo /> },
-  { path: '/demo/discount-comparison', element: <DiscountComparisonDemo /> },
-  { path: '/demo/unit-management', element: <UnitManagementDemo /> },
-  { path: '/demo/pricing-management', element: <PricingManagementDemo /> },
-  { path: '/unit-conversions', element: <UnitConversionPage /> },
+  // { path: '/unit-conversions', element: <UnitConversionPage /> }, // Temporarily disabled
   { path: '/reports', element: <Navigate to="/dashboard" replace /> },
   { path: '*', element: <NotFoundPage /> },
 ]

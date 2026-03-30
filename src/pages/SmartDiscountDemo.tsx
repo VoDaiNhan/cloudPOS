@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { SmartDiscountInput } from '../components/SmartDiscountInput'
 import type { DiscountType } from '../types/posProduct'
+import { DashboardLayout } from '../layouts/DashboardLayout'
 
 const SmartDiscountDemo = () => {
   const [discount1, setDiscount1] = useState({ value: 0, type: 'percent' as DiscountType })
@@ -23,7 +24,13 @@ const SmartDiscountDemo = () => {
   const discount3Amount = calculateDiscount(discount3.value, discount3.type, 1000000)
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-8">
+    <DashboardLayout
+      title="Giảm giá thông minh"
+      breadcrumb={[
+        { label: 'Bán hàng' },
+        { label: 'Giảm giá' },
+      ]}
+    >
       <div className="max-w-4xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-2">
@@ -268,7 +275,7 @@ const SmartDiscountDemo = () => {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }
 

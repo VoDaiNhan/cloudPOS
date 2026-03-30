@@ -3,6 +3,7 @@ import { PriceManager } from '../components/PriceManager'
 import { inventoryValues, getInventorySummary } from '../mock/pricing'
 import { formatPrice, calculateInventoryValue } from '../utils/priceCalculator'
 import type { InventoryValue } from '../types/pricing'
+import { DashboardLayout } from '../layouts/DashboardLayout'
 
 const PricingManagementDemo = () => {
   const [inventory, setInventory] = useState<InventoryValue[]>(inventoryValues)
@@ -32,7 +33,13 @@ const PricingManagementDemo = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-8">
+    <DashboardLayout
+      title="Quản lý giá"
+      breadcrumb={[
+        { label: 'Hàng hóa' },
+        { label: 'Quản lý giá' },
+      ]}
+    >
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-2">
@@ -121,8 +128,19 @@ const PricingManagementDemo = () => {
         {/* Inventory Table */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
           <div className="bg-linear-to-r from-primary to-blue-600 p-6 text-white">
-            <h2 className="text-2xl font-black mb-2">Danh sách hàng tồn kho</h2>
-            <p className="text-sm opacity-90">Quản lý giá và xem giá trị tồn kho theo từng loại giá</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-black mb-2">Danh sách hàng tồn kho</h2>
+                <p className="text-sm opacity-90">Quản lý giá và xem giá trị tồn kho theo từng loại giá</p>
+              </div>
+              <button
+                onClick={() => alert('Chức năng thêm sản phẩm mới - Sẽ mở form nhập thông tin')}
+                className="px-4 py-2.5 rounded-xl bg-white text-primary font-bold text-sm hover:bg-white/90 transition-all shadow-lg flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-lg">add</span>
+                Thêm sản phẩm
+              </button>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
@@ -314,7 +332,7 @@ const PricingManagementDemo = () => {
           onCancel={() => setManagingProduct(null)}
         />
       )}
-    </div>
+    </DashboardLayout>
   )
 }
 

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { SmartDiscountInput } from '../components/SmartDiscountInput'
 import type { DiscountType } from '../types/posProduct'
+import { DashboardLayout } from '../layouts/DashboardLayout'
 
 const DiscountComparisonDemo = () => {
   // Product discounts
@@ -46,7 +47,13 @@ const DiscountComparisonDemo = () => {
   const finalTotal = afterProductDiscount - invoiceDiscountAmount
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-8">
+    <DashboardLayout
+      title="Discount Comparison Demo"
+      breadcrumb={[
+        { label: 'Demo' },
+        { label: 'Discount Comparison' },
+      ]}
+    >
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-2">
@@ -335,7 +342,7 @@ const DiscountComparisonDemo = () => {
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   )
 }
 

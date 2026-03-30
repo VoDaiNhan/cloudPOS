@@ -3,6 +3,7 @@ import { UnitConversionManager } from '../components/UnitConversionManager'
 import { UnitSelector } from '../components/UnitSelector'
 import type { UnitConversion } from '../types/unit'
 import { unitConversions, units } from '../mock/units'
+import { DashboardLayout } from '../layouts/DashboardLayout'
 
 interface Product {
   id: string
@@ -88,7 +89,13 @@ const UnitManagementDemo = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-8">
+    <DashboardLayout
+      title="Đơn vị & Quy đổi"
+      breadcrumb={[
+        { label: 'Hàng hóa' },
+        { label: 'Đơn vị & Quy đổi' },
+      ]}
+    >
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-2">
@@ -148,12 +155,23 @@ const UnitManagementDemo = () => {
         {/* Product Configuration */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl overflow-hidden">
           <div className="bg-linear-to-r from-primary to-blue-600 p-6 text-white">
-            <h2 className="text-2xl font-black mb-2">
-              1. Cấu hình đơn vị cho sản phẩm
-            </h2>
-            <p className="text-sm opacity-90">
-              Thiết lập quy đổi đơn vị cho từng sản phẩm
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-black mb-2">
+                  1. Cấu hình đơn vị cho sản phẩm
+                </h2>
+                <p className="text-sm opacity-90">
+                  Thiết lập quy đổi đơn vị cho từng sản phẩm
+                </p>
+              </div>
+              <button
+                onClick={() => alert('Chức năng thêm sản phẩm mới - Sẽ mở form nhập thông tin')}
+                className="px-4 py-2.5 rounded-xl bg-white text-primary font-bold text-sm hover:bg-white/90 transition-all shadow-lg flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-lg">add</span>
+                Thêm sản phẩm
+              </button>
+            </div>
           </div>
 
           <div className="p-6">
@@ -375,7 +393,7 @@ const UnitManagementDemo = () => {
           onCancel={() => setManagingProduct(null)}
         />
       )}
-    </div>
+    </DashboardLayout>
   )
 }
 

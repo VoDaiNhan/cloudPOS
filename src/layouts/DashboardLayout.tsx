@@ -138,6 +138,7 @@ export const DashboardLayout = ({
       title: 'Giao dịch',
       items: [
         { to: '/pos', icon: 'point_of_sale', label: 'Bán hàng (POS)' },
+        { to: '/pos/return-exchange', icon: 'assignment_return', label: 'Đổi trả hàng' },
         { to: '/open-shift', icon: 'storefront', label: 'Mở ca' },
         { to: '/close-shift', icon: 'logout', label: 'Đóng ca' },
         { to: '/end-shift-report', icon: 'receipt_long', label: 'Báo cáo ca' },
@@ -160,9 +161,11 @@ export const DashboardLayout = ({
         { to: '/import-order', icon: 'local_shipping', label: 'Nhập kho' },
         { to: '/supplier-return', icon: 'assignment_return', label: 'Trả hàng NCC' },
         { to: '/inventory', icon: 'warehouse', label: 'Tồn kho' },
+        { to: '/inventory/batches', icon: 'qr_code_scanner', label: 'Quản lý lô hàng' },
+        { to: '/inventory/pricing', icon: 'payments', label: 'Quản lý giá' },
+        { to: '/inventory/units', icon: 'straighten', label: 'Đơn vị & Quy đổi' },
         { to: '/stock-audit', icon: 'rule_folder', label: 'Kiểm kho' },
         { to: '/stock-cancellation', icon: 'remove_shopping_cart', label: 'Hủy hàng' },
-        { to: '/unit-conversions', icon: 'sync_alt', label: 'Quy đổi đơn vị' },
         { to: '/expiry', icon: 'history_toggle_off', label: 'Hạn sử dụng' },
       ],
     },
@@ -224,7 +227,7 @@ export const DashboardLayout = ({
                   to={item.to}
                   icon={item.icon}
                   label={item.label}
-                  active={pathname.includes(item.to)}
+                  active={pathname === item.to || (pathname.startsWith(item.to + '/') && item.to !== '/pos')}
                   collapsed={collapsed}
                 />
               ))}
