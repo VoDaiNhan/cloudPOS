@@ -1,36 +1,63 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Modal } from '../components/Modal'
+import { shiftService, type BackendShift } from '../services/shiftService'
 
 const CloseShiftPage = () => {
   const navigate = useNavigate()
   const [actualCash, setActualCash] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
+  const [shift, setShift] = useState<BackendShift | null>(null)
+  const [note, setNote] = useState('')
+  const [error, setError] = useState('')
 
-  const shiftData = {
-    employee: 'Nguyễn Văn A',
-    startTime: '08:00',
-    startDate: '05/03/2026',
-    branch: 'Chi nhánh Quận 1, TP. HCM',
-    openingCash: 2000000,
-    cashRevenue: 12000000,
-    transferRevenue: 3500000,
-    expenses: -500000,
-  }
+  useEffect(() => {
+    const loadCurrentShift = async () => {
+      setIsLoading(true)
+      setError('')
+      try {
+        const currentShift = await shiftService.getCurrent()
+        setShift(currentShift)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Không thể tải ca hiện tại.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadCurrentShift()
+  }, [])
 
   const now = new Date()
   const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
   const currentDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
 
-  const totalRevenue = shiftData.cashRevenue + shiftData.transferRevenue
-  const expectedCash = shiftData.openingCash + shiftData.cashRevenue + shiftData.expenses
+  const paymentMethods = shift?.paymentMethods ?? []
+  const cashRevenue = paymentMethods
+    .filter((payment) => payment.method.toLowerCase().includes('cash') || payment.method.toLowerCase().includes('tiền mặt'))
+    .reduce((sum, payment) => sum + payment.amount, 0)
+  const transferRevenue = Math.max((shift?.totalRevenue ?? 0) - cashRevenue, 0)
+  const totalRevenue = shift?.totalRevenue ?? 0
+  const openingCash = shift?.openingAmount ?? 0
+  const expectedCash = shift?.systemAmount ?? openingCash + cashRevenue
   const difference = actualCash > 0 ? actualCash - expectedCash : 0
 
   const handleCloseShift = async () => {
+    if (!shift) {
+      setError('Không có ca đang mở để đóng.')
+      return
+    }
+
     setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setIsLoading(false)
-    navigate('/end-shift-report')
+    setError('')
+    try {
+      const closedShift = await shiftService.close(shift.id, actualCash, note.trim() || undefined)
+      navigate('/end-shift-report', { state: { shiftId: closedShift.id } })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể đóng ca. Vui lòng thử lại.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -39,7 +66,7 @@ const CloseShiftPage = () => {
       <div className="flex items-center justify-between px-8 py-5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-950 sticky top-0 z-10">
         <div>
           <h1 className="text-xl font-black tracking-tight text-slate-900 dark:text-white uppercase">Kết thúc ca bán hàng</h1>
-          <p className="text-slate-400 text-xs font-medium mt-0.5">{shiftData.branch}</p>
+          <p className="text-slate-400 text-xs font-medium mt-0.5">{shift?.shiftCode ?? 'Ca hiện tại'}</p>
         </div>
         <button
           onClick={() => navigate(-1)}
@@ -59,8 +86,8 @@ const CloseShiftPage = () => {
               <h2 className="text-base font-black text-slate-900 dark:text-white">1. Thông tin ca làm việc</h2>
             </div>
             {[
-              { label: 'Nhân viên', value: shiftData.employee },
-              { label: 'Thời gian bắt đầu', value: `${shiftData.startTime} — ${shiftData.startDate}` },
+              { label: 'Nhân viên', value: shift?.userName ?? 'Tài khoản' },
+              { label: 'Thời gian bắt đầu', value: shift ? new Date(shift.openedAt).toLocaleString('vi-VN') : '—' },
               { label: 'Thời gian hiện tại', value: `${currentTime} — ${currentDate}` },
             ].map((row) => (
               <div key={row.label} className="flex justify-between items-center py-3 border-b border-slate-100 dark:border-slate-800 last:border-0">
@@ -76,11 +103,11 @@ const CloseShiftPage = () => {
               <div className="mt-4 flex flex-col gap-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-400 font-bold">Tiền mặt:</span>
-                  <span className="font-black text-slate-700 dark:text-slate-300">{shiftData.cashRevenue.toLocaleString('vi-VN')} đ</span>
+                  <span className="font-black text-slate-700 dark:text-slate-300">{cashRevenue.toLocaleString('vi-VN')} đ</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-slate-400 font-bold">Chuyển khoản / Thẻ:</span>
-                  <span className="font-black text-slate-700 dark:text-slate-300">{shiftData.transferRevenue.toLocaleString('vi-VN')} đ</span>
+                  <span className="font-black text-slate-700 dark:text-slate-300">{transferRevenue.toLocaleString('vi-VN')} đ</span>
                 </div>
               </div>
             </div>
@@ -96,7 +123,7 @@ const CloseShiftPage = () => {
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Tiền đầu ca</label>
                 <div className="relative">
-                  <input type="text" value={shiftData.openingCash.toLocaleString('vi-VN')} readOnly
+                  <input type="text" value={openingCash.toLocaleString('vi-VN')} readOnly
                     className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 text-slate-500 font-bold cursor-not-allowed text-sm"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">đ</span>
@@ -105,7 +132,7 @@ const CloseShiftPage = () => {
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Doanh thu tiền mặt</label>
                 <div className="relative">
-                  <input type="text" value={shiftData.cashRevenue.toLocaleString('vi-VN')} readOnly
+                  <input type="text" value={cashRevenue.toLocaleString('vi-VN')} readOnly
                     className="w-full bg-slate-50 dark:bg-slate-800 border-none rounded-xl py-3 px-4 text-slate-500 font-bold cursor-not-allowed text-sm"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">đ</span>
@@ -140,10 +167,22 @@ const CloseShiftPage = () => {
                 {actualCash > 0 ? `${difference > 0 ? '+' : ''}${difference.toLocaleString('vi-VN')}` : '0'} đ
               </span>
             </div>
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Ghi chú đóng ca nếu có"
+              rows={3}
+              className="w-full p-4 rounded-xl border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 transition-all resize-none font-medium placeholder:text-slate-400"
+            />
+            {error && (
+              <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-600">
+                {error}
+              </div>
+            )}
             <div className="flex flex-col gap-3 pt-2">
               <button
                 onClick={handleCloseShift}
-                disabled={isLoading}
+                disabled={isLoading || !shift}
                 className="w-full bg-primary hover:bg-primary/90 text-white font-black py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-3 shadow-lg shadow-primary/25 uppercase tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (

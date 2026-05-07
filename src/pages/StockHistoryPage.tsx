@@ -1,5 +1,6 @@
+import { useState, useEffect } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
-import { mockStockHistory } from '../mock/stockHistory'
+import { stockHistoryService, type StockHistoryEntry } from '../services/stockHistoryService'
 import type { StockMovementType } from '../types/stockHistory'
 import { exportToExcel, exportToPDF } from '../utils/exportUtils'
 
@@ -23,6 +24,20 @@ const getMovementStyles = (type: StockMovementType) => {
 }
 
 const StockHistoryPage = () => {
+  const [entries, setEntries] = useState<StockHistoryEntry[]>([])
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await stockHistoryService.getAll()
+        setEntries(data)
+      } catch (err) {
+        console.error('Failed to load stock history:', err)
+      }
+    }
+    load()
+  }, [])
+
   return (
     <DashboardLayout title="Lịch sử kho" breadcrumb={[{ label: 'Hàng hóa' }, { label: 'Hạn sử dụng', path: '/expiry' }, { label: 'Lịch sử biến động' }]}>
       <div className="flex flex-col gap-8 animate-fade-in pb-12">
@@ -96,7 +111,7 @@ const StockHistoryPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                {mockStockHistory.map((entry) => {
+                {entries.map((entry) => {
                   const styles = getMovementStyles(entry.type)
                   return (
                     <tr key={entry.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50 transition-colors group">

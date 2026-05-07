@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import type { Batch, BatchScanResult } from '../types/batch'
+import type { BatchScanResult } from '../types/batch'
 import { parseGS1Barcode, isGS1Barcode } from '../utils/gs1Parser'
 
 interface BatchScannerProps {

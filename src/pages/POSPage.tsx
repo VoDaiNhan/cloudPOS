@@ -1,6 +1,9 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
-import { posProducts, posCategories } from '../mock/pos'
+import { posService } from '../services/posService'
+import { customerService } from '../services/customerService'
+import { orderService } from '../services/orderService'
 import type { POSProduct, CartItem, PaymentMethod, DiscountType } from '../types/posProduct'
+import type { Customer } from '../types/customer'
 import VoiceOverlay from '../components/VoiceOverlay'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import { SmartDiscountInput } from '../components/SmartDiscountInput'
@@ -40,35 +43,43 @@ const POSPage = () => {
   const [customerSearch, setCustomerSearch] = useState('')
   const [voiceOpen, setVoiceOpen] = useState(false)
   const [customVat, setCustomVat] = useState(false)
+  const [customers, setCustomers] = useState<Customer[]>([])
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
+
+  // ── API data ────────────────────────────────────
+  const [posProducts, setPosProducts] = useState<POSProduct[]>([])
+  const [posCategories, setPosCategories] = useState<string[]>(['Tất cả'])
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const products = await posService.getProducts()
+        const categories = Array.from(new Set(products.map((product) => product.category || 'Khác')))
+        setPosProducts(products)
+        setPosCategories(['Tất cả', ...categories])
+      } catch (err) {
+        console.error('Failed to load POS data:', err)
+      }
+    }
+    load()
+  }, [])
+
+  useEffect(() => {
+    const loadCustomers = async () => {
+      try {
+        const data = await customerService.getAll()
+        setCustomers(data)
+      } catch (err) {
+        console.error('Failed to load customers:', err)
+      }
+    }
+    loadCustomers()
+  }, [])
 
   // ── Refs ───────────────────────────────────────
   const productSearchRef = useRef<HTMLInputElement>(null)
   const customerSearchRef = useRef<HTMLInputElement>(null)
-
-  // ── Keyboard Shortcuts ─────────────────────────
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if focus is inside an input, unless it's a specific function key
-      if (e.key === 'F1') {
-        e.preventDefault()
-        productSearchRef.current?.focus()
-      } else if (e.key === 'F2') {
-        e.preventDefault()
-        customerSearchRef.current?.focus()
-      } else if (e.key === 'F8') {
-        e.preventDefault()
-        // Trigger Payment
-        if (cart.length > 0) alert('Thực hiện Thanh toán thành công!')
-      } else if (e.key === 'F10') {
-        e.preventDefault()
-        // Save Draft
-        if (cart.length > 0) alert('Đã lưu nháp đơn hàng!')
-      }
-    }
-    
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [cart])
 
   // ── Refs for scroll-spy ─────────────────────────
   const productScrollRef = useRef<HTMLDivElement>(null)
@@ -76,29 +87,42 @@ const POSPage = () => {
   const isUserScrolling = useRef(true)
 
   // ── Categories (without 'Tất cả') ──────────────
-  const actualCategories = useMemo(() => posCategories.filter(c => c !== 'Tất cả'), []) 
+  const actualCategories = useMemo(() => posCategories.filter(c => c !== 'Tất cả'), [posCategories]) 
 
   // ── Products grouped by category ───────────────
   const groupedProducts = useMemo(() => {
     const groups: Record<string, typeof posProducts> = {}
     for (const cat of actualCategories) {
-      const items = posProducts.filter(p => p.category === cat)
+      const items = posProducts.filter(p => p.category === cat && (p.is_sellable !== false))
       if (items.length > 0) groups[cat] = items
     }
     return groups
-  }, [actualCategories])
+  }, [actualCategories, posProducts])
 
   // ── Filtered (for search) ──────────────────────
   const searchFiltered = useMemo(() => {
     if (!searchTerm) return null
     const term = searchTerm.toLowerCase()
-    return posProducts.filter(p => p.name.toLowerCase().includes(term))
-  }, [searchTerm])
+    return posProducts.filter(p => p.name.toLowerCase().includes(term) && (p.is_sellable !== false))
+  }, [searchTerm, posProducts])
 
   const productStockMap = useMemo(
     () => new Map(posProducts.map((product) => [product.id, product.stockInBaseUnit])),
-    []
+    [posProducts]
   )
+
+  const filteredCustomers = useMemo(() => {
+    const term = customerSearch.trim().toLowerCase()
+    if (!term) return []
+
+    return customers
+      .filter((customer) =>
+        customer.name.toLowerCase().includes(term) ||
+        customer.phone.includes(customerSearch.trim()) ||
+        (customer.customerGroupName || '').toLowerCase().includes(term)
+      )
+      .slice(0, 6)
+  }, [customerSearch, customers])
 
   // ── IntersectionObserver scroll-spy ─────────────
   useEffect(() => {
@@ -251,6 +275,111 @@ const POSPage = () => {
   const change = cashReceived > 0 ? cashReceived - total : 0
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0)
+
+  const effectiveCustomerDiscount = selectedCustomer?.effectiveDiscountPercent || 0
+  const hiddenCommissionEnabled = selectedCustomer?.hiddenCommissionEnabled || false
+  const commissionBaseAmount = Math.max(0, afterItemDiscount - invoiceDiscountAmount)
+  const hiddenCommissionAmount = hiddenCommissionEnabled
+    ? Math.round(commissionBaseAmount * effectiveCustomerDiscount) / 100
+    : 0
+
+  const selectCustomer = useCallback((customer: Customer | null) => {
+    setSelectedCustomer(customer)
+    setCustomerSearch(customer?.name || '')
+  }, [])
+
+  const handleCheckout = useCallback(async () => {
+    if (cart.length === 0 || checkoutLoading) return
+
+    if (paymentMethod === 'debt' && !selectedCustomer) {
+      alert('Vui lòng chọn khách hàng trước khi ghi nợ đơn hàng.')
+      return
+    }
+
+    if (paymentMethod === 'cash' && cashReceived > 0 && cashReceived < total) {
+      alert('Tiền khách đưa chưa đủ để thanh toán đơn hàng tiền mặt.')
+      return
+    }
+
+    setCheckoutLoading(true)
+    try {
+      const paidAmount = paymentMethod === 'cash'
+        ? (cashReceived > 0 ? cashReceived : total)
+        : paymentMethod === 'transfer'
+          ? total
+          : 0
+
+      const result = await orderService.create({
+        customerId: selectedCustomer?.id,
+        discountAmount: invoiceDiscountAmount,
+        taxAmount: vatAmount,
+        paidAmount,
+        paymentMethod,
+        notes: hiddenCommissionEnabled
+          ? `Hoa hồng ẩn ${effectiveCustomerDiscount}% cho ${selectedCustomer?.name || 'khách hàng'}`
+          : undefined,
+        items: cart.map((item) => ({
+          productId: item.product.id,
+          productName: item.product.name,
+          unitName: item.product.baseUnit,
+          quantity: item.quantity,
+          unitPrice: item.product.price,
+          discountValue: item.discountValue,
+          discountType: item.discountType,
+        })),
+      })
+
+      setCart([])
+      setCashReceived(0)
+      setInvoiceDiscountValue(0)
+      setInvoiceDiscountType('fixed')
+
+      alert(
+        hiddenCommissionEnabled && hiddenCommissionAmount > 0
+          ? `Đã tạo đơn ${result.orderNumber}. Hệ thống tích lũy ${hiddenCommissionAmount.toLocaleString('vi-VN')}đ hoa hồng cho ${selectedCustomer?.name}.`
+          : `Đã tạo đơn ${result.orderNumber} thành công.`
+      )
+    } catch (err) {
+      console.error('Checkout failed:', err)
+      alert('Không thể tạo đơn hàng. Vui lòng kiểm tra lại dữ liệu và thử lại.')
+    } finally {
+      setCheckoutLoading(false)
+    }
+  }, [
+    cart,
+    cashReceived,
+    checkoutLoading,
+    effectiveCustomerDiscount,
+    hiddenCommissionAmount,
+    hiddenCommissionEnabled,
+    invoiceDiscountAmount,
+    paymentMethod,
+    selectedCustomer,
+    total,
+    vatAmount,
+  ])
+
+  // ── Keyboard Shortcuts ─────────────────────────
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'F1') {
+        e.preventDefault()
+        productSearchRef.current?.focus()
+      } else if (e.key === 'F2') {
+        e.preventDefault()
+        customerSearchRef.current?.focus()
+      } else if (e.key === 'F8') {
+        e.preventDefault()
+        if (cart.length > 0) void handleCheckout()
+      } else if (e.key === 'F10') {
+        e.preventDefault()
+        if (cart.length > 0) alert('Đã lưu nháp đơn hàng!')
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [cart, handleCheckout])
 
   // ── Payment methods ────────────────────────────
   const paymentMethods: { key: PaymentMethod; icon: string; label: string }[] = [
@@ -537,20 +666,50 @@ const POSPage = () => {
                 value={customerSearch}
                 onChange={(e) => setCustomerSearch(e.target.value)}
               />
+              {customerSearch.trim() && customerSearch !== selectedCustomer?.name && filteredCustomers.length > 0 && (
+                <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-20 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-950">
+                  {filteredCustomers.map((customer) => (
+                    <button
+                      key={customer.id}
+                      onClick={() => selectCustomer(customer)}
+                      className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left hover:bg-slate-50 dark:hover:bg-slate-900"
+                    >
+                      <div>
+                        <p className="text-sm font-black text-slate-900 dark:text-white">{customer.name}</p>
+                        <p className="text-[11px] font-bold text-slate-400">{customer.phone || 'Không có SĐT'} • {customer.customerGroupName || 'Khách vãng lai'}</p>
+                      </div>
+                      <span className="text-xs font-black text-primary">{customer.effectiveDiscountPercent || 0}%</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             {/* Selected Customer */}
             <div className="mt-3 flex items-center justify-between rounded-xl bg-primary/5 p-3">
               <div className="flex items-center gap-3">
-                <div className="size-10 rounded-full bg-primary flex items-center justify-center text-white font-black text-xs">KV</div>
+                <div className="size-10 rounded-full bg-primary flex items-center justify-center text-white font-black text-xs">
+                  {selectedCustomer ? selectedCustomer.name.slice(0, 2).toUpperCase() : 'KV'}
+                </div>
                 <div>
-                  <p className="text-sm font-black text-slate-900 dark:text-white">Khách vãng lai</p>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Điểm tích lũy: 0</p>
+                  <p className="text-sm font-black text-slate-900 dark:text-white">{selectedCustomer?.name || 'Khách vãng lai'}</p>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                    {selectedCustomer
+                      ? `${selectedCustomer.customerGroupName || 'Khách vãng lai'} • ${effectiveCustomerDiscount}%`
+                      : 'Không áp dụng chiết khấu nhóm'}
+                  </p>
                 </div>
               </div>
-              <button className="text-slate-400 hover:text-slate-600 transition-all">
-                <span className="material-symbols-outlined text-xl">edit</span>
+              <button onClick={() => selectCustomer(null)} className="text-slate-400 hover:text-slate-600 transition-all">
+                <span className="material-symbols-outlined text-xl">{selectedCustomer ? 'close' : 'person'}</span>
               </button>
             </div>
+            {selectedCustomer?.hiddenCommissionEnabled && hiddenCommissionAmount > 0 && (
+              <div className="mt-3 rounded-xl border border-amber-100 bg-amber-50 px-3 py-3 text-xs text-amber-700 dark:border-amber-900/30 dark:bg-amber-900/10 dark:text-amber-300">
+                Chiết khấu của nhóm khách này không in trên hóa đơn. Hệ thống sẽ tích lũy{' '}
+                <span className="font-black">{hiddenCommissionAmount.toLocaleString('vi-VN')}đ</span> hoa hồng phải trả cho{' '}
+                <span className="font-black">{selectedCustomer.name}</span>.
+              </div>
+            )}
           </div>
 
           {/* Payment Section */}
@@ -652,6 +811,15 @@ const POSPage = () => {
                 <span className="text-base font-black text-slate-900 dark:text-white">Tổng cộng</span>
                 <span className="text-3xl font-black text-primary tracking-tight">{total.toLocaleString('vi-VN')}đ</span>
               </div>
+              {hiddenCommissionEnabled && hiddenCommissionAmount > 0 && (
+                <div className="flex justify-between rounded-xl bg-amber-50 px-4 py-3 text-sm border border-amber-100 dark:bg-amber-900/10 dark:border-amber-900/30">
+                  <div>
+                    <p className="font-black text-amber-700 dark:text-amber-300">Hoa hồng tích lũy nội bộ</p>
+                    <p className="text-[11px] font-bold text-amber-600">Không hiển thị trên hóa đơn khách</p>
+                  </div>
+                  <span className="font-black text-amber-700 dark:text-amber-300">{hiddenCommissionAmount.toLocaleString('vi-VN')}đ</span>
+                </div>
+              )}
             </div>
 
             {/* Payment Method */}
@@ -741,11 +909,12 @@ const POSPage = () => {
                 In nháp (F10)
               </button>
               <button 
-                onClick={() => { if (cart.length > 0) alert('Thực hiện Thanh toán thành công!') }}
-                className="flex items-center justify-center gap-2 rounded-2xl bg-primary py-4 font-black text-white shadow-xl shadow-primary/25 hover:bg-primary/90 transition-all active:scale-95 text-sm uppercase tracking-widest"
+                onClick={() => { if (cart.length > 0) void handleCheckout() }}
+                disabled={checkoutLoading}
+                className="flex items-center justify-center gap-2 rounded-2xl bg-primary py-4 font-black text-white shadow-xl shadow-primary/25 hover:bg-primary/90 transition-all active:scale-95 text-sm uppercase tracking-widest disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <span className="material-symbols-outlined">check_circle</span>
-                Thanh toán (F8)
+                <span className="material-symbols-outlined">{checkoutLoading ? 'progress_activity' : 'check_circle'}</span>
+                {checkoutLoading ? 'Đang tạo đơn...' : 'Thanh toán (F8)'}
               </button>
             </div>
           </div>
@@ -756,3 +925,5 @@ const POSPage = () => {
 }
 
 export default POSPage
+
+

@@ -5,15 +5,39 @@ import { Table } from '../components/Table'
 import type { Column } from '../components/Table'
 import { Button } from '../components/Button'
 import type { Product } from '../types/product'
-import { useProductStore } from '../store/productStore'
+import { productService } from '../services/productService'
 
 const ProductListPage = () => {
   const navigate = useNavigate()
-  const { products, deleteProduct } = useProductStore()
+  const [products, setProducts] = useState<Product[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const [isLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const pageSize = 6
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        const data = await productService.getAll()
+        setProducts(data)
+      } catch (err) {
+        console.error('Failed to load products:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadProducts()
+  }, [])
+
+  const deleteProduct = async (id: string) => {
+    try {
+      await productService.delete(id)
+      setProducts((prev) => prev.filter((p) => p.id !== id))
+    } catch (err) {
+      console.error('Failed to delete product:', err)
+      alert('Xoá sản phẩm thất bại')
+    }
+  }
 
   const filteredProducts = useMemo(() => {
     return products.filter((p) =>
@@ -25,14 +49,9 @@ const ProductListPage = () => {
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize))
 
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm])
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages)
-    }
+  const currentPageClamped = useMemo(() => {
+    if (currentPage > totalPages) return totalPages
+    return currentPage
   }, [currentPage, totalPages])
 
   const columns: Column<Product>[] = [
@@ -41,7 +60,7 @@ const ProductListPage = () => {
       title: 'STT',
       width: '60px',
       align: 'center',
-      render: (_, __, index) => <span className="text-slate-500">{(currentPage - 1) * pageSize + index + 1}</span>,
+      render: (_, __, index) => <span className="text-slate-500">{(currentPageClamped - 1) * pageSize + index + 1}</span>,
     },
     {
       key: 'name',
@@ -142,7 +161,9 @@ const ProductListPage = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight uppercase">Danh sách sản phẩm</h2>
-            <p className="text-sm text-slate-500 font-bold opacity-70">Quản lý danh mục và tồn kho sản phẩm của bạn</p>
+            <p className="text-sm text-slate-500 font-bold opacity-70">
+              {isLoading ? 'Đang tải...' : `${products.length} sản phẩm từ cơ sở dữ liệu`}
+            </p>
           </div>
           <Button 
             icon="add" 
@@ -170,10 +191,6 @@ const ProductListPage = () => {
               <span className="material-symbols-outlined text-lg group-hover:rotate-12 transition-transform">filter_list</span>
               <span>Lọc dữ liệu</span>
             </button>
-            <button className="flex items-center gap-2 h-12 px-5 bg-white dark:bg-slate-900 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-500 border border-slate-200 dark:border-slate-800 hover:border-emerald-500 hover:text-emerald-500 transition-all group">
-              <span className="material-symbols-outlined text-lg group-hover:-translate-y-0.5 transition-transform">download</span>
-              <span>Xuất Excel</span>
-            </button>
           </div>
         </div>
 
@@ -184,9 +201,9 @@ const ProductListPage = () => {
             dataSource={filteredProducts}
             loading={isLoading}
             rowKey="id"
-            onRowClick={(product) => console.log('View product', product.id)}
+            onRowClick={(product) => navigate(`/products/${product.id}`)}
             pagination={{
-              current: currentPage,
+              current: currentPageClamped,
               pageSize,
               total: filteredProducts.length,
               onChange: setCurrentPage

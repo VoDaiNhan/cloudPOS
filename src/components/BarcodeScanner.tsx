@@ -14,7 +14,7 @@ export const BarcodeScanner = ({
   const [value, setValue] = useState('')
   const [isScanning, setIsScanning] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const scanTimeoutRef = useRef<NodeJS.Timeout>()
+  const scanTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (autoFocus && inputRef.current) {
@@ -32,12 +32,12 @@ export const BarcodeScanner = ({
     }
 
     // Clear timeout cũ
-    if (scanTimeoutRef.current) {
-      clearTimeout(scanTimeoutRef.current)
+    if (scanTimeoutRef.current !== null) {
+      window.clearTimeout(scanTimeoutRef.current)
     }
 
     // Nếu nhập xong (không có ký tự mới trong 100ms), xử lý
-    scanTimeoutRef.current = setTimeout(() => {
+    scanTimeoutRef.current = window.setTimeout(() => {
       setIsScanning(false)
       if (newValue.trim()) {
         handleScan(newValue.trim())
@@ -48,8 +48,8 @@ export const BarcodeScanner = ({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && value.trim()) {
       e.preventDefault()
-      if (scanTimeoutRef.current) {
-        clearTimeout(scanTimeoutRef.current)
+      if (scanTimeoutRef.current !== null) {
+        window.clearTimeout(scanTimeoutRef.current)
       }
       setIsScanning(false)
       handleScan(value.trim())
@@ -60,7 +60,7 @@ export const BarcodeScanner = ({
     onScan(code)
     setValue('')
     // Focus lại để quét tiếp
-    setTimeout(() => {
+    window.setTimeout(() => {
       inputRef.current?.focus()
     }, 100)
   }

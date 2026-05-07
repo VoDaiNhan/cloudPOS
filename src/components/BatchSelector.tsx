@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import type { Batch, BatchAllocation } from '../types/batch'
 import { allocateBatches, calculateDaysUntilExpiry } from '../utils/batchAllocator'
 
@@ -13,7 +13,7 @@ interface BatchSelectorProps {
 }
 
 export const BatchSelector = ({
-  productId,
+  productId: _productId,
   productName,
   batches,
   requestedQuantity,
@@ -21,16 +21,20 @@ export const BatchSelector = ({
   onCancel,
   strategy = 'FEFO',
 }: BatchSelectorProps) => {
-  const [allocations, setAllocations] = useState<BatchAllocation[]>([])
+  const [manualAllocations, setManualAllocations] = useState<BatchAllocation[]>([])
   const [manualSelections, setManualSelections] = useState<Map<string, number>>(new Map())
 
-  // Auto-allocate on mount (for FEFO/FIFO)
-  useEffect(() => {
+  // Auto-allocate based on strategy (for FEFO/FIFO)
+  const autoAllocations = useMemo(() => {
     if (strategy !== 'MANUAL') {
-      const allocated = allocateBatches(batches, requestedQuantity, strategy)
-      setAllocations(allocated)
+      return allocateBatches(batches, requestedQuantity, strategy)
     }
+    return []
   }, [batches, requestedQuantity, strategy])
+
+  const allocations = strategy === 'MANUAL' ? manualAllocations : autoAllocations
+
+  void _productId // used via props interface
 
   const handleManualQuantityChange = (batchId: string, quantity: number) => {
     const newSelections = new Map(manualSelections)
@@ -57,7 +61,7 @@ export const BatchSelector = ({
         })
       }
     })
-    setAllocations(newAllocations)
+    setManualAllocations(newAllocations)
   }
 
   const totalAllocated = allocations.reduce((sum, alloc) => sum + alloc.quantity, 0)

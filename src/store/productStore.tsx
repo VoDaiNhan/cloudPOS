@@ -1,16 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { mockProducts } from '../mock/product'
-import { mockStockBatches } from '../mock/stock-batches'
+import { productService } from '../services/productService'
+import { batchService, type BatchItem } from '../services/batchService'
+import { authService } from '../services/authService'
 import type { ExpiryBatch, ExpirySummary } from '../types/expiry'
 import type { InventoryItem, InventoryStatus, StockBatch } from '../types/inventory'
 import type { Product } from '../types/product'
 import { buildExpiryBatches, buildExpirySummary, getBatchStatus, sortBatchesForIssue } from '../utils/stockBatchUtils'
-
-const PRODUCT_STORAGE_KEY = 'cloudpos.products.v1'
-const BATCH_STORAGE_KEY = 'cloudpos.stock-batches.v1'
-const STORAGE_VERSION_KEY = 'cloudpos.data-version'
-const CURRENT_STORAGE_VERSION = '3'
 
 export interface ImportStockLine {
   sku: string
@@ -30,28 +26,16 @@ interface ProductStoreContextValue {
   stockBatches: StockBatch[]
   expiryBatches: ExpiryBatch[]
   expirySummary: ExpirySummary
-  saveProduct: (payload: Partial<Product>) => Product
-  deleteProduct: (id: string) => void
-  importStocks: (lines: ImportStockLine[]) => { updated: number; created: number }
+  isLoading: boolean
+  error: string
+  refresh: () => Promise<void>
+  saveProduct: (payload: Partial<Product>) => Promise<Product>
+  deleteProduct: (id: string) => Promise<void>
+  importStocks: (lines: ImportStockLine[]) => Promise<{ updated: number; created: number }>
   inventoryItems: InventoryItem[]
 }
 
 const ProductStoreContext = createContext<ProductStoreContextValue | null>(null)
-
-const ensureStorageVersion = () => {
-  try {
-    const currentVersion = localStorage.getItem(STORAGE_VERSION_KEY)
-    if (currentVersion === CURRENT_STORAGE_VERSION) return false
-
-    // Force-refresh old demo cache so all pages start from POS-aligned seed.
-    localStorage.removeItem(PRODUCT_STORAGE_KEY)
-    localStorage.removeItem(BATCH_STORAGE_KEY)
-    localStorage.setItem(STORAGE_VERSION_KEY, CURRENT_STORAGE_VERSION)
-    return true
-  } catch {
-    return false
-  }
-}
 
 const toPositiveNumber = (value: unknown, fallback = 0) => {
   const parsed = Number(value)
@@ -146,180 +130,141 @@ const mapProductsToInventoryWithBatches = (
     }
   })
 
-const mapStockStatus = (stockLevel: number): InventoryStatus => {
-  if (stockLevel <= 0) return 'low'
-  if (stockLevel <= 5) return 'low'
-  if (stockLevel <= 10) return 'under_limit'
-  return 'stable'
-}
+const mapBatchItemsToStockBatches = (items: BatchItem[], products: Product[]): StockBatch[] => {
+  const productById = new Map(products.map((product) => [product.id, product]))
 
-const mapProductsToInventory = (products: Product[]): InventoryItem[] =>
-  products.map((product) => ({
-    id: product.id,
-    sku: product.code,
-    name: product.name,
-    image: product.image,
-    category: product.categoryName || 'Khác',
-    unit: product.baseUnit || 'Cái',
-    stockLevel: product.stock,
-    stockValue: product.stock * (product.costPrice ?? product.price),
-    status: mapStockStatus(product.stock),
-    issuePolicy: 'FIFO',
-    trackedBatchCount: 0,
-    expiringQuantity: 0,
-    expiredQuantity: 0,
-  }))
-
-void mapProductsToInventory
-
-const syncProductsWithPosSeed = (storedProducts: Product[]) => {
-  const storedByCode = new Map(
-    storedProducts.map((product) => [product.code.toUpperCase(), product])
-  )
-
-  return mockProducts.map((seedProduct) => {
-    const existing = storedByCode.get(seedProduct.code.toUpperCase())
-    if (!existing) return seedProduct
+  return items.map((item) => {
+    const product = productById.get(item.productId)
 
     return {
-      ...seedProduct,
-      stock: toPositiveNumber(existing.stock, seedProduct.stock),
-      price: toPositiveNumber(existing.price, seedProduct.price),
-      costPrice: toPositiveNumber(existing.costPrice, seedProduct.costPrice ?? 0),
-      status: existing.status ?? seedProduct.status,
-      tax: toPositiveNumber(existing.tax, seedProduct.tax ?? 0),
-      barcode: existing.barcode || seedProduct.barcode,
+      id: item.id,
+      productId: item.productId,
+      sku: product?.code || '',
+      productName: item.productName || product?.name || '',
+      category: product?.categoryName || 'Khác',
+      unit: item.unitName || product?.baseUnit || 'Cái',
+      quantity: item.availableQuantity ?? item.currentQuantity,
+      costPrice: item.importPrice,
+      receivedDate: item.importDate,
+      batchNumber: item.batchNumber,
+      expiryDate: item.expiryDate,
+      image: product?.image,
     }
   })
 }
 
-const readProductsFromStorage = (): Product[] => {
-  try {
-    if (ensureStorageVersion()) return mockProducts
-
-    const raw = localStorage.getItem(PRODUCT_STORAGE_KEY)
-    if (!raw) return mockProducts
-    const parsed = JSON.parse(raw) as Product[]
-    if (!Array.isArray(parsed) || parsed.length === 0) return mockProducts
-    return syncProductsWithPosSeed(parsed)
-  } catch {
-    return mockProducts
-  }
-}
-
-const readBatchesFromStorage = (): StockBatch[] => {
-  try {
-    if (ensureStorageVersion()) return mockStockBatches
-
-    const raw = localStorage.getItem(BATCH_STORAGE_KEY)
-    if (!raw) return mockStockBatches
-    const parsed = JSON.parse(raw) as StockBatch[]
-    if (!Array.isArray(parsed) || parsed.length === 0) return mockStockBatches
-    return parsed
-  } catch {
-    return mockStockBatches
-  }
-}
-
 export const ProductStoreProvider = ({ children }: { children: ReactNode }) => {
-  const [products, setProducts] = useState<Product[]>(() => readProductsFromStorage())
-  const [stockBatches, setStockBatches] = useState<StockBatch[]>(() => readBatchesFromStorage())
+  const [products, setProducts] = useState<Product[]>([])
+  const [stockBatches, setStockBatches] = useState<StockBatch[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  useEffect(() => {
-    localStorage.setItem(PRODUCT_STORAGE_KEY, JSON.stringify(products))
-  }, [products])
-
-  useEffect(() => {
-    localStorage.setItem(BATCH_STORAGE_KEY, JSON.stringify(stockBatches))
-  }, [stockBatches])
-
-  const saveProduct = useCallback((payload: Partial<Product>) => {
-    let savedProduct: Product | null = null
-
-    setProducts((prev) => {
-      const isEdit = Boolean(payload.id)
-      const existing = prev.find((product) => product.id === payload.id)
-
-      const normalized: Product = {
-        id: payload.id ?? `p-${Date.now()}`,
-        code: (payload.code?.trim() || (isEdit && existing?.code) || nextProductCode(prev)).toUpperCase(),
-        name: payload.name?.trim() || existing?.name || 'Sản phẩm mới',
-        barcode: payload.barcode?.trim() || existing?.barcode || '',
-        categoryName: payload.categoryName?.trim() || existing?.categoryName || 'Khác',
-        price: toPositiveNumber(payload.price, existing?.price ?? 0),
-        costPrice: toPositiveNumber(payload.costPrice, existing?.costPrice ?? 0),
-        stock: toPositiveNumber(payload.stock, existing?.stock ?? 0),
-        status: payload.status ?? existing?.status ?? 'active',
-        image: payload.image || existing?.image,
-        baseUnit: payload.baseUnit?.trim() || existing?.baseUnit || 'Cái',
-        conversions: payload.conversions ?? existing?.conversions ?? [],
-        tax: toPositiveNumber(payload.tax, existing?.tax ?? 0),
-      }
-
-      savedProduct = normalized
-      if (isEdit) {
-        return prev.map((product) => (product.id === normalized.id ? normalized : product))
-      }
-      return [...prev, normalized]
-    })
-
-    if (savedProduct) {
-      setStockBatches((prev) =>
-        prev.map((batch) =>
-          batch.productId === savedProduct?.id
-            ? {
-                ...batch,
-                sku: savedProduct.code,
-                productName: savedProduct.name,
-                category: savedProduct.categoryName,
-                unit: savedProduct.baseUnit || batch.unit,
-                image: savedProduct.image || batch.image,
-              }
-            : batch
-        )
-      )
+  const refresh = useCallback(async () => {
+    if (!authService.isAuthenticated()) {
+      setProducts([])
+      setStockBatches([])
+      setError('')
+      setIsLoading(false)
+      return
     }
 
-    if (!savedProduct) {
-      throw new Error('Khong the luu san pham')
+    setIsLoading(true)
+    setError('')
+    try {
+      const [nextProducts, nextBatches] = await Promise.all([
+        productService.getAll(),
+        batchService.getAll(),
+      ])
+      setProducts(nextProducts)
+      setStockBatches(mapBatchItemsToStockBatches(nextBatches, nextProducts))
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Không thể tải dữ liệu sản phẩm.'
+      setError(message)
+    } finally {
+      setIsLoading(false)
     }
-
-    return savedProduct
   }, [])
 
-  const deleteProduct = useCallback((id: string) => {
+  useEffect(() => {
+    refresh()
+  }, [refresh])
+
+  const saveProduct = useCallback(async (payload: Partial<Product>) => {
+    const existing = products.find((product) => product.id === payload.id)
+    const normalized: Partial<Product> = {
+      ...payload,
+      code: (payload.code?.trim() || existing?.code || nextProductCode(products)).toUpperCase(),
+      name: payload.name?.trim() || existing?.name || 'Sản phẩm mới',
+      barcode: payload.barcode?.trim() || existing?.barcode || '',
+      categoryName: payload.categoryName?.trim() || existing?.categoryName || 'Khác',
+      price: toPositiveNumber(payload.price, existing?.price ?? 0),
+      costPrice: toPositiveNumber(payload.costPrice, existing?.costPrice ?? 0),
+      stock: toPositiveNumber(payload.stock, existing?.stock ?? 0),
+      status: payload.status ?? existing?.status ?? 'active',
+      image: payload.image || existing?.image,
+      baseUnit: payload.baseUnit?.trim() || existing?.baseUnit || 'Cái',
+      conversions: payload.conversions ?? existing?.conversions ?? [],
+      tax: toPositiveNumber(payload.tax, existing?.tax ?? 0),
+    }
+
+    const savedProduct = payload.id
+      ? await productService.update(payload.id, normalized)
+      : await productService.create(normalized)
+
+    setProducts((prev) => {
+      const exists = prev.some((product) => product.id === savedProduct.id)
+      if (exists) {
+        return prev.map((product) => (product.id === savedProduct.id ? savedProduct : product))
+      }
+      return [...prev, savedProduct]
+    })
+
+    setStockBatches((prev) =>
+      prev.map((batch) =>
+        batch.productId === savedProduct.id
+          ? {
+              ...batch,
+              sku: savedProduct.code,
+              productName: savedProduct.name,
+              category: savedProduct.categoryName,
+              unit: savedProduct.baseUnit || batch.unit,
+              image: savedProduct.image || batch.image,
+            }
+          : batch
+      )
+    )
+
+    return savedProduct
+  }, [products])
+
+  const deleteProduct = useCallback(async (id: string) => {
+    await productService.delete(id)
     setProducts((prev) => prev.filter((product) => product.id !== id))
     setStockBatches((prev) => prev.filter((batch) => batch.productId !== id))
   }, [])
 
-  const importStocks = useCallback((lines: ImportStockLine[]) => {
+  const importStocks = useCallback(async (lines: ImportStockLine[]) => {
     let updated = 0
     let created = 0
 
-    const nextProducts = [...products]
-    const nextBatches = [...stockBatches]
+    for (const line of lines) {
+      if (line.quantityInBaseUnit <= 0) continue
 
-    lines.forEach((line, index) => {
-        if (line.quantityInBaseUnit <= 0) return
+      const code = line.sku.trim().toUpperCase()
+      if (!code) continue
 
-        const code = line.sku.trim().toUpperCase()
-        if (!code) return
-        const productIndex = nextProducts.findIndex(
-          (product) => product.code.toUpperCase() === code
-        )
-        if (productIndex >= 0) {
-          const current = nextProducts[productIndex]
-          nextProducts[productIndex] = {
-            ...current,
-            stock: current.stock + line.quantityInBaseUnit,
-            baseUnit: line.baseUnit || current.baseUnit,
-            costPrice: line.costPrice > 0 ? line.costPrice : current.costPrice,
-            image: line.image || current.image,
-          }
-          updated += 1
-        } else {
-          const newProduct: Product = {
-          id: `p-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      const existing = products.find((product) => product.code.toUpperCase() === code)
+      if (existing) {
+        await saveProduct({
+          ...existing,
+          stock: existing.stock + line.quantityInBaseUnit,
+          baseUnit: line.baseUnit || existing.baseUnit,
+          costPrice: line.costPrice > 0 ? line.costPrice : existing.costPrice,
+          image: line.image || existing.image,
+        })
+        updated += 1
+      } else {
+        await saveProduct({
           code,
           name: line.name || `Sản phẩm ${code}`,
           barcode: '',
@@ -331,55 +276,15 @@ export const ProductStoreProvider = ({ children }: { children: ReactNode }) => {
           baseUnit: line.baseUnit || 'Cái',
           conversions: [],
           tax: 0,
-        }
-        nextProducts.push(newProduct)
+          image: line.image,
+        })
         created += 1
-        }
+      }
+    }
 
-        const trackedProduct =
-          productIndex >= 0
-            ? nextProducts[productIndex]
-            : nextProducts[nextProducts.length - 1]
-
-        const batchKey = `${code}::${(line.batchNumber || '').trim().toUpperCase()}::${line.expiryDate || ''}`
-        const batchIndex = nextBatches.findIndex((batch) => {
-          const currentKey = `${batch.sku.toUpperCase()}::${batch.batchNumber.trim().toUpperCase()}::${batch.expiryDate || ''}`
-          return currentKey === batchKey
-        })
-
-        if (batchIndex >= 0) {
-          nextBatches[batchIndex] = {
-            ...nextBatches[batchIndex],
-            quantity: nextBatches[batchIndex].quantity + line.quantityInBaseUnit,
-            costPrice:
-              line.costPrice > 0 ? line.costPrice : nextBatches[batchIndex].costPrice,
-            receivedDate: line.receivedDate || nextBatches[batchIndex].receivedDate,
-            unit: line.baseUnit || nextBatches[batchIndex].unit,
-          }
-          return
-        }
-
-        nextBatches.push({
-          id: `batch-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}`,
-          productId: trackedProduct.id,
-          sku: code,
-          productName: trackedProduct.name,
-          category: trackedProduct.categoryName || 'Khác',
-          unit: line.baseUnit || trackedProduct.baseUnit || 'Cái',
-          quantity: line.quantityInBaseUnit,
-          costPrice: Math.max(line.costPrice, 0),
-          receivedDate: line.receivedDate || new Date().toISOString().slice(0, 10),
-          batchNumber: line.batchNumber?.trim() || `AUTO-${Date.now()}-${index + 1}`,
-          expiryDate: line.expiryDate,
-          image: line.image || trackedProduct.image,
-        })
-      })
-
-    setProducts(nextProducts)
-    setStockBatches(nextBatches)
-
+    await refresh()
     return { updated, created }
-  }, [products, stockBatches])
+  }, [products, refresh, saveProduct])
 
   const inventoryItems = useMemo(
     () => mapProductsToInventoryWithBatches(products, stockBatches),
@@ -394,6 +299,9 @@ export const ProductStoreProvider = ({ children }: { children: ReactNode }) => {
       stockBatches,
       expiryBatches,
       expirySummary,
+      isLoading,
+      error,
+      refresh,
       saveProduct,
       deleteProduct,
       importStocks,
@@ -404,6 +312,9 @@ export const ProductStoreProvider = ({ children }: { children: ReactNode }) => {
       stockBatches,
       expiryBatches,
       expirySummary,
+      isLoading,
+      error,
+      refresh,
       saveProduct,
       deleteProduct,
       importStocks,

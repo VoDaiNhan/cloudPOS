@@ -1,0 +1,16 @@
+src/components/BarcodeScanner.tsx(17,26): error TS2554: Expected 1 arguments, but got 0.
+src/components/BarcodeScanner.tsx(17,33): error TS2503: Cannot find namespace 'NodeJS'.
+src/components/BatchScanner.tsx(2,15): error TS6196: 'Batch' is declared but never used.
+src/components/BatchSelector.tsx(16,3): error TS6133: 'productId' is declared but its value is never read.
+src/components/ReturnOrderManager.tsx(68,9): error TS2322: Type '"return_to_supplier"' is not assignable to type 'WarehouseType'.
+src/components/ReturnOrderManager.tsx(84,7): error TS2322: Type 'WarehouseType' is not assignable to type '"main" | "expired" | "damaged" | "return_to_supplier" | undefined'.
+  Type '"return"' is not assignable to type '"main" | "expired" | "damaged" | "return_to_supplier" | undefined'.
+src/components/ReturnSummary.tsx(24,9): error TS6133: 'netAmount' is declared but its value is never read.
+src/mock/foodReturnExamples.ts(171,9): error TS6133: 'today' is declared but its value is never read.
+src/pages/BatchManagementDemo.tsx(13,3): error TS6133: 'calculateDaysUntilExpiry' is declared but its value is never read.
+src/pages/BatchManagementDemo.tsx(16,3): error TS6133: 'getTotalAvailableQuantity' is declared but its value is never read.
+src/pages/ReturnExchangePage.tsx(10,1): error TS6192: All imports in import declaration are unused.
+src/pages/ReturnExchangePage.tsx(11,1): error TS6133: 'ProductCategory' is declared but its value is never read.
+src/pages/ReturnExchangePage.tsx(149,25): error TS18048: 'ret.customerName' is possibly 'undefined'.
+src/utils/foodReturnHandler.ts(184,3): error TS6133: 'orderDate' is declared but its value is never read.
+src/utils/foodReturnHandler.ts(301,7): error TS6133: 'refundMethod' is declared but its value is never read.

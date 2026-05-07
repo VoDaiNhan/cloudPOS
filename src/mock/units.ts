@@ -1,257 +1,122 @@
-import type { Unit, UnitConversion } from '../types/unit'
+import type { Unit, UnitConversion, ConversionTemplate } from '../types/unit'
 
 // ============================================
-// HỆ THỐNG ĐỢN VỊ CHUẨN
+// HỆ THỐNG ĐƠN VỊ CHUẨN
 // ============================================
 
-export const standardUnits: Unit[] = [
+export const units: Unit[] = [
   // ── ĐƠN CHIẾC ──────────────────────────────
   {
-    id: 'cai',
+    id: 'unit-1',
     name: 'Cái',
+    shortName: 'Cái',
     category: 'piece',
     isBase: true,
     description: 'Đơn vị đếm cơ bản',
   },
   {
-    id: 'chiec',
+    id: 'unit-2',
     name: 'Chiếc',
+    shortName: 'Chiếc',
     category: 'piece',
     isBase: true,
-    description: 'Dùng cho đồ có hình dạng (giày, áo, xe)',
+    description: 'Dùng cho đồ có hình dạng',
   },
   {
-    id: 'con',
-    name: 'Con',
-    category: 'piece',
-    isBase: true,
-    description: 'Dùng cho động vật, đồ vật nhỏ',
-  },
-  {
-    id: 'bo',
+    id: 'unit-3',
     name: 'Bộ',
+    shortName: 'Bộ',
     category: 'piece',
     isBase: false,
-    description: 'Tập hợp nhiều món (bộ bàn ghế, bộ đồ ăn)',
-  },
-  {
-    id: 'cap',
-    name: 'Cặp',
-    category: 'piece',
-    isBase: false,
-    conversionRate: 2,
-    description: '1 cặp = 2 chiếc',
-  },
-  {
-    id: 'ta',
-    name: 'Tá',
-    category: 'piece',
-    isBase: false,
-    conversionRate: 12,
-    description: '1 tá = 12 cái',
-  },
-
-  // ── KHỐI LƯỢNG ──────────────────────────────
-  {
-    id: 'g',
-    name: 'Gram (g)',
-    category: 'weight',
-    isBase: true,
-    description: 'Đơn vị khối lượng cơ bản',
-  },
-  {
-    id: 'kg',
-    name: 'Kilogram (kg)',
-    category: 'weight',
-    isBase: false,
-    conversionRate: 1000,
-    description: '1 kg = 1000 g',
-  },
-  {
-    id: 'tan',
-    name: 'Tấn',
-    category: 'weight',
-    isBase: false,
-    conversionRate: 1000000,
-    description: '1 tấn = 1000 kg = 1,000,000 g',
-  },
-  {
-    id: 'yen',
-    name: 'Yến',
-    category: 'weight',
-    isBase: false,
-    conversionRate: 10,
-    description: '1 yến = 10 g (dùng trong vàng bạc)',
-  },
-  {
-    id: 'luong',
-    name: 'Lượng',
-    category: 'weight',
-    isBase: false,
-    conversionRate: 37.5,
-    description: '1 lượng = 37.5 g (dùng trong vàng)',
-  },
-
-  // ── THỂ TÍCH ──────────────────────────────
-  {
-    id: 'ml',
-    name: 'Mililít (ml)',
-    category: 'volume',
-    isBase: true,
-    description: 'Đơn vị thể tích cơ bản',
-  },
-  {
-    id: 'lit',
-    name: 'Lít (l)',
-    category: 'volume',
-    isBase: false,
-    conversionRate: 1000,
-    description: '1 lít = 1000 ml',
-  },
-  {
-    id: 'm3',
-    name: 'Mét khối (m³)',
-    category: 'volume',
-    isBase: false,
-    conversionRate: 1000000,
-    description: '1 m³ = 1000 lít',
-  },
-
-  // ── CHIỀU DÀI ──────────────────────────────
-  {
-    id: 'cm',
-    name: 'Centimet (cm)',
-    category: 'length',
-    isBase: true,
-    description: 'Đơn vị chiều dài cơ bản',
-  },
-  {
-    id: 'm',
-    name: 'Mét (m)',
-    category: 'length',
-    isBase: false,
-    conversionRate: 100,
-    description: '1 m = 100 cm',
-  },
-  {
-    id: 'km',
-    name: 'Kilomet (km)',
-    category: 'length',
-    isBase: false,
-    conversionRate: 100000,
-    description: '1 km = 1000 m',
-  },
-
-  // ── DIỆN TÍCH ──────────────────────────────
-  {
-    id: 'cm2',
-    name: 'Centimet vuông (cm²)',
-    category: 'area',
-    isBase: true,
-    description: 'Đơn vị diện tích cơ bản',
-  },
-  {
-    id: 'm2',
-    name: 'Mét vuông (m²)',
-    category: 'area',
-    isBase: false,
-    conversionRate: 10000,
-    description: '1 m² = 10,000 cm²',
+    conversionRate: 1,
+    description: 'Tập hợp nhiều món',
   },
 
   // ── ĐÓNG GÓI ──────────────────────────────
   {
-    id: 'goi',
-    name: 'Gói',
-    category: 'package',
-    isBase: true,
-    description: 'Đơn vị đóng gói nhỏ',
-  },
-  {
-    id: 'hop',
-    name: 'Hộp',
-    category: 'package',
-    isBase: true,
-    description: 'Đơn vị đóng gói trung bình',
-  },
-  {
-    id: 'thung',
-    name: 'Thùng',
-    category: 'package',
-    isBase: false,
-    description: 'Đơn vị đóng gói lớn',
-  },
-  {
-    id: 'bao',
-    name: 'Bao',
-    category: 'package',
-    isBase: false,
-    description: 'Đơn vị đóng gói lớn (gạo, xi măng)',
-  },
-  {
-    id: 'lon',
+    id: 'unit-4',
     name: 'Lon',
+    shortName: 'L',
     category: 'package',
     isBase: true,
-    description: 'Đồ uống đóng lon',
   },
   {
-    id: 'loc',
-    name: 'Lốc',
+    id: 'unit-5',
+    name: 'Chai',
+    shortName: 'Ch',
+    category: 'package',
+    isBase: true,
+  },
+  {
+    id: 'unit-6',
+    name: 'Thùng',
+    shortName: 'Th',
     category: 'package',
     isBase: false,
-    description: 'Đơn vị trung bình (thường 6 lon)',
   },
   {
-    id: 'chai',
-    name: 'Chai',
+    id: 'unit-7',
+    name: 'Lốc',
+    shortName: 'Lốc',
+    category: 'package',
+    isBase: false,
+  },
+  {
+    id: 'unit-8',
+    name: 'Gói',
+    shortName: 'Gói',
     category: 'package',
     isBase: true,
-    description: 'Đồ uống đóng chai',
-  },
-
-  // ── ĐỒ ĂN ──────────────────────────────
-  {
-    id: 'phan',
-    name: 'Phần',
-    category: 'food',
-    isBase: true,
-    description: 'Suất ăn cho 1 người',
   },
   {
-    id: 'suat',
-    name: 'Suất',
-    category: 'food',
+    id: 'unit-9',
+    name: 'Kg',
+    shortName: 'Kg',
+    category: 'weight',
     isBase: true,
-    description: 'Suất ăn (tương đương phần)',
   },
   {
-    id: 'dia',
-    name: 'Dĩa',
-    category: 'food',
-    isBase: true,
-    description: 'Món ăn tính theo dĩa',
+    id: 'unit-10',
+    name: 'Gam',
+    shortName: 'G',
+    category: 'weight',
+    isBase: false,
+    conversionRate: 0.001,
   },
   {
-    id: 'bat',
-    name: 'Bát',
-    category: 'food',
-    isBase: true,
-    description: 'Món ăn tính theo bát (phở, cơm)',
+    id: 'unit-11',
+    name: 'Bao',
+    shortName: 'Bao',
+    category: 'package',
+    isBase: false,
   },
   {
-    id: 'ly',
-    name: 'Ly',
-    category: 'food',
+    id: 'unit-12',
+    name: 'Hộp',
+    shortName: 'Hộp',
+    category: 'package',
     isBase: true,
-    description: 'Đồ uống tính theo ly',
   },
   {
-    id: 'to',
-    name: 'Tô',
-    category: 'food',
+    id: 'unit-13',
+    name: 'Vỉ',
+    shortName: 'Vỉ',
+    category: 'package',
+    isBase: false,
+  },
+  {
+    id: 'unit-14',
+    name: 'Quả',
+    shortName: 'Q',
+    category: 'piece',
     isBase: true,
-    description: 'Món ăn tính theo tô (lớn hơn bát)',
+  },
+  {
+    id: 'unit-15',
+    name: 'Bao 50kg',
+    shortName: 'Bao',
+    category: 'package',
+    isBase: false,
   },
 ]
 
@@ -259,89 +124,93 @@ export const standardUnits: Unit[] = [
 // QUY ĐỔI ĐƠN VỊ MẪU
 // ============================================
 
-export const sampleConversions: UnitConversion[] = [
-  // Nước ngọt
+export const unitConversions: UnitConversion[] = [
+  // Coca Cola
   {
-    id: 'conv-001',
-    productId: null, // Áp dụng chung
-    fromUnit: 'thung',
-    toUnit: 'lon',
+    id: 'conv-1',
+    productId: 'prod-coca',
+    fromUnitId: 'unit-6', // Thùng
+    toUnitId: 'unit-4', // Lon
+    conversionRate: 24,
+    fromUnit: 'unit-6',
+    toUnit: 'unit-4',
     rate: 24,
-    description: '1 thùng = 24 lon (nước ngọt)',
+    isDefault: true,
   },
   {
-    id: 'conv-001-1',
-    productId: null,
-    fromUnit: 'loc',
-    toUnit: 'lon',
+    id: 'conv-2',
+    productId: 'prod-coca',
+    fromUnitId: 'unit-7', // Lốc
+    toUnitId: 'unit-4', // Lon
+    conversionRate: 6,
+    fromUnit: 'unit-7',
+    toUnit: 'unit-4',
     rate: 6,
-    description: '1 lốc = 6 lon (nước ngọt)',
   },
+  // Pepsi
   {
-    id: 'conv-002',
-    productId: null,
-    fromUnit: 'thung',
-    toUnit: 'chai',
-    rate: 12,
-    description: '1 thùng = 12 chai (nước suối)',
+    id: 'conv-3',
+    productId: 'prod-pepsi',
+    fromUnitId: 'unit-6', // Thùng
+    toUnitId: 'unit-5', // Chai
+    conversionRate: 20,
+    fromUnit: 'unit-6',
+    toUnit: 'unit-5',
+    rate: 20,
+    isDefault: true,
   },
-  
   // Gạo
   {
-    id: 'conv-003',
-    productId: null,
-    fromUnit: 'bao',
-    toUnit: 'kg',
+    id: 'conv-4',
+    productId: 'prod-rice',
+    fromUnitId: 'unit-15', // Bao 50kg
+    toUnitId: 'unit-9', // Kg
+    conversionRate: 50,
+    fromUnit: 'unit-15',
+    toUnit: 'unit-9',
     rate: 50,
-    description: '1 bao = 50 kg (gạo)',
+    isDefault: true,
   },
-  
-  // Trứng
+]
+
+// ============================================
+// MẪU QUY ĐỔI NHANH
+// ============================================
+
+export const conversionTemplates: ConversionTemplate[] = [
   {
-    id: 'conv-004',
-    productId: null,
-    fromUnit: 'hop',
-    toUnit: 'qua',
-    rate: 10,
-    description: '1 hộp = 10 quả (trứng)',
+    id: 'temp-drink',
+    name: 'Đồ uống đóng lon',
+    description: 'Thùng 24 lon, Lốc 6 lon',
+    conversions: [
+      { fromUnit: 'Thùng', toUnit: 'Lon', rate: 24 },
+      { fromUnit: 'Lốc', toUnit: 'Lon', rate: 6 },
+    ],
   },
   {
-    id: 'conv-005',
-    productId: null,
-    fromUnit: 'thung',
-    toUnit: 'qua',
-    rate: 360,
-    description: '1 thùng = 360 quả (trứng)',
+    id: 'temp-bottle',
+    name: 'Đồ uống đóng chai',
+    description: 'Thùng 24 chai, Thùng 12 chai',
+    conversions: [
+      { fromUnit: 'Thùng', toUnit: 'Chai', rate: 24 },
+    ],
   },
-  
-  // Bia
   {
-    id: 'conv-006',
-    productId: null,
-    fromUnit: 'thung',
-    toUnit: 'chai',
-    rate: 24,
-    description: '1 thùng = 24 chai (bia)',
+    id: 'temp-rice',
+    name: 'Nông sản (Gạo)',
+    description: 'Bao 50kg, Bao 25kg, Bao 10kg',
+    conversions: [
+      { fromUnit: 'Bao', toUnit: 'Kg', rate: 50 },
+    ],
   },
-  
-  // Sữa
   {
-    id: 'conv-007',
-    productId: null,
-    fromUnit: 'thung',
-    toUnit: 'hop',
-    rate: 48,
-    description: '1 thùng = 48 hộp (sữa)',
-  },
-  
-  // Bánh snack
-  {
-    id: 'conv-008',
-    productId: null,
-    fromUnit: 'thung',
-    toUnit: 'goi',
-    rate: 30,
-    description: '1 thùng = 30 gói (snack)',
+    id: 'temp-egg',
+    name: 'Trứng',
+    description: 'Vỉ 30 quả, Vỉ 10 quả',
+    conversions: [
+      { fromUnit: 'Vỉ', toUnit: 'Quả', rate: 30 },
+      { fromUnit: 'Hộp', toUnit: 'Quả', rate: 10 },
+    ],
   },
 ]
 
@@ -349,59 +218,44 @@ export const sampleConversions: UnitConversion[] = [
 // HELPER FUNCTIONS
 // ============================================
 
-export const getUnitsByCategory = (category: string) => {
-  return standardUnits.filter(u => u.category === category)
-}
-
-export const getBaseUnit = (category: string) => {
-  return standardUnits.find(u => u.category === category && u.isBase)
-}
-
-export const getLargerUnits = (category: string) => {
-  return standardUnits.filter(u => u.category === category && !u.isBase)
-}
-
-export const convertUnit = (
-  value: number,
+export const convertQuantity = (
+  quantity: number,
   fromUnitId: string,
   toUnitId: string,
-  customConversion?: UnitConversion
+  productId?: string
 ): number => {
-  // Nếu cùng đơn vị
-  if (fromUnitId === toUnitId) return value
+  if (fromUnitId === toUnitId) return quantity
 
-  const fromUnit = standardUnits.find(u => u.id === fromUnitId)
-  const toUnit = standardUnits.find(u => u.id === toUnitId)
+  // Find conversion for this specific product
+  const conversion = unitConversions.find(
+    (c) => 
+      c.productId === productId && 
+      (((c.fromUnitId ?? c.fromUnit) === fromUnitId && (c.toUnitId ?? c.toUnit) === toUnitId) ||
+       ((c.fromUnitId ?? c.fromUnit) === toUnitId && (c.toUnitId ?? c.toUnit) === fromUnitId))
+  )
 
-  if (!fromUnit || !toUnit) return value
-
-  // Kiểm tra custom conversion trước
-  if (customConversion) {
-    if (customConversion.fromUnit === fromUnitId && customConversion.toUnit === toUnitId) {
-      return value * customConversion.rate
-    }
-    if (customConversion.fromUnit === toUnitId && customConversion.toUnit === fromUnitId) {
-      return value / customConversion.rate
+  if (conversion) {
+    const rate = conversion.conversionRate ?? conversion.rate
+    if ((conversion.fromUnitId ?? conversion.fromUnit) === fromUnitId) {
+      return quantity * rate
+    } else {
+      return quantity / rate
     }
   }
 
-  // Nếu khác category thì không quy đổi được
-  if (fromUnit.category !== toUnit.category) return value
+  // Fallback to standard units if applicable (categories match)
+  const fromUnit = units.find(u => u.id === fromUnitId)
+  const toUnit = units.find(u => u.id === toUnitId)
 
-  // Quy đổi thông qua đơn vị cơ bản
-  const fromRate = fromUnit.conversionRate || 1
-  const toRate = toUnit.conversionRate || 1
+  if (fromUnit && toUnit && fromUnit.category === toUnit.category) {
+    const fromRate = fromUnit.conversionRate || 1
+    const toRate = toUnit.conversionRate || 1
+    return (quantity * fromRate) / toRate
+  }
 
-  return (value * fromRate) / toRate
+  return quantity
 }
 
-export const getConversionRate = (fromUnitId: string, toUnitId: string): number => {
-  return convertUnit(1, fromUnitId, toUnitId)
-}
-
-export const formatUnitDisplay = (value: number, unitId: string): string => {
-  const unit = standardUnits.find(u => u.id === unitId)
-  if (!unit) return `${value}`
-  
-  return `${value.toLocaleString('vi-VN')} ${unit.name}`
+export const getUnitName = (id: string) => {
+  return units.find((u) => u.id === id)?.name || id
 }

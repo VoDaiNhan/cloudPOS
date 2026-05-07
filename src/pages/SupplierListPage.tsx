@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import { Table } from '../components/Table'
 import type { Column } from '../components/Table'
 import { Button } from '../components/Button'
-import { mockSuppliers } from '../mock/supplier'
+import { supplierService } from '../services/supplierService'
 import type { Supplier } from '../types/supplier'
 
 // Category badge colors
@@ -23,24 +23,42 @@ const StatCard = ({ label, value, color }: { label: string; value: string; color
 )
 
 const SupplierListPage = () => {
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await supplierService.getAll()
+        setSuppliers(data)
+      } catch (err) {
+        console.error('Failed to load suppliers:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    load()
+  }, [])
 
   const filteredSuppliers = useMemo(() => {
-    if (!searchTerm) return mockSuppliers
+    if (!searchTerm) return suppliers
     const term = searchTerm.toLowerCase()
-    return mockSuppliers.filter(
+    return suppliers.filter(
       (s) =>
         s.name.toLowerCase().includes(term) ||
         s.code.toLowerCase().includes(term) ||
         s.phone.includes(searchTerm)
     )
-  }, [searchTerm])
+  }, [searchTerm, suppliers])
 
   // Aggregate stats
-  const totalImportValue = mockSuppliers.reduce((acc, s) => acc + s.totalImported, 0)
-  const totalDebt = mockSuppliers.reduce((acc, s) => acc + s.debt, 0)
+  const totalImportValue = suppliers.reduce((acc, s) => acc + s.totalImported, 0)
+  const totalDebt = suppliers.reduce((acc, s) => acc + s.debt, 0)
+  const totalDiscountSaved = suppliers.reduce((acc, s) => acc + s.totalDiscountSaved, 0)
+  const totalActualPaid = suppliers.reduce((acc, s) => acc + s.actualTotalPaid, 0)
 
   const columns: Column<Supplier>[] = [
     {
@@ -76,13 +94,38 @@ const SupplierListPage = () => {
       ),
     },
     {
-      key: 'totalImported',
-      title: 'Tổng giá trị nhập',
+      key: 'discountPercent',
+      title: 'Chiết khấu NCC',
       align: 'right',
       render: (_, supplier) => (
-        <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+        <span className={`text-sm font-black ${supplier.discountPercent > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
+          {supplier.discountPercent > 0 ? `${supplier.discountPercent}%` : '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'totalImported',
+      title: 'Giá nhập (Sổ)',
+      align: 'right',
+      render: (_, supplier) => (
+        <span className="text-sm font-bold text-slate-500 tracking-tight">
           {supplier.totalImported.toLocaleString('vi-VN')}đ
         </span>
+      ),
+    },
+    {
+      key: 'actualPaid',
+      title: 'Thực trả NCC',
+      align: 'right',
+      render: (_, supplier) => (
+        <div className="text-right">
+          <span className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+            {supplier.actualTotalPaid.toLocaleString('vi-VN')}đ
+          </span>
+          {supplier.totalDiscountSaved > 0 && (
+            <p className="text-[10px] font-black text-emerald-500">Tiết kiệm {supplier.totalDiscountSaved.toLocaleString('vi-VN')}đ</p>
+          )}
+        </div>
       ),
     },
     {
@@ -144,10 +187,11 @@ const SupplierListPage = () => {
         </div>
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <StatCard label="Tổng nhà cung cấp" value={String(mockSuppliers.length)} />
-          <StatCard label="Tổng giá trị nhập (Tháng)" value={totalImportValue.toLocaleString('vi-VN') + 'đ'} color="text-primary" />
-          <StatCard label="Tổng công nợ hiện tại" value={totalDebt.toLocaleString('vi-VN') + 'đ'} color="text-rose-500" />
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          <StatCard label="Tổng nhà cung cấp" value={isLoading ? '...' : String(suppliers.length)} />
+          <StatCard label="Giá nhập ghi sổ" value={totalImportValue.toLocaleString('vi-VN') + 'đ'} color="text-primary" />
+          <StatCard label="Tiết kiệm CK nhà cung cấp" value={totalDiscountSaved.toLocaleString('vi-VN') + 'đ'} color="text-emerald-600" />
+          <StatCard label="Thực trả NCC / Công nợ" value={`${totalActualPaid.toLocaleString('vi-VN')}đ / ${totalDebt.toLocaleString('vi-VN')}đ`} color="text-rose-500" />
         </div>
 
         {/* Search */}

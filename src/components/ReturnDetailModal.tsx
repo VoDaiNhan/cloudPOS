@@ -1,5 +1,25 @@
-import type { ReturnOrder } from '../types/returnExchange'
-import { getReturnReasonLabel, returnConditions } from '../mock/returnExchange'
+import type { ReturnOrder, ReturnReason, ReturnCondition } from '../types/returnExchange'
+
+const returnReasons: Array<{ value: ReturnReason; label: string }> = [
+  { value: 'technical_defect', label: 'Lỗi kỹ thuật' },
+  { value: 'wrong_item', label: 'Giao sai hàng' },
+  { value: 'change_size_color', label: 'Đổi size/màu' },
+  { value: 'no_need', label: 'Không còn nhu cầu' },
+  { value: 'shipping_damage', label: 'Hỏng do vận chuyển' },
+  { value: 'expired', label: 'Hết hạn' },
+  { value: 'customer_request', label: 'Yêu cầu khách hàng' },
+  { value: 'other', label: 'Khác' },
+]
+
+const getReturnReasonLabel = (reason: ReturnReason): string =>
+  returnReasons.find((r) => r.value === reason)?.label || reason
+
+const returnConditions: Array<{ value: ReturnCondition; label: string; color: string }> = [
+  { value: 'good', label: 'Còn tốt', color: 'emerald' },
+  { value: 'defective', label: 'Hàng lỗi', color: 'rose' },
+  { value: 'opened', label: 'Đã mở hộp', color: 'amber' },
+  { value: 'need_check', label: 'Cần kiểm tra', color: 'blue' },
+]
 
 interface ReturnDetailModalProps {
   returnOrder: ReturnOrder

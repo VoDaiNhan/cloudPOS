@@ -1,15 +1,19 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { InputField } from '../components/InputField'
 import { SelectField } from '../components/SelectField'
 import { OtpInput } from '../components/OtpInput'
 import { Button } from '../components/Button'
-import { mockRegions, mockOtpCode } from '../mock/register'
+import { mockRegions } from '../mock/register'
+import { authService } from '../services/authService'
 
 const RegisterPage = () => {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     fullName: '',
     phone: '',
+    email: '',
+    password: '',
     region: '',
   })
   const [otp, setOtp] = useState<string[]>(Array(6).fill(''))
@@ -27,37 +31,30 @@ const RegisterPage = () => {
   }
 
   const handleSendOtp = async () => {
-    if (!formData.fullName || !formData.phone || !formData.region) {
+    if (!formData.fullName || !formData.phone || !formData.email || !formData.region) {
       setError('Vui lòng điền đầy đủ thông tin.')
       return
     }
     setIsLoading(true)
     setError('')
 
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setOtpSent(true)
-    setSuccess('Mã OTP đã được gửi đến số ' + formData.phone)
-    setIsLoading(false)
+    try {
+      await authService.sendRegisterOtp(formData.email)
+      setOtpSent(true)
+      setSuccess('Mã OTP đã được gửi đến email ' + formData.email)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể gửi OTP. Vui lòng kiểm tra cấu hình email.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleOtpChange = (value: string[]) => {
     setOtp(value)
     setError('')
 
-    // Auto-verify when all digits filled
     const code = value.join('')
-    if (code.length === 6) {
-      if (code === mockOtpCode) {
-        setOtpVerified(true)
-        setSuccess('Xác nhận OTP thành công!')
-      } else {
-        setError('Mã OTP không chính xác.')
-        setOtpVerified(false)
-      }
-    } else {
-      setOtpVerified(false)
-    }
+    setOtpVerified(code.length === 6)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,15 +62,23 @@ const RegisterPage = () => {
     if (!otpVerified || !agreeTerms) return
 
     setIsLoading(true)
-    // Simulate register API
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setSuccess('Đăng ký thành công! Đang chuyển hướng...')
-    setIsLoading(false)
-
-    // Navigate after delay
-    setTimeout(() => {
-      window.location.href = '/create-store'
-    }, 2000)
+    setError('')
+    try {
+      await authService.register({
+        fullName: formData.fullName,
+        phone: formData.phone,
+        email: formData.email,
+        password: formData.password,
+        otpCode: otp.join(''),
+        region: formData.region,
+      })
+      setSuccess('Đăng ký thành công! Đang chuyển hướng...')
+      navigate('/dashboard', { replace: true })
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Đăng ký thất bại. Vui lòng thử lại.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const canSubmit = otpVerified && agreeTerms && !isLoading
@@ -185,6 +190,28 @@ const RegisterPage = () => {
                   required
                 />
 
+                <InputField
+                  label="Email nhận mã OTP"
+                  icon="mail"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="you@gmail.com"
+                  required
+                />
+
+                <InputField
+                  label="Mật khẩu"
+                  icon="lock"
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  placeholder="Tối thiểu 6 ký tự"
+                  required
+                />
+
                 <SelectField
                   label="Khu vực"
                   icon="location_on"
@@ -218,14 +245,14 @@ const RegisterPage = () => {
                     onClick={handleSendOtp}
                     disabled={otpSent}
                   >
-                    {otpSent ? 'Đã gửi mã OTP' : 'Gửi mã OTP'}
+                    {otpSent ? 'Đã gửi mã OTP email' : 'Gửi mã OTP qua email'}
                   </Button>
                 </div>
 
                 {/* OTP Section */}
                 <div className="py-4 border-t border-dashed border-slate-200 mt-4">
                   <label className="block text-sm font-semibold text-slate-700 mb-3 text-center">
-                    Xác nhận mã OTP (6 chữ số)
+                    Xác nhận mã OTP email (6 chữ số)
                   </label>
                   <OtpInput value={otp} onChange={handleOtpChange} />
                 </div>
@@ -293,3 +320,5 @@ const RegisterPage = () => {
 }
 
 export default RegisterPage
+
+

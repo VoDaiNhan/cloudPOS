@@ -20,6 +20,13 @@ export interface Customer {
   lastPurchase: string
   status: 'active' | 'inactive'
   memberType: 'vip' | 'regular'
+  customerGroupId?: string
+  customerGroupName?: string
+  defaultDiscountPercent?: number
+  customDiscountPercent?: number
+  usesGroupDefaultDiscount?: boolean
+  effectiveDiscountPercent?: number
+  hiddenCommissionEnabled?: boolean
   avatarColor: string
   purchases?: PurchaseHistory[]
 }

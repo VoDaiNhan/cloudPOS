@@ -41,12 +41,25 @@ import PaymentSuccessPage from '../pages/PaymentSuccessPage'
 import NotFoundPage from '../pages/NotFoundPage'
 import TestPage from '../pages/TestPage'
 import SmartDiscountDemo from '../pages/SmartDiscountDemo'
-// import DiscountComparisonDemo from '../pages/DiscountComparisonDemo' // Temporarily disabled
-// import UnitManagementDemo from '../pages/UnitManagementDemo' // Temporarily disabled due to import errors
+import DiscountComparisonDemo from '../pages/DiscountComparisonDemo'
 import PricingManagementDemo from '../pages/PricingManagementDemo'
-// import UnitConversionPage from '../pages/UnitConversionPage' // Temporarily disabled due to import errors
 import { BatchManagementDemo } from '../pages/BatchManagementDemo'
 import { ReturnExchangePage } from '../pages/ReturnExchangePage'
+import ReturnInventoryPage from '../pages/ReturnInventoryPage'
+import UnitConversionPage from '../pages/UnitConversionPage'
+import ProfitReportPage from '../pages/ProfitReportPage'
+import RecipeManagementPage from '../pages/RecipeManagementPage'
+import { authService } from '../services/authService'
+
+const RequireAuth = ({ children }: { children: React.ReactNode }) => {
+  if (!authService.isAuthenticated()) {
+    return <Navigate to="/" replace />
+  }
+
+  return children
+}
+
+const protectedPage = (element: React.ReactNode) => <RequireAuth>{element}</RequireAuth>
 
 // Modal routes are defined in modalRoutes.ts
 // They are rendered as overlays using background location pattern
@@ -66,51 +79,57 @@ const mainRoutes: RouteObject[] = [
       { path: '/login', element: <LoginPage /> },
     ],
   },
-  { path: '/debt', element: <DebtPage /> },
-  { path: '/choose-workplace', element: <ChooseWorkplacePage /> },
-  { path: '/dashboard', element: <DashboardPage /> },
-  { path: '/expiry', element: <ExpiryDatePage /> },
-  { path: '/stock-history', element: <StockHistoryPage /> },
-  { path: '/categories', element: <CategoryPage /> },
-  { path: '/products', element: <ProductListPage /> },
-  { path: '/products/new', element: <ProductDetailPage /> },
-  { path: '/products/:id', element: <ProductDetailPage /> },
-  { path: '/customers', element: <CustomerListPage /> },
-  { path: '/suppliers', element: <SupplierListPage /> },
-  { path: '/pos', element: <POSPage /> },
-  { path: '/pos/discount', element: <SmartDiscountDemo /> },
-  { path: '/pos/return-exchange', element: <ReturnExchangePage /> },
-  { path: '/import-order', element: <ImportOrderPage /> },
-  { path: '/inventory', element: <InventoryPage /> },
-  { path: '/inventory/batches', element: <BatchManagementDemo /> },
-  { path: '/inventory/pricing', element: <PricingManagementDemo /> },
-  // { path: '/inventory/units', element: <UnitManagementDemo /> }, // Temporarily disabled
-  { path: '/stock-audit', element: <StockAuditPage /> },
-  { path: '/supplier-return', element: <SupplierReturnPage /> },
-  { path: '/customer-return', element: <CustomerReturnPage /> },
-  { path: '/stock-cancellation', element: <StockCancellationPage /> },
-  { path: '/cashbook', element: <CashbookPage /> },
-  { path: '/store-access', element: <StoreAccessPage /> },
+  { path: '/debt', element: protectedPage(<DebtPage />) },
+  { path: '/choose-workplace', element: protectedPage(<ChooseWorkplacePage />) },
+  { path: '/dashboard', element: protectedPage(<DashboardPage />) },
+  { path: '/expiry', element: protectedPage(<ExpiryDatePage />) },
+  { path: '/stock-history', element: protectedPage(<StockHistoryPage />) },
+  { path: '/categories', element: protectedPage(<CategoryPage />) },
+  { path: '/products', element: protectedPage(<ProductListPage />) },
+  { path: '/products/new', element: protectedPage(<ProductDetailPage />) },
+  { path: '/products/:id', element: protectedPage(<ProductDetailPage />) },
+  { path: '/customers', element: protectedPage(<CustomerListPage />) },
+  { path: '/suppliers', element: protectedPage(<SupplierListPage />) },
+  { path: '/pos', element: protectedPage(<POSPage />) },
+  { path: '/pos/discount', element: protectedPage(<SmartDiscountDemo />) },
+  { path: '/pos/discount-comparison', element: protectedPage(<DiscountComparisonDemo />) },
+  { path: '/pos/return-exchange', element: protectedPage(<ReturnExchangePage />) },
+  { path: '/import-order', element: protectedPage(<ImportOrderPage />) },
+  { path: '/inventory', element: protectedPage(<InventoryPage />) },
+  { path: '/inventory/batches', element: protectedPage(<BatchManagementDemo />) },
+  { path: '/inventory/pricing', element: protectedPage(<PricingManagementDemo />) },
+  { path: '/inventory/returns', element: protectedPage(<ReturnInventoryPage />) },
+  { path: '/inventory/units', element: protectedPage(<UnitConversionPage />) },
+  { path: '/recipes/:productId', element: protectedPage(<RecipeManagementPage />) },
+  { path: '/recipes', element: protectedPage(<RecipeManagementPage />) },
+  { path: '/stock-audit', element: protectedPage(<StockAuditPage />) },
+  { path: '/supplier-return', element: protectedPage(<SupplierReturnPage />) },
+  { path: '/customer-return', element: protectedPage(<CustomerReturnPage />) },
+  { path: '/stock-cancellation', element: protectedPage(<StockCancellationPage />) },
+  { path: '/cashbook', element: protectedPage(<CashbookPage />) },
+  { path: '/store-access', element: protectedPage(<StoreAccessPage />) },
   { path: '/register', element: <RegisterPage /> },
-  { path: '/create-store', element: <CreateStorePage /> },
-  { path: '/onboarding', element: <OnboardingPage /> },
-  { path: '/checkout', element: <CheckoutPage /> },
-  { path: '/account', element: <AccountPage /> },
-  { path: '/staff-permissions', element: <StaffPermissionsPage /> },
-  { path: '/settings', element: <SystemSettingsPage /> },
-  { path: '/checkout/success', element: <PaymentSuccessPage /> },
-  // { path: '/unit-conversions', element: <UnitConversionPage /> }, // Temporarily disabled
-  { path: '/reports', element: <Navigate to="/dashboard" replace /> },
+  { path: '/create-store', element: protectedPage(<CreateStorePage />) },
+  { path: '/onboarding', element: protectedPage(<OnboardingPage />) },
+  { path: '/checkout', element: protectedPage(<CheckoutPage />) },
+  { path: '/account', element: protectedPage(<AccountPage />) },
+  { path: '/staff-permissions', element: protectedPage(<StaffPermissionsPage />) },
+  { path: '/settings', element: protectedPage(<SystemSettingsPage />) },
+  { path: '/checkout/success', element: protectedPage(<PaymentSuccessPage />) },
+  { path: '/unit-conversions', element: protectedPage(<UnitConversionPage />) },
+  { path: '/reports/profit', element: protectedPage(<ProfitReportPage />) },
+  { path: '/reports', element: <Navigate to="/reports/profit" replace /> },
   { path: '*', element: <NotFoundPage /> },
 ]
 
 // Modal routes — these are rendered separately as overlays
 const modalRoutes: RouteObject[] = [
-  { path: '/open-shift', element: <OpenShiftPage /> },
-  { path: '/close-shift', element: <CloseShiftPage /> },
-  { path: '/end-shift-report', element: <EndShiftReportPage /> },
-  { path: '/receipt-voucher', element: <ReceiptVoucherPage /> },
-  { path: '/payment-voucher', element: <PaymentVoucherPage /> },
+  { path: '/open-shift', element: protectedPage(<OpenShiftPage />) },
+  { path: '/close-shift', element: protectedPage(<CloseShiftPage />) },
+  { path: '/end-shift-report', element: protectedPage(<EndShiftReportPage />) },
+  { path: '/end-shift-report/:id', element: protectedPage(<EndShiftReportPage />) },
+  { path: '/receipt-voucher', element: protectedPage(<ReceiptVoucherPage />) },
+  { path: '/payment-voucher', element: protectedPage(<PaymentVoucherPage />) },
 ]
 
 export default function AppRouter() {

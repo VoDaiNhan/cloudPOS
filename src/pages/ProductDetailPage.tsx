@@ -32,6 +32,7 @@ const ProductDetailPage = () => {
   const [conversions, setConversions] = useState<UnitConversion[]>(formData.conversions || [])
   const [linkedProductId, setLinkedProductId] = useState(existingProduct?.id || '')
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
 
   const handleSelectExistingProduct = (productId: string) => {
     setLinkedProductId(productId)
@@ -77,21 +78,25 @@ const ProductDetailPage = () => {
 
   const handleSave = async () => {
     setIsLoading(true)
-    // Simulate save
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    const payload: Partial<Product> = {
-      ...formData,
-      id: linkedProductId || existingProduct?.id,
-      conversions,
-      stock: Number(formData.stock ?? existingProduct?.stock ?? 0),
-      price: Number(formData.price ?? existingProduct?.price ?? 0),
-      costPrice: Number(formData.costPrice ?? existingProduct?.costPrice ?? 0),
-      tax: Number(formData.tax ?? existingProduct?.tax ?? 0),
-      status: (formData.status ?? existingProduct?.status ?? 'active') as Product['status'],
+    setError('')
+    try {
+      const payload: Partial<Product> = {
+        ...formData,
+        id: linkedProductId || existingProduct?.id,
+        conversions,
+        stock: Number(formData.stock ?? existingProduct?.stock ?? 0),
+        price: Number(formData.price ?? existingProduct?.price ?? 0),
+        costPrice: Number(formData.costPrice ?? existingProduct?.costPrice ?? 0),
+        tax: Number(formData.tax ?? existingProduct?.tax ?? 0),
+        status: (formData.status ?? existingProduct?.status ?? 'active') as Product['status'],
+      }
+      await saveProduct(payload)
+      navigate('/products')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể lưu sản phẩm.')
+    } finally {
+      setIsLoading(false)
     }
-    saveProduct(payload)
-    setIsLoading(false)
-    navigate('/products')
   }
 
   return (
@@ -119,6 +124,7 @@ const ProductDetailPage = () => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {error && <span className="text-sm font-bold text-rose-600">{error}</span>}
             <button 
               onClick={() => navigate('/products')}
               className="px-6 h-11 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold text-sm hover:bg-slate-200 transition-all"
@@ -365,6 +371,44 @@ const ProductDetailPage = () => {
                     <span className="absolute right-5 top-4 text-slate-400 font-bold">{formData.baseUnit || 'đv'}</span>
                   </div>
                 </div>
+                <div className="space-y-5 pt-2">
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Loại sản phẩm</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { key: true, label: 'Sản phẩm bán', icon: 'shopping_cart' },
+                      { key: false, label: 'Nguyên liệu', icon: 'inventory' },
+                    ].map((option) => (
+                      <label key={String(option.key)} className="cursor-pointer group">
+                        <input
+                          type="radio"
+                          name="is_sellable"
+                          checked={(formData.is_sellable ?? true) === option.key}
+                          onChange={() => setFormData(prev => ({ ...prev, is_sellable: option.key }))}
+                          className="peer hidden"
+                        />
+                        <div className="w-full text-center py-3.5 rounded-2xl border border-slate-100 dark:border-slate-800 peer-checked:bg-primary peer-checked:text-white peer-checked:border-primary peer-checked:shadow-lg peer-checked:shadow-primary/20 transition-all text-sm font-black text-slate-500 group-hover:border-primary/30 flex items-center justify-center gap-2">
+                          <span className="material-symbols-outlined text-lg">{option.icon}</span>
+                          {option.label}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                {formData.is_sellable && (
+                  <div className="space-y-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/recipes/${id || 'new'}`)}
+                      className="w-full h-14 rounded-2xl bg-gradient-to-r from-primary to-primary/80 text-white font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 hover:shadow-lg hover:shadow-primary/30 transition-all group"
+                    >
+                      <span className="material-symbols-outlined text-xl group-hover:rotate-12 transition-transform">restaurant</span>
+                      Thiết lập công thức
+                    </button>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest ml-1 text-center">
+                      Định mức nguyên liệu cho sản phẩm này
+                    </p>
+                  </div>
+                )}
                 <div className="space-y-5 pt-2">
                   <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Trạng thái kinh doanh</label>
                   <div className="grid grid-cols-2 gap-3">

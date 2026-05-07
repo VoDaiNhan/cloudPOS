@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DashboardLayout } from '../layouts/DashboardLayout'
-import { mockStoreInfo, mockServicePlan, mockBillingRecords } from '../mock/account'
+import { accountService } from '../services/accountService'
+import { storeService } from '../services/storeService'
 import type { BillingStatus } from '../types/account'
 
 // ── Sub-components ──────────────────────────────────────────────────────────
@@ -54,8 +55,8 @@ interface EditStoreModalProps {
   onClose: () => void
 }
 
-const EditStoreModal = ({ onClose }: EditStoreModalProps) => {
-  const store = mockStoreInfo
+const EditStoreModal = ({ onClose, storeData }: EditStoreModalProps & { storeData: { name: string; slug: string; address: string; phone: string; email: string; businessType: string } }) => {
+  const store = storeData
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-8 border border-slate-200 dark:border-slate-800">
@@ -113,9 +114,28 @@ const EditStoreModal = ({ onClose }: EditStoreModalProps) => {
 const AccountPage = () => {
   const [showEditModal, setShowEditModal] = useState(false)
   const navigate = useNavigate()
-  const store = mockStoreInfo
-  const plan = mockServicePlan
-  const billings = mockBillingRecords
+  const [store, setStore] = useState({ name: '', slug: '', address: '', phone: '', email: '', businessType: '' })
+  const [plan] = useState({ name: 'Gói Chuyên Nghiệp' as const, status: 'active' as const, expiryDate: '', branches: { used: 0, total: 0 }, staffAccounts: { used: 0, total: 0 }, storage: { usedGb: 0, totalGb: 0 } })
+  const [billings] = useState<{ id: string; date: string; invoiceId: string; planName: string; amount: number; status: BillingStatus }[]>([])
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [acct, storeData] = await Promise.all([accountService.get(), storeService.getMyStore()])
+        setStore({
+          name: storeData.name || acct.fullName || '',
+          slug: storeData.slug || '',
+          address: storeData.address || '',
+          phone: storeData.phone || acct.phone || '',
+          email: storeData.email || acct.email || '',
+          businessType: storeData.businessType || '',
+        })
+      } catch (err) {
+        console.error('Failed to load account:', err)
+      }
+    }
+    load()
+  }, [])
 
   const formatCurrency = (amount: number) =>
     amount.toLocaleString('vi-VN') + 'đ'
@@ -321,7 +341,7 @@ const AccountPage = () => {
         </footer>
       </div>
 
-      {showEditModal && <EditStoreModal onClose={() => setShowEditModal(false)} />}
+      {showEditModal && <EditStoreModal onClose={() => setShowEditModal(false)} storeData={store} />}
     </DashboardLayout>
   )
 }

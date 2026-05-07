@@ -1,28 +1,61 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BatchScanner } from '../components/BatchScanner'
 import { BatchSelector } from '../components/BatchSelector'
 import { ReturnOrderManager } from '../components/ReturnOrderManager'
 import type { BatchScanResult, Batch, BatchAllocation, ReturnOrder } from '../types/batch'
 import {
-  batches as mockBatches,
   warehouseLocations,
   pickingStrategies,
-  returnOrders as mockReturnOrders,
 } from '../mock/batches'
+import { batchService } from '../services/batchService'
 import {
-  calculateDaysUntilExpiry,
   getNearExpiryBatches,
   getExpiredBatches,
-  getTotalAvailableQuantity,
 } from '../utils/batchAllocator'
 
 import { DashboardLayout } from '../layouts/DashboardLayout'
 
 export const BatchManagementDemo = () => {
   const [activeTab, setActiveTab] = useState<'scan' | 'allocate' | 'return' | 'warehouse'>('scan')
-  const [batches] = useState<Batch[]>(mockBatches)
-  const [returnOrders, setReturnOrders] = useState<ReturnOrder[]>(mockReturnOrders)
+  const [batches, setBatches] = useState<Batch[]>([])
+  const [returnOrders, setReturnOrders] = useState<ReturnOrder[]>([])
   const [scanResult, setScanResult] = useState<BatchScanResult | null>(null)
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const batchData = await batchService.getAll()
+        // Map to Batch type expected by components
+        setBatches(batchData.map(b => ({
+          id: b.id,
+          batchNumber: b.batchNumber,
+          productId: b.id,
+          productName: b.productName,
+          importDate: b.importDate,
+          expiryDate: b.expiryDate || '',
+          initialQuantity: b.initialQuantity,
+          currentQuantity: b.currentQuantity,
+          availableQuantity: b.availableQuantity,
+          importPrice: b.importPrice,
+          unitName: b.unitName || 'Cái',
+          status: b.status as Batch['status'],
+          supplierId: '',
+          supplierName: b.supplierName || '',
+          warehouseLocation: 'main',
+          reservedQuantity: 0,
+          unitId: 'unit-1',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          isBlocked: false,
+          blockReason: '',
+          gs1Barcode: ''
+        })))
+      } catch (err) {
+        console.error('Failed to load batches:', err)
+      }
+    }
+    load()
+  }, [])
   const [showBatchSelector, setShowBatchSelector] = useState(false)
   const [showReturnManager, setShowReturnManager] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<{
@@ -173,7 +206,7 @@ export const BatchManagementDemo = () => {
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`px-4 py-2.5 rounded-xl font-bold text-sm transition-all whitespace-nowrap flex items-center gap-2 ${
                 activeTab === tab.id
                   ? 'bg-primary text-white shadow-lg shadow-primary/25'

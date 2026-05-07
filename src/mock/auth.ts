@@ -11,6 +11,15 @@ export const mockUser: User = {
 export const mockLoginResponse: LoginResponse = {
   token: 'mock-jwt-token-cloudpos-2026',
   user: mockUser,
+  currentStoreId: 'mock-store-1',
+  stores: [
+    {
+      id: 'mock-store-1',
+      name: 'CloudPOS Demo Store',
+      isPrimary: true,
+      isOwner: true,
+    },
+  ],
 }
 
 /**

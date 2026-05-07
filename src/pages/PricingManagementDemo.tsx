@@ -1,14 +1,48 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { PriceManager } from '../components/PriceManager'
-import { inventoryValues, getInventorySummary } from '../mock/pricing'
+import { inventoryService } from '../services/inventoryService'
 import { formatPrice, calculateInventoryValue } from '../utils/priceCalculator'
 import type { InventoryValue } from '../types/pricing'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 
 const PricingManagementDemo = () => {
-  const [inventory, setInventory] = useState<InventoryValue[]>(inventoryValues)
+  const [inventory, setInventory] = useState<InventoryValue[]>([])
   const [managingProduct, setManagingProduct] = useState<InventoryValue | null>(null)
-  const summary = getInventorySummary()
+
+  useEffect(() => {
+    inventoryService.getAll().then(items => {
+      const mapped: InventoryValue[] = items.map(item => {
+        const importPrice = item.stockValue / (item.stockLevel || 1)
+        const retailPrice = importPrice * 1.3
+        const wholesalePrice = importPrice * 1.15
+        const calc = calculateInventoryValue(item.stockLevel, importPrice, retailPrice, wholesalePrice)
+        return {
+          productId: item.id,
+          productName: item.name,
+          stockQuantity: item.stockLevel,
+          unitName: item.unit,
+          importPrice,
+          retailPrice,
+          wholesalePrice,
+          ...calc,
+        }
+      })
+      setInventory(mapped)
+    }).catch(err => console.error('Failed to load inventory:', err))
+  }, [])
+
+  const summary = useMemo(() => {
+    const totalProducts = inventory.length
+    const totalStockQuantity = inventory.reduce((s, i) => s + i.stockQuantity, 0)
+    const totalImportValue = inventory.reduce((s, i) => s + i.totalImportValue, 0)
+    const totalRetailValue = inventory.reduce((s, i) => s + i.totalRetailValue, 0)
+    const totalWholesaleValue = inventory.reduce((s, i) => s + i.totalWholesaleValue, 0)
+    const totalPotentialRetailProfit = inventory.reduce((s, i) => s + i.potentialRetailProfit, 0)
+    const totalPotentialWholesaleProfit = inventory.reduce((s, i) => s + i.potentialWholesaleProfit, 0)
+    const averageRetailMarginPercent = totalProducts ? Math.round(inventory.reduce((s, i) => s + i.retailMarginPercent, 0) / totalProducts * 100) / 100 : 0
+    const averageWholesaleMarginPercent = totalProducts ? Math.round(inventory.reduce((s, i) => s + i.wholesaleMarginPercent, 0) / totalProducts * 100) / 100 : 0
+    return { totalProducts, totalStockQuantity, totalImportValue, totalRetailValue, totalWholesaleValue, totalPotentialRetailProfit, totalPotentialWholesaleProfit, averageRetailMarginPercent, averageWholesaleMarginPercent }
+  }, [inventory])
 
   const handleSavePrices = (prices: { importPrice: number; retailPrice: number; wholesalePrice: number }) => {
     if (!managingProduct) return

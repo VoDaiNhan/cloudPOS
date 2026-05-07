@@ -1,30 +1,94 @@
-import type { LoginCredentials, LoginResponse } from '../types/auth'
-import { mockLoginResponse, mockCredentials } from '../mock/auth'
-
-/**
- * Auth service layer.
- * Currently uses mock data. Replace with real API calls when backend is ready.
- */
+import api from './api'
+import type { LoginCredentials, LoginResponse, ApiLoginResponse, RegisterCredentials } from '../types/auth'
 
 export const authService = {
   /**
-   * Simulate login API call.
-   * Replace the body with: return api.post('/auth/login', credentials)
+   * Login via real backend API.
    */
   login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    const { data } = await api.post<ApiLoginResponse>('/auth/login', {
+      phone: credentials.phone.trim().replace(/\s+/g, ''),
+      password: credentials.password,
+    })
 
-    if (
-      credentials.phone === mockCredentials.phone &&
-      credentials.password === mockCredentials.password
-    ) {
-      const response = mockLoginResponse
-      localStorage.setItem('access_token', response.token)
-      return response
+    const currentStore =
+      data.stores.find((store) => store.id === data.currentStoreId) ??
+      data.stores.find((store) => store.isPrimary) ??
+      data.stores[0]
+
+    if (!currentStore) {
+      throw new Error('Tài khoản chưa được gán cửa hàng nào.')
     }
 
-    throw new Error('Số điện thoại hoặc mật khẩu không đúng')
+    localStorage.setItem('access_token', data.accessToken)
+    localStorage.setItem('store_id', currentStore.id)
+
+    const response: LoginResponse = {
+      token: data.accessToken,
+      currentStoreId: currentStore.id,
+      stores: data.stores,
+      user: {
+        id: data.user.id,
+        name: data.user.fullName,
+        phone: data.user.phone,
+        role: 'admin',
+        storeName: currentStore.name,
+        storeId: currentStore.id,
+      },
+    }
+
+    // Cache user info
+    localStorage.setItem('user', JSON.stringify(response.user))
+
+    return response
+  },
+
+  register: async (credentials: RegisterCredentials): Promise<LoginResponse> => {
+    const { data } = await api.post<ApiLoginResponse>('/auth/register', {
+      fullName: credentials.fullName.trim(),
+      phone: credentials.phone.trim().replace(/\s+/g, ''),
+      email: credentials.email.trim().toLowerCase(),
+      password: credentials.password,
+      otpCode: credentials.otpCode,
+      region: credentials.region,
+      storeName: credentials.storeName,
+    })
+
+    const currentStore =
+      data.stores.find((store) => store.id === data.currentStoreId) ??
+      data.stores.find((store) => store.isPrimary) ??
+      data.stores[0]
+
+    if (!currentStore) {
+      throw new Error('Tài khoản chưa được gán cửa hàng nào.')
+    }
+
+    localStorage.setItem('access_token', data.accessToken)
+    localStorage.setItem('store_id', currentStore.id)
+
+    const response: LoginResponse = {
+      token: data.accessToken,
+      currentStoreId: currentStore.id,
+      stores: data.stores,
+      user: {
+        id: data.user.id,
+        name: data.user.fullName,
+        phone: data.user.phone,
+        role: 'admin',
+        storeName: currentStore.name,
+        storeId: currentStore.id,
+      },
+    }
+
+    localStorage.setItem('user', JSON.stringify(response.user))
+
+    return response
+  },
+
+  sendRegisterOtp: async (email: string): Promise<void> => {
+    await api.post('/auth/register/send-otp', {
+      email: email.trim().toLowerCase(),
+    })
   },
 
   /**
@@ -32,6 +96,8 @@ export const authService = {
    */
   logout: () => {
     localStorage.removeItem('access_token')
+    localStorage.removeItem('store_id')
+    localStorage.removeItem('user')
   },
 
   /**
@@ -39,5 +105,17 @@ export const authService = {
    */
   isAuthenticated: (): boolean => {
     return !!localStorage.getItem('access_token')
+  },
+
+  /**
+   * Get cached user info.
+   */
+  getUser: () => {
+    try {
+      const raw = localStorage.getItem('user')
+      return raw ? JSON.parse(raw) : null
+    } catch {
+      return null
+    }
   },
 }

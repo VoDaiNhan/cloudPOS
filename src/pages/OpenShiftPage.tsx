@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Modal } from '../components/Modal'
+import { authService } from '../services/authService'
+import { shiftService } from '../services/shiftService'
 
 const OpenShiftPage = () => {
   const navigate = useNavigate()
   const [cashAmount, setCashAmount] = useState(0)
   const [note, setNote] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+  const user = authService.getUser()
 
   const now = new Date()
   const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} - ${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`
@@ -20,9 +24,15 @@ const OpenShiftPage = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1200))
-    setIsLoading(false)
-    navigate('/pos')
+    setError('')
+    try {
+      await shiftService.open(cashAmount, note.trim() || undefined)
+      navigate('/pos')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Không thể mở ca. Vui lòng thử lại.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -60,7 +70,7 @@ const OpenShiftPage = () => {
               <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xl">person</span>
               <input
                 type="text"
-                value="Nguyễn Văn A"
+                value={user?.name ?? 'Tài khoản'}
                 readOnly
                 className="w-full pl-12 pr-4 h-12 rounded-xl border-none bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white font-bold cursor-not-allowed"
               />
@@ -124,6 +134,12 @@ const OpenShiftPage = () => {
         </div>
 
         {/* Action Button */}
+        {error && (
+          <div className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-600">
+            {error}
+          </div>
+        )}
+
         <div className="pt-2">
           <button
             type="submit"

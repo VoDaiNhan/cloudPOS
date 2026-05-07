@@ -1,6 +1,27 @@
-import { useState, useMemo } from 'react'
-import type { UnitConversion } from '../types/unit'
-import { units, convertQuantity } from '../mock/units'
+import { useState, useMemo, useEffect } from 'react'
+import type { Unit, UnitConversion } from '../types/unit'
+import { unitService } from '../services/unitService'
+
+const convertUnit = (
+  value: number,
+  fromUnitId: string,
+  toUnitId: string,
+  allUnits: Unit[],
+  customConversion?: UnitConversion
+): number => {
+  if (fromUnitId === toUnitId) return value
+  const fromUnit = allUnits.find(u => u.id === fromUnitId)
+  const toUnit = allUnits.find(u => u.id === toUnitId)
+  if (!fromUnit || !toUnit) return value
+  if (customConversion) {
+    if (customConversion.fromUnit === fromUnitId && customConversion.toUnit === toUnitId) return value * customConversion.rate
+    if (customConversion.fromUnit === toUnitId && customConversion.toUnit === fromUnitId) return value / customConversion.rate
+  }
+  if (fromUnit.category !== toUnit.category) return value
+  const fromRate = fromUnit.conversionRate || 1
+  const toRate = toUnit.conversionRate || 1
+  return (value * fromRate) / toRate
+}
 
 interface UnitSelectorProps {
   productId: string
@@ -13,7 +34,7 @@ interface UnitSelectorProps {
 }
 
 export const UnitSelector = ({
-  productId,
+  productId: _productId,
   selectedUnitId,
   quantity,
   conversions,
@@ -22,13 +43,18 @@ export const UnitSelector = ({
   className = '',
 }: UnitSelectorProps) => {
   const [localUnitId, setLocalUnitId] = useState(selectedUnitId)
+  const [allUnits, setAllUnits] = useState<Unit[]>([])
+  
+  void _productId // retained in interface for parent components, but unused here
+
+  useEffect(() => {
+    unitService.getAll().then(data => setAllUnits(data as unknown as Unit[])).catch(err => console.error('Failed to load units:', err))
+  }, [])
 
   // Get available units for this product
-  const availableUnits = units.filter((unit) => {
-    // Always include base unit
+  const availableUnits = allUnits.filter((unit: Unit) => {
     if (unit.id === baseUnitId) return true
-    // Include units that have conversions
-    return conversions.some((c) => c.fromUnitId === unit.id || c.toUnitId === unit.id)
+    return conversions.some((c) => c.fromUnit === unit.id || c.toUnit === unit.id)
   })
 
   // Calculate base quantity when unit or quantity changes
@@ -40,10 +66,11 @@ export const UnitSelector = ({
     if (localUnitId === baseUnitId) {
       return quantity
     } else {
-      const converted = convertQuantity(quantity, localUnitId, baseUnitId, productId)
+      const customConv = conversions.find((c) => (c.fromUnit === localUnitId && c.toUnit === baseUnitId) || (c.fromUnit === baseUnitId && c.toUnit === localUnitId))
+      const converted = convertUnit(quantity, localUnitId, baseUnitId, allUnits, customConv)
       return converted || 0
     }
-  }, [quantity, localUnitId, baseUnitId, productId])
+  }, [quantity, localUnitId, baseUnitId, conversions, allUnits])
 
   const handleUnitChange = (newUnitId: string) => {
     setLocalUnitId(newUnitId)
@@ -51,7 +78,8 @@ export const UnitSelector = ({
     // Calculate base quantity with new unit
     let newBaseQuantity = quantity
     if (newUnitId !== baseUnitId) {
-      const converted = convertQuantity(quantity, newUnitId, baseUnitId, productId)
+      const customConv = conversions.find((c) => (c.fromUnit === newUnitId && c.toUnit === baseUnitId) || (c.fromUnit === baseUnitId && c.toUnit === newUnitId))
+      const converted = convertUnit(quantity, newUnitId, baseUnitId, allUnits, customConv)
       newBaseQuantity = converted || quantity
     }
     
@@ -59,20 +87,20 @@ export const UnitSelector = ({
   }
 
   const getUnitName = (unitId: string) => {
-    return units.find((u) => u.id === unitId)?.shortName || ''
+    return allUnits.find((u) => u.id === unitId)?.name || ''
   }
 
   const getConversionInfo = () => {
     if (localUnitId === baseUnitId || !quantity) return null
 
     const conversion = conversions.find(
-      (c) => c.fromUnitId === localUnitId && c.toUnitId === baseUnitId
+      (c) => c.fromUnit === localUnitId && c.toUnit === baseUnitId
     )
 
     if (!conversion) return null
 
     return {
-      rate: conversion.conversionRate,
+      rate: conversion.rate,
       fromUnit: getUnitName(localUnitId),
       toUnit: getUnitName(baseUnitId),
     }
@@ -89,7 +117,7 @@ export const UnitSelector = ({
       >
         {availableUnits.map((unit) => (
           <option key={unit.id} value={unit.id}>
-            {unit.name} ({unit.shortName})
+            {unit.name}
           </option>
         ))}
       </select>

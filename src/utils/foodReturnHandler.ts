@@ -181,7 +181,7 @@ export const checkExpiry = (
 
 export const validateFoodReturn = (
   category: ProductCategory,
-  orderDate: string,
+  _orderDate: string,
   servedDate: string | null,
   returnReason: string,
   originalPrice: number,
@@ -298,13 +298,11 @@ export const validateFoodReturn = (
 
   // Tính % hoàn tiền
   let refundPercentage = rule.refundPercentage
-  let refundMethod = rule.refundMethod
 
   // Điều chỉnh theo lý do
   const customerFaultReasons = ['customer_change_mind']
   if (customerFaultReasons.includes(returnReason)) {
     refundPercentage = 50 // Chỉ hoàn 50% nếu khách đổi ý
-    refundMethod = 'voucher' // Hoàn bằng voucher
     warnings.push('Khách đổi ý: chỉ hoàn 50% bằng voucher')
   }
 

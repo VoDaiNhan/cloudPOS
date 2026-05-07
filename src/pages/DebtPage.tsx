@@ -1,167 +1,109 @@
-import { useState, useRef, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
-import { mockDebtSummary, mockCustomerDebts, mockSupplierDebts } from '../mock/debt'
+import { debtService } from '../services/debtService'
+import type { DebtItem, DebtSummary } from '../services/debtService'
+import { commissionPayableService } from '../services/commissionPayableService'
+import type { CommissionPayableItem, CommissionPayableSummary } from '../services/commissionPayableService'
 
-type TabType = 'CUSTOMER' | 'SUPPLIER' | 'HISTORY'
+type TabType = 'CUSTOMER' | 'SUPPLIER' | 'COMMISSION'
 
 const DebtPage = () => {
   const [activeTab, setActiveTab] = useState<TabType>('CUSTOMER')
-  const [showVoucherMenu, setShowVoucherMenu] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
-  const navigate = useNavigate()
-  const location = useLocation()
-  const summary = mockDebtSummary
+  const [loading, setLoading] = useState(false)
+  const [summary, setSummary] = useState<DebtSummary>({
+    totalReceivable: 0,
+    totalPayable: 0,
+    overdueAmount: 0,
+    overdueCount: 0,
+    receivableChangePercent: 0,
+    payableChangePercent: 0,
+    liquidityRatio: '0',
+  })
+  const [commissionSummary, setCommissionSummary] = useState<CommissionPayableSummary>({
+    totalAccrued: 0,
+    totalPaid: 0,
+    totalRemaining: 0,
+    unpaidCount: 0,
+  })
+  const [customerDebts, setCustomerDebts] = useState<DebtItem[]>([])
+  const [supplierDebts, setSupplierDebts] = useState<DebtItem[]>([])
+  const [commissionItems, setCommissionItems] = useState<CommissionPayableItem[]>([])
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setShowVoucherMenu(false)
-      }
+  const loadData = async () => {
+    setLoading(true)
+    try {
+      const [debtSummary, customerDebtItems, supplierDebtItems, commissionSummaryData, commissionData] = await Promise.all([
+        debtService.getSummary(),
+        debtService.getAll('customer'),
+        debtService.getAll('supplier'),
+        commissionPayableService.getSummary(),
+        commissionPayableService.getAll(),
+      ])
+
+      setSummary(debtSummary)
+      setCustomerDebts(customerDebtItems)
+      setSupplierDebts(supplierDebtItems)
+      setCommissionSummary(commissionSummaryData)
+      setCommissionItems(commissionData)
+    } catch (err) {
+      console.error('Failed to load debt data:', err)
+    } finally {
+      setLoading(false)
     }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }
+
+  useEffect(() => {
+    loadData()
   }, [])
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'OVERDUE':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-rose-100 dark:bg-rose-900/30 text-rose-600">Quá hạn</span>
-      case 'DUE_SOON':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-amber-100 dark:bg-amber-900/30 text-amber-600">Sắp đến hạn</span>
-      case 'ON_TIME':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600">Trong hạn</span>
-      case 'PAID':
-        return <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest bg-slate-100 dark:bg-slate-800 text-slate-500">Đã thanh toán</span>
-      default:
-        return null
+  const payCommission = async (item: CommissionPayableItem) => {
+    const method = (window.prompt('Phương thức thanh toán hoa hồng: cash hoặc transfer', 'cash') || 'cash').toLowerCase()
+    if (!['cash', 'transfer'].includes(method)) return
+    if (!window.confirm(`Xác nhận chi ${item.remainingAmount.toLocaleString('vi-VN')}đ cho ${item.customerName}?`)) return
+
+    try {
+      await commissionPayableService.pay(item.id, {
+        amount: item.remainingAmount,
+        method,
+        note: `Chi hoa hồng cho ${item.customerName} từ đơn ${item.orderNumber}`,
+      })
+      await loadData()
+    } catch (err) {
+      console.error('Failed to pay commission:', err)
     }
   }
 
   return (
-    <DashboardLayout title="Đối soát Công nợ" breadcrumb={[{ label: 'Sổ quỹ', path: '/cashbook' }, { label: 'Công nợ' }]}>
-      <div className="space-y-8 animate-fade-in pb-12 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        {/* Header Actions */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Đối soát Công nợ</h1>
-            <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm font-medium">Quản lý dòng tiền, nợ khách hàng và nghĩa vụ thanh toán nhà cung cấp.</p>
-          </div>
-          <div className="flex gap-3">
-            <button className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-300 hover:bg-slate-50 hover:-translate-y-0.5 transition-all shadow-sm">
-              <span className="material-symbols-outlined text-[18px]">download</span>
-              Xuất báo cáo
-            </button>
-            <div className="relative" ref={menuRef}>
-              <button
-                onClick={() => setShowVoucherMenu(!showVoucherMenu)}
-                className="flex items-center gap-2 bg-primary text-white border border-transparent px-5 py-3 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-primary/90 hover:-translate-y-0.5 shadow-xl shadow-primary/20 transition-all"
-              >
-                <span className="material-symbols-outlined text-[18px]">add_circle</span>
-                Tạo phiếu thu/chi
-                <span className="material-symbols-outlined text-[16px] ml-1">expand_more</span>
-              </button>
-              {showVoucherMenu && (
-                <div className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 overflow-hidden animate-fade-in">
-                  <button
-                    onClick={() => {
-                      setShowVoucherMenu(false)
-                      navigate('/receipt-voucher', { state: { background: location } })
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-primary/5 hover:text-primary transition-colors text-left"
-                  >
-                    <span className="material-symbols-outlined text-emerald-500">request_quote</span>
-                    Tạo phiếu thu
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowVoucherMenu(false)
-                      navigate('/payment-voucher', { state: { background: location } })
-                    }}
-                    className="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-primary/5 hover:text-primary transition-colors text-left border-t border-slate-100 dark:border-slate-800"
-                  >
-                    <span className="material-symbols-outlined text-rose-500">payments</span>
-                    Tạo phiếu chi
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
+    <DashboardLayout title="Đối soát Công nợ & Hoa hồng" breadcrumb={[{ label: 'Sổ quỹ' }, { label: 'Công nợ & Hoa hồng' }]}>
+      <div className="space-y-6">
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Đối soát Công nợ & Hoa hồng</h1>
+          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+            Theo dõi công nợ phải thu, phải trả và khoản hoa hồng phải thanh toán cho nhóm khách có chiết khấu ẩn.
+          </p>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white dark:bg-slate-950 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm transition-all hover:shadow-md group">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="size-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <span className="material-symbols-outlined text-[20px]">account_balance_wallet</span>
-              </div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tổng nợ phải thu</p>
-            </div>
-            <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{summary.totalReceivable.toLocaleString()}đ</h3>
-            <div className="flex items-center gap-1.5 mt-3 text-emerald-500 text-[11px] font-black uppercase tracking-widest">
-              <span className="material-symbols-outlined text-[14px]">trending_up</span> 
-              +{summary.receivableChangePercent}% 
-              <span className="text-slate-400 font-bold normal-case tracking-normal ml-1">so với tháng trước</span>
-            </div>
-          </div>
-          
-          <div className="bg-white dark:bg-slate-950 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm transition-all hover:shadow-md group">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="size-10 rounded-xl bg-rose-50 dark:bg-rose-900/20 text-rose-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <span className="material-symbols-outlined text-[20px]">payments</span>
-              </div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Tổng nợ phải trả</p>
-            </div>
-            <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{summary.totalPayable.toLocaleString()}đ</h3>
-            <div className="flex items-center gap-1.5 mt-3 text-rose-500 text-[11px] font-black uppercase tracking-widest">
-              <span className="material-symbols-outlined text-[14px]">trending_down</span> 
-              {summary.payableChangePercent}% 
-              <span className="text-slate-400 font-bold normal-case tracking-normal ml-1">so với tháng trước</span>
-            </div>
-          </div>
-
-          <div className="bg-white dark:bg-slate-950 p-6 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm transition-all hover:shadow-md group">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="size-10 rounded-xl bg-amber-50 dark:bg-amber-900/20 text-amber-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <span className="material-symbols-outlined text-[20px]">warning</span>
-              </div>
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nợ quá hạn</p>
-            </div>
-            <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{summary.overdueAmount.toLocaleString()}đ</h3>
-            <p className="text-slate-400 text-[11px] font-bold mt-3">Gồm {summary.overdueCount} đối tác quá hạn</p>
-          </div>
-
-          <div className="bg-primary/5 dark:bg-primary/10 p-6 rounded-3xl border border-primary/20 shadow-sm transition-all hover:shadow-md relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-bl-full -z-10 group-hover:scale-110 transition-transform origin-top-right"></div>
-            <div className="flex items-center gap-3 mb-4">
-              <div className="size-10 rounded-xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 group-hover:scale-110 transition-transform">
-                <span className="material-symbols-outlined text-[20px]">query_stats</span>
-              </div>
-              <p className="text-[10px] font-black text-primary uppercase tracking-widest">Chỉ số thanh khoản</p>
-            </div>
-            <h3 className="text-2xl font-black tracking-tight text-primary">{summary.liquidityRatio}</h3>
-            <p className="text-emerald-500 text-[11px] mt-3 font-black uppercase tracking-widest">Mức độ an toàn cao</p>
-          </div>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <SummaryCard label="Nợ phải thu" value={summary.totalReceivable} tone="emerald" icon="account_balance_wallet" />
+          <SummaryCard label="Nợ phải trả" value={summary.totalPayable} tone="rose" icon="payments" />
+          <SummaryCard label="Hoa hồng chưa chi" value={commissionSummary.totalRemaining} tone="amber" icon="sell" />
+          <SummaryCard label="Khoản hoa hồng mở" value={commissionSummary.unpaidCount} tone="primary" icon="receipt_long" isCount />
         </div>
 
-        {/* Tabs & Table Section */}
-        <div className="bg-white dark:bg-slate-950 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm overflow-hidden flex flex-col">
-          <div className="border-b border-slate-100 dark:border-slate-800 flex overflow-x-auto px-2 pt-2">
+        <div className="rounded-3xl border border-slate-200/60 bg-white shadow-sm dark:border-slate-800/60 dark:bg-slate-950">
+          <div className="flex gap-2 border-b border-slate-100 p-3 dark:border-slate-800">
             {[
-              { id: 'CUSTOMER', label: 'Công nợ Khách hàng' },
-              { id: 'SUPPLIER', label: 'Công nợ Nhà cung cấp' },
-              { id: 'HISTORY', label: 'Lịch sử thanh toán' }
-            ].map(tab => (
+              { id: 'CUSTOMER', label: 'Công nợ khách hàng' },
+              { id: 'SUPPLIER', label: 'Công nợ nhà cung cấp' },
+              { id: 'COMMISSION', label: 'Hoa hồng khách thợ / đối tác' },
+            ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as TabType)}
-                className={`px-6 py-4 text-sm font-bold whitespace-nowrap border-b-2 transition-all ${
+                className={`rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest transition-all ${
                   activeTab === tab.id
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                    ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                    : 'text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-900'
                 }`}
               >
                 {tab.label}
@@ -169,102 +111,198 @@ const DebtPage = () => {
             ))}
           </div>
 
-          {/* Search and Filters */}
-          <div className="p-5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 flex flex-col md:flex-row gap-4 items-center">
-            <div className="flex-1 relative w-full">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
-              <input 
-                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl text-sm font-bold shadow-sm focus:ring-2 focus:ring-primary/20 transition-all outline-none" 
-                placeholder="Tìm kiếm đối tác, SĐT..." 
-                type="text"
-              />
-            </div>
-            <div className="flex gap-3 w-full md:w-auto">
-              <select className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none shadow-sm flex-1 md:flex-none cursor-pointer">
-                <option>Tất cả trạng thái</option>
-                <option>Còn nợ</option>
-                <option>Quá hạn</option>
-                <option>Đã thanh toán</option>
-              </select>
-              <button className="flex items-center gap-2 px-5 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-2xl text-[11px] font-black uppercase tracking-widest transition-colors shadow-sm">
-                <span className="material-symbols-outlined text-[18px]">filter_list</span> 
-                Lọc
-              </button>
-            </div>
-          </div>
-
-          {/* Table Content */}
-          <div className="overflow-x-auto min-h-[300px]">
-            {activeTab === 'HISTORY' ? (
-              <div className="flex flex-col items-center justify-center p-12 text-center text-slate-500">
-                <span className="material-symbols-outlined text-6xl text-slate-300 dark:text-slate-700 mb-4">history</span>
-                <p>Chưa có dữ liệu lịch sử thanh toán.</p>
-              </div>
+          <div className="p-5">
+            {activeTab === 'COMMISSION' ? (
+              <CommissionTable items={commissionItems} loading={loading} onPay={payCommission} />
             ) : (
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="bg-slate-50/50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800">
-                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{activeTab === 'CUSTOMER' ? 'Khách hàng' : 'Nhà cung cấp'}</th>
-                    <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Mã đối tác</th>
-                    <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Tổng nợ</th>
-                    <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Hạn TT</th>
-                    <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Trạng thái</th>
-                    <th className="px-6 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50 dark:divide-slate-800/50">
-                  {((activeTab === 'CUSTOMER' ? mockCustomerDebts : mockSupplierDebts) as unknown as Array<{
-                    id: string; avatarLetters: string; customerName?: string; supplierName?: string; 
-                    customerPhone?: string; supplierPhone?: string; customerId?: string; supplierId?: string;
-                    totalDebt: number; dueDate: string; status: string; daysOverdue?: number;
-                  }>).map((item) => (
-                    <tr key={item.id} className="group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
-                      <td className="px-8 py-5">
-                        <div className="flex items-center gap-3">
-                          <div className="size-10 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center font-black text-slate-500 text-sm">
-                            {item.avatarLetters}
-                          </div>
-                          <div>
-                            <p className="text-sm font-bold text-slate-900 dark:text-white whitespace-nowrap">{item.customerName || item.supplierName}</p>
-                            <p className="text-[11px] font-bold text-slate-400">{item.customerPhone || item.supplierPhone}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5 text-sm font-bold text-slate-600 dark:text-slate-400">
-                        {item.customerId || item.supplierId}
-                      </td>
-                      <td className="px-6 py-5 text-sm font-black tracking-tight text-slate-900 dark:text-white">
-                        {item.totalDebt.toLocaleString()}đ
-                      </td>
-                      <td className="px-6 py-5 text-sm font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">
-                        {item.dueDate}
-                      </td>
-                      <td className="px-6 py-5">
-                        {getStatusBadge(item.status)}
-                        {item.daysOverdue && (
-                          <span className="ml-2 text-[10px] font-black text-rose-500">({item.daysOverdue} ngày)</span>
-                        )}
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <button
-                          onClick={() => navigate(
-                            activeTab === 'CUSTOMER' ? '/receipt-voucher' : '/payment-voucher',
-                            { state: { background: location } }
-                          )}
-                          className="bg-primary/10 text-primary hover:bg-primary hover:text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-sm"
-                        >
-                          {activeTab === 'CUSTOMER' ? 'Thu nợ' : 'Trả nợ'}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <DebtTable items={activeTab === 'CUSTOMER' ? customerDebts : supplierDebts} loading={loading} />
             )}
           </div>
         </div>
       </div>
     </DashboardLayout>
+  )
+}
+
+const SummaryCard = ({
+  label,
+  value,
+  tone,
+  icon,
+  isCount = false,
+}: {
+  label: string
+  value: number
+  tone: 'emerald' | 'rose' | 'amber' | 'primary'
+  icon: string
+  isCount?: boolean
+}) => {
+  const tones = {
+    emerald: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+    rose: 'bg-rose-50 text-rose-600 border-rose-100',
+    amber: 'bg-amber-50 text-amber-600 border-amber-100',
+    primary: 'bg-primary/10 text-primary border-primary/10',
+  }
+
+  return (
+    <div className="rounded-3xl border border-slate-200/60 bg-white p-5 shadow-sm dark:border-slate-800/60 dark:bg-slate-950">
+      <div className="flex items-center gap-3">
+        <div className={`flex size-11 items-center justify-center rounded-2xl border ${tones[tone]}`}>
+          <span className="material-symbols-outlined text-xl">{icon}</span>
+        </div>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</p>
+          <p className="mt-2 text-2xl font-black tracking-tight text-slate-900 dark:text-white">
+            {isCount ? value.toLocaleString('vi-VN') : `${value.toLocaleString('vi-VN')}đ`}
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const DebtTable = ({ items, loading }: { items: DebtItem[]; loading: boolean }) => {
+  if (loading) {
+    return <div className="py-12 text-center text-sm font-bold text-slate-400">Đang tải dữ liệu...</div>
+  }
+
+  if (items.length === 0) {
+    return <div className="py-12 text-center text-sm font-bold text-slate-400">Không có dữ liệu công nợ.</div>
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse text-left">
+        <thead>
+          <tr className="border-b border-slate-100 dark:border-slate-800">
+            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Đối tượng</th>
+            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Mã</th>
+            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Số dư</th>
+            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Hạn thanh toán</th>
+            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Trạng thái</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+          {items.map((item) => (
+            <tr key={item.id}>
+              <td className="px-4 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="flex size-10 items-center justify-center rounded-2xl bg-slate-100 font-black text-slate-500 dark:bg-slate-800">
+                    {item.avatarLetters}
+                  </div>
+                  <div>
+                    <p className="text-sm font-black text-slate-900 dark:text-white">{item.customerName || item.supplierName}</p>
+                    <p className="text-[11px] font-bold text-slate-400">{item.customerPhone || item.supplierPhone || '—'}</p>
+                  </div>
+                </div>
+              </td>
+              <td className="px-4 py-4 text-sm font-bold text-slate-500">{item.customerId || item.supplierId || '—'}</td>
+              <td className="px-4 py-4 text-right text-sm font-black text-slate-900 dark:text-white">{item.totalDebt.toLocaleString('vi-VN')}đ</td>
+              <td className="px-4 py-4 text-sm font-bold text-slate-500">{item.dueDate}</td>
+              <td className="px-4 py-4">
+                <StatusBadge status={item.status} />
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+const CommissionTable = ({
+  items,
+  loading,
+  onPay,
+}: {
+  items: CommissionPayableItem[]
+  loading: boolean
+  onPay: (item: CommissionPayableItem) => void
+}) => {
+  if (loading) {
+    return <div className="py-12 text-center text-sm font-bold text-slate-400">Đang tải dữ liệu...</div>
+  }
+
+  if (items.length === 0) {
+    return <div className="py-12 text-center text-sm font-bold text-slate-400">Chưa phát sinh khoản hoa hồng nào.</div>
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full border-collapse text-left">
+        <thead>
+          <tr className="border-b border-slate-100 dark:border-slate-800">
+            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Khách hàng</th>
+            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Nhóm</th>
+            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Đơn hàng</th>
+            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Hoa hồng</th>
+            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Còn phải trả</th>
+            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Trạng thái</th>
+            <th className="px-4 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-slate-50 dark:divide-slate-800">
+          {items.map((item) => (
+            <tr key={item.id}>
+              <td className="px-4 py-4">
+                <div>
+                  <p className="text-sm font-black text-slate-900 dark:text-white">{item.customerName}</p>
+                  <p className="text-[11px] font-bold text-slate-400">{item.customerPhone || '—'} • {item.accruedAt}</p>
+                </div>
+              </td>
+              <td className="px-4 py-4 text-sm font-bold text-slate-500">{item.customerGroupName || '—'}</td>
+              <td className="px-4 py-4">
+                <p className="text-sm font-black text-slate-900 dark:text-white">{item.orderNumber}</p>
+                <p className="text-[11px] font-bold text-slate-400">{item.commissionPercent}% trên {item.baseAmount.toLocaleString('vi-VN')}đ</p>
+              </td>
+              <td className="px-4 py-4 text-right text-sm font-black text-amber-600">{item.commissionAmount.toLocaleString('vi-VN')}đ</td>
+              <td className="px-4 py-4 text-right text-sm font-black text-slate-900 dark:text-white">{item.remainingAmount.toLocaleString('vi-VN')}đ</td>
+              <td className="px-4 py-4">
+                <StatusBadge status={item.status} />
+              </td>
+              <td className="px-4 py-4 text-right">
+                {item.status === 'PAID' ? (
+                  <span className="text-[11px] font-black uppercase tracking-widest text-emerald-600">Đã chi</span>
+                ) : (
+                  <button
+                    onClick={() => onPay(item)}
+                    className="rounded-xl bg-primary/10 px-3 py-2 text-[11px] font-black uppercase tracking-widest text-primary hover:bg-primary hover:text-white transition-all"
+                  >
+                    Chi hoa hồng
+                  </button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+const StatusBadge = ({ status }: { status: string }) => {
+  const labelMap: Record<string, string> = {
+    PAID: 'Đã thanh toán',
+    UNPAID: 'Chưa thanh toán',
+    PARTIALLY_PAID: 'Thanh toán một phần',
+    OVERDUE: 'Quá hạn',
+    DUE_SOON: 'Sắp đến hạn',
+    ON_TIME: 'Trong hạn',
+  }
+
+  const toneMap: Record<string, string> = {
+    PAID: 'bg-emerald-50 text-emerald-600 border-emerald-100',
+    UNPAID: 'bg-rose-50 text-rose-600 border-rose-100',
+    PARTIALLY_PAID: 'bg-amber-50 text-amber-600 border-amber-100',
+    OVERDUE: 'bg-rose-50 text-rose-600 border-rose-100',
+    DUE_SOON: 'bg-amber-50 text-amber-600 border-amber-100',
+    ON_TIME: 'bg-slate-100 text-slate-500 border-slate-200',
+  }
+
+  return (
+    <span className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-widest ${toneMap[status] || toneMap.ON_TIME}`}>
+      {labelMap[status] || status}
+    </span>
   )
 }
 

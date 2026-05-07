@@ -1,7 +1,21 @@
-import { useState, useMemo } from 'react'
-import type { UnitConversion, ConversionTemplate } from '../types/unit'
-import { units, conversionTemplates } from '../mock/units'
+import { useState, useMemo, useEffect } from 'react'
+import type { Unit, UnitConversion } from '../types/unit'
+import { unitService } from '../services/unitService'
 import { createPortal } from 'react-dom'
+
+interface ConversionTemplate {
+  id: string
+  name: string
+  description: string
+  conversions: Array<{ fromUnit: string; toUnit: string; rate: number }>
+}
+
+const conversionTemplates: ConversionTemplate[] = [
+  { id: 'tpl-drink', name: 'Nước ngọt (Thùng/Lốc/Lon)', description: '1 thùng = 24 lon, 1 lốc = 6 lon', conversions: [{ fromUnit: 'Thùng', toUnit: 'Lon', rate: 24 }, { fromUnit: 'Lốc', toUnit: 'Lon', rate: 6 }] },
+  { id: 'tpl-rice', name: 'Gạo (Bao/Kg)', description: '1 bao = 50 kg', conversions: [{ fromUnit: 'Bao', toUnit: 'Kilogram (kg)', rate: 50 }] },
+  { id: 'tpl-milk', name: 'Sữa (Thùng/Hộp)', description: '1 thùng = 48 hộp', conversions: [{ fromUnit: 'Thùng', toUnit: 'Hộp', rate: 48 }] },
+  { id: 'tpl-snack', name: 'Snack (Thùng/Gói)', description: '1 thùng = 30 gói', conversions: [{ fromUnit: 'Thùng', toUnit: 'Gói', rate: 30 }] },
+]
 
 interface UnitConversionManagerProps {
   productId: string
@@ -21,17 +35,22 @@ export const UnitConversionManager = ({
   const [conversions, setConversions] = useState<UnitConversion[]>(existingConversions)
   const [showTemplates, setShowTemplates] = useState(false)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [allUnits, setAllUnits] = useState<Unit[]>([])
   
   // New conversion form
-  const [fromUnitId, setFromUnitId] = useState('')
-  const [toUnitId, setToUnitId] = useState('')
+  const [fromUnit, setfromUnit] = useState('')
+  const [toUnit, settoUnit] = useState('')
   const [rate, setRate] = useState('')
 
+  useEffect(() => {
+    unitService.getAll().then(data => setAllUnits(data as unknown as Unit[])).catch(err => console.error('Failed to load units:', err))
+  }, [])
+
   // Get all units for maximum flexibility
-  const availableUnits = useMemo(() => [...units], [])
+  const availableUnits = useMemo(() => [...allUnits], [allUnits])
 
   const addConversion = () => {
-    if (!fromUnitId || !toUnitId || !rate || parseFloat(rate) <= 0) {
+    if (!fromUnit || !toUnit || !rate || parseFloat(rate) <= 0) {
       alert('Vui lòng điền đầy đủ thông tin quy đổi')
       return
     }
@@ -39,12 +58,10 @@ export const UnitConversionManager = ({
     const newConversion: UnitConversion = {
       id: `conv-${Date.now()}`,
       productId,
-      fromUnitId,
-      toUnitId,
-      conversionRate: parseFloat(rate),
+      fromUnit,
+      toUnit,
+      rate: parseFloat(rate),
       isDefault: conversions.length === 0, // First one is default
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
     }
 
     if (editingIndex !== null) {
@@ -59,8 +76,8 @@ export const UnitConversionManager = ({
     }
 
     // Reset form
-    setFromUnitId('')
-    setToUnitId('')
+    setfromUnit('')
+    settoUnit('')
     setRate('')
   }
 
@@ -70,9 +87,9 @@ export const UnitConversionManager = ({
 
   const editConversion = (index: number) => {
     const conv = conversions[index]
-    setFromUnitId(conv.fromUnitId)
-    setToUnitId(conv.toUnitId)
-    setRate(conv.conversionRate.toString())
+    setfromUnit(conv.fromUnit)
+    settoUnit(conv.toUnit)
+    setRate(conv.rate.toString())
     setEditingIndex(index)
   }
 
@@ -87,17 +104,17 @@ export const UnitConversionManager = ({
 
   const applyTemplate = (template: ConversionTemplate) => {
     const newConversions: UnitConversion[] = template.conversions.map((tc, index) => {
-      const fromUnit = units.find(u => u.name === tc.fromUnit)
-      const toUnit = units.find(u => u.name === tc.toUnit)
+      const fromUnit = allUnits.find(u => u.name === tc.fromUnit)
+      const toUnit = allUnits.find(u => u.name === tc.toUnit)
       
       if (!fromUnit || !toUnit) return null
 
       return {
         id: `conv-${Date.now()}-${index}`,
         productId,
-        fromUnitId: fromUnit.id,
-        toUnitId: toUnit.id,
-        conversionRate: tc.rate,
+        fromUnit: fromUnit.id,
+        toUnit: toUnit.id,
+        rate: tc.rate,
         isDefault: index === 0,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -109,7 +126,7 @@ export const UnitConversionManager = ({
   }
 
   const getUnitName = (unitId: string) => {
-    return units.find(u => u.id === unitId)?.name || unitId
+    return allUnits.find(u => u.id === unitId)?.name || unitId
   }
 
   return createPortal(
@@ -173,8 +190,8 @@ export const UnitConversionManager = ({
                   Đơn vị lớn
                 </label>
                 <select
-                  value={fromUnitId}
-                  onChange={(e) => setFromUnitId(e.target.value)}
+                  value={fromUnit}
+                  onChange={(e) => setfromUnit(e.target.value)}
                   className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:outline-none"
                 >
                   <option value="">Chọn đơn vị</option>
@@ -193,8 +210,8 @@ export const UnitConversionManager = ({
                   Đơn vị nhỏ
                 </label>
                 <select
-                  value={toUnitId}
-                  onChange={(e) => setToUnitId(e.target.value)}
+                  value={toUnit}
+                  onChange={(e) => settoUnit(e.target.value)}
                   className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm font-bold focus:ring-2 focus:ring-primary/20 focus:outline-none"
                 >
                   <option value="">Chọn đơn vị</option>
@@ -224,10 +241,10 @@ export const UnitConversionManager = ({
               </div>
             </div>
 
-            {fromUnitId && toUnitId && rate && (
+            {fromUnit && toUnit && rate && (
               <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
                 <p className="text-sm font-bold text-blue-900 dark:text-blue-100">
-                  1 {getUnitName(fromUnitId)} = {rate} {getUnitName(toUnitId)}
+                  1 {getUnitName(fromUnit)} = {rate} {getUnitName(toUnit)}
                 </p>
               </div>
             )}
@@ -246,8 +263,8 @@ export const UnitConversionManager = ({
                 <button
                   onClick={() => {
                     setEditingIndex(null)
-                    setFromUnitId('')
-                    setToUnitId('')
+                    setfromUnit('')
+                    settoUnit('')
                     setRate('')
                   }}
                   className="px-4 rounded-xl border-2 border-slate-200 dark:border-slate-700 font-black text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all text-sm"
@@ -289,7 +306,7 @@ export const UnitConversionManager = ({
                         </span>
                       )}
                       <p className="text-sm font-bold text-slate-900 dark:text-white">
-                        1 {getUnitName(conv.fromUnitId)} = {conv.conversionRate} {getUnitName(conv.toUnitId)}
+                        1 {getUnitName(conv.fromUnit)} = {conv.rate} {getUnitName(conv.toUnit)}
                       </p>
                     </div>
 

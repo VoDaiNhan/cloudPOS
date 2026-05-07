@@ -1,9 +1,41 @@
 import { useState } from 'react'
-import type { ReturnOrderItem, ReturnReason, ReturnCondition } from '../types/returnExchange'
-import { returnReasons, returnConditions } from '../mock/returnExchange'
+import type { ReturnOrderItem, ReturnReason, ReturnCondition, ReturnWarehouse } from '../types/returnExchange'
+
+const returnReasons: Array<{ value: ReturnReason; label: string; icon: string }> = [
+  { value: 'technical_defect', label: 'Lỗi kỹ thuật', icon: 'build_circle' },
+  { value: 'wrong_item', label: 'Giao sai hàng', icon: 'error' },
+  { value: 'change_size_color', label: 'Đổi size/màu', icon: 'palette' },
+  { value: 'no_need', label: 'Không còn nhu cầu', icon: 'cancel' },
+  { value: 'shipping_damage', label: 'Hỏng do vận chuyển', icon: 'local_shipping' },
+  { value: 'expired', label: 'Hết hạn', icon: 'event_busy' },
+  { value: 'customer_request', label: 'Yêu cầu khách hàng', icon: 'person' },
+  { value: 'other', label: 'Khác', icon: 'more_horiz' },
+]
+
+const returnConditions: Array<{ value: ReturnCondition; label: string; description: string; warehouse: ReturnWarehouse; color: string }> = [
+  { value: 'good', label: 'Còn tốt', description: 'Hàng nguyên vẹn, có thể bán lại', warehouse: 'main', color: 'emerald' },
+  { value: 'defective', label: 'Hàng lỗi', description: 'Không thể bán lại, chờ xử lý', warehouse: 'defective', color: 'rose' },
+  { value: 'opened', label: 'Đã mở hộp', description: 'Có thể bán giảm giá', warehouse: 'clearance', color: 'amber' },
+  { value: 'need_check', label: 'Cần kiểm tra', description: 'Chưa xác định được tình trạng', warehouse: 'quarantine', color: 'blue' },
+]
+
+interface OrderItem {
+  id: string
+  productId: string
+  productName: string
+  productImage?: string
+  quantity: number
+  price: number
+  total: number
+  discount?: number
+  barcode?: string
+  category?: string
+  servedAt?: string | null
+  expiryDate?: string | null
+}
 
 interface ReturnItemSelectorProps {
-  orderItems: any[]
+  orderItems: OrderItem[]
   onItemsSelected: (items: Partial<ReturnOrderItem>[]) => void
   returnType: 'cancel' | 'return' | 'exchange'
 }
@@ -17,7 +49,7 @@ export const ReturnItemSelector = ({
     Map<string, Partial<ReturnOrderItem>>
   >(new Map())
 
-  const handleSelectItem = (item: any) => {
+  const handleSelectItem = (item: OrderItem) => {
     const newSelected = new Map(selectedItems)
     
     if (newSelected.has(item.id)) {

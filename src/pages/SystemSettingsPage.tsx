@@ -1,11 +1,6 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
-import {
-  mockStoreSettings,
-  mockTaxSettings,
-  mockPaymentMethods,
-  mockDeviceSettings,
-} from '../mock/settings'
+import { storeService } from '../services/storeService'
 import type { PaymentMethod, PaymentStatus } from '../types/settings'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -89,7 +84,13 @@ const paymentAction: Record<PaymentStatus, React.ReactNode> = {
 // ── Section: Cửa hàng ────────────────────────────────────────────────────────
 
 const StoreSection = ({ id }: { id: string }) => {
-  const [form, setForm] = useState(mockStoreSettings)
+  const [form, setForm] = useState({ name: '', phone: '', address: '', website: '' })
+
+  useEffect(() => {
+    storeService.getMyStore().then(s => {
+      setForm({ name: s.name || '', phone: s.phone || '', address: s.address || '', website: '' })
+    }).catch(err => console.error('Failed to load store settings:', err))
+  }, [])
   const set = (k: keyof typeof form, v: string) => setForm((p) => ({ ...p, [k]: v }))
 
   return (
@@ -152,7 +153,7 @@ const StoreSection = ({ id }: { id: string }) => {
 // ── Section: Thuế & Hóa đơn ──────────────────────────────────────────────────
 
 const TaxSection = ({ id }: { id: string }) => {
-  const [tax, setTax] = useState(mockTaxSettings)
+  const [tax, setTax] = useState({ vatEnabled: true, vatRate: 10, receiptTemplate: 'A80' })
 
   return (
     <section id={id} className="bg-white dark:bg-slate-950 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -261,7 +262,11 @@ const TaxSection = ({ id }: { id: string }) => {
 // ── Section: Thanh toán ───────────────────────────────────────────────────────
 
 const PaymentSection = ({ id }: { id: string }) => {
-  const methods = mockPaymentMethods
+  const methods: PaymentMethod[] = [
+    { id: 'cash', label: 'Tiền mặt', description: 'Thanh toán trực tiếp bằng tiền giấy', icon: 'payments', iconBg: 'bg-emerald-100 dark:bg-emerald-900/30', iconColor: 'text-emerald-600 dark:text-emerald-400', status: 'on' },
+    { id: 'qr', label: 'Chuyển khoản / QR Code', description: 'VietQR, MoMo, ZaloPay...', icon: 'qr_code_2', iconBg: 'bg-blue-100 dark:bg-blue-900/30', iconColor: 'text-blue-600 dark:text-blue-400', status: 'configure' },
+    { id: 'card', label: 'Máy quẹt thẻ (POS)', description: 'Kết nối máy quẹt thẻ ngân hàng', icon: 'credit_card', iconBg: 'bg-slate-100 dark:bg-slate-800', iconColor: 'text-slate-500', status: 'activate' },
+  ]
 
   return (
     <section id={id} className="bg-white dark:bg-slate-950 rounded-2xl border border-slate-200/60 dark:border-slate-800 shadow-sm overflow-hidden">
@@ -302,7 +307,13 @@ const PaymentSection = ({ id }: { id: string }) => {
 // ── Section: Thiết bị ─────────────────────────────────────────────────────────
 
 const DeviceSection = ({ id }: { id: string }) => {
-  const [device, setDevice] = useState(mockDeviceSettings)
+  const [device, setDevice] = useState({
+    printerStatus: 'ready' as const,
+    printerModel: 'Xprinter XP-N160II (USB)',
+    printerOptions: ['Xprinter XP-N160II (USB)', 'Bixolon SRP-330II (LAN)'],
+    scannerConnection: 'HID Keyboard (USB)',
+    scannerAutoEnter: true,
+  })
 
   const printerStatusConfig = {
     ready: { label: 'Sẵn sàng', className: 'text-emerald-500' },

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, type ReactNode, type KeyboardEvent as ReactKeyboardEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { mockUser } from '../mock/auth'
 import { MODAL_ROUTES } from '../router/modalRoutes'
+import { authService } from '../services/authService'
 
 interface DashboardLayoutProps {
   children: ReactNode
@@ -75,7 +75,7 @@ export const DashboardLayout = ({
 }: DashboardLayoutProps) => {
   const { pathname } = useLocation()
   const navigate = useNavigate()
-  const user = mockUser
+  const user = authService.getUser()
   const [collapsed, setCollapsed] = useState(savedCollapsed)
   const [globalSearch, setGlobalSearch] = useState('')
   const searchRef = useRef<HTMLInputElement>(null)
@@ -138,7 +138,6 @@ export const DashboardLayout = ({
       title: 'Giao dịch',
       items: [
         { to: '/pos', icon: 'point_of_sale', label: 'Bán hàng (POS)' },
-        { to: '/pos/return-exchange', icon: 'assignment_return', label: 'Đổi trả hàng' },
         { to: '/open-shift', icon: 'storefront', label: 'Mở ca' },
         { to: '/close-shift', icon: 'logout', label: 'Đóng ca' },
         { to: '/end-shift-report', icon: 'receipt_long', label: 'Báo cáo ca' },
@@ -161,9 +160,11 @@ export const DashboardLayout = ({
         { to: '/import-order', icon: 'local_shipping', label: 'Nhập kho' },
         { to: '/supplier-return', icon: 'assignment_return', label: 'Trả hàng NCC' },
         { to: '/inventory', icon: 'warehouse', label: 'Tồn kho' },
+        { to: '/inventory/returns', icon: 'manage_history', label: 'Tồn kho Đổi trả' },
         { to: '/inventory/batches', icon: 'qr_code_scanner', label: 'Quản lý lô hàng' },
         { to: '/inventory/pricing', icon: 'payments', label: 'Quản lý giá' },
         { to: '/inventory/units', icon: 'straighten', label: 'Đơn vị & Quy đổi' },
+        { to: '/recipes', icon: 'menu_book', label: 'Định mức / Công thức' },
         { to: '/stock-audit', icon: 'rule_folder', label: 'Kiểm kho' },
         { to: '/stock-cancellation', icon: 'remove_shopping_cart', label: 'Hủy hàng' },
         { to: '/expiry', icon: 'history_toggle_off', label: 'Hạn sử dụng' },
@@ -173,8 +174,14 @@ export const DashboardLayout = ({
       title: 'Đối tác',
       items: [
         { to: '/customers', icon: 'person', label: 'Khách hàng' },
-        { to: '/customer-return', icon: 'keyboard_return', label: 'Đổi trả KH' },
+        { to: '/pos/return-exchange', icon: 'assignment_return', label: 'Quản lý đổi trả KH' },
         { to: '/suppliers', icon: 'local_shipping', label: 'Nhà cung cấp' },
+      ],
+    },
+    {
+      title: 'Báo cáo',
+      items: [
+        { to: '/reports/profit', icon: 'analytics', label: 'Lợi nhuận & CK NCC' },
       ],
     },
     {
@@ -254,7 +261,7 @@ export const DashboardLayout = ({
         <div className={`${collapsed ? 'p-2' : 'p-4'} mt-auto border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10 transition-all duration-300`}>
           {collapsed ? (
             <div className="flex justify-center">
-              <div className="size-10 rounded-full bg-primary/10 border border-primary/5 flex items-center justify-center overflow-hidden shrink-0" title={user.name}>
+              <div className="size-10 rounded-full bg-primary/10 border border-primary/5 flex items-center justify-center overflow-hidden shrink-0" title={user?.name ?? 'Tài khoản'}>
                 <span className="material-symbols-outlined text-primary">person</span>
               </div>
             </div>
@@ -264,8 +271,8 @@ export const DashboardLayout = ({
                 <span className="material-symbols-outlined text-primary group-hover:scale-110 transition-transform">person</span>
               </div>
               <div className="flex-1 min-w-0 pr-2">
-                <p className="text-[14px] font-bold text-slate-900 dark:text-white truncate">{user.name}</p>
-                <p className="text-[11px] text-slate-500 font-medium tracking-wide truncate">ADMIN STORE</p>
+                <p className="text-[14px] font-bold text-slate-900 dark:text-white truncate">{user?.name ?? 'Tài khoản'}</p>
+                <p className="text-[11px] text-slate-500 font-medium tracking-wide truncate">{user?.storeName ?? 'CloudPOS'}</p>
               </div>
             </div>
           )}

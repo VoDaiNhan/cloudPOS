@@ -1,10 +1,15 @@
 import { useState, useMemo } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
-import { mockReturnInvoice } from '../mock/customerReturn'
+import { returnService } from '../services/returnService'
 import type { ReturnInvoice, RefundMethod } from '../types/customerReturn'
 
+const defaultInvoice: ReturnInvoice = {
+  id: '', invoiceCode: '', customerName: '', customerPhone: '',
+  status: 'PAID', items: [],
+}
+
 const CustomerReturnPage = () => {
-  const [invoice, setInvoice] = useState<ReturnInvoice>(mockReturnInvoice)
+  const [invoice, setInvoice] = useState<ReturnInvoice>(defaultInvoice)
   const [searchQuery, setSearchQuery] = useState('')
   const [refundMethod, setRefundMethod] = useState<RefundMethod>('cash')
   const [returnReason, setReturnReason] = useState('')
@@ -38,15 +43,22 @@ const CustomerReturnPage = () => {
 
   const handleConfirm = async () => {
     setIsLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    console.log('Customer Return Confirmed', {
-      invoiceId: invoice.id,
-      items: invoice.items.filter(i => i.returnQuantity > 0),
-      summary,
-      refundMethod,
-      returnReason
-    })
-    setIsLoading(false)
+    try {
+      await returnService.getAll('customer_return')
+      console.log('Customer Return Confirmed', {
+        invoiceId: invoice.id,
+        items: invoice.items.filter(i => i.returnQuantity > 0),
+        summary,
+        refundMethod,
+        returnReason
+      })
+      alert('Đã xác nhận đơn đổi trả thành công!')
+    } catch (err) {
+      console.error('Failed to process return:', err)
+      alert('Không thể xử lý đơn đổi trả')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

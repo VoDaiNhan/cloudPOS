@@ -1,12 +1,25 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
-import { mockRecentAuditSessions, initialStockAuditItems } from '../mock/stockAudit'
+import { stockAuditService, type AuditSession } from '../services/stockAuditService'
 import type { StockAuditItem } from '../types/stockAudit'
 
 const StockAuditPage = () => {
-  const [items, setItems] = useState<StockAuditItem[]>(initialStockAuditItems)
+  const [items, setItems] = useState<StockAuditItem[]>([])
+  const [recentSessions, setRecentSessions] = useState<AuditSession[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const sessions = await stockAuditService.getAll()
+        setRecentSessions(sessions)
+      } catch (err) {
+        console.error('Failed to load audit sessions:', err)
+      }
+    }
+    load()
+  }, [])
 
   const filteredItems = useMemo(
     () => items.filter(item =>
@@ -212,7 +225,7 @@ const StockAuditPage = () => {
                 <button className="text-[10px] text-primary font-black uppercase tracking-widest hover:underline">Xem tất cả</button>
               </div>
               <div className="p-2 space-y-1">
-                {mockRecentAuditSessions.map((session) => (
+                {recentSessions.map((session) => (
                   <div key={session.id} className="p-4 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-2xl cursor-pointer transition-all group border border-transparent hover:border-slate-100 dark:hover:border-slate-800">
                     <div className="flex justify-between items-start mb-2">
                       <span className="font-black text-slate-900 dark:text-white text-sm group-hover:text-primary transition-colors tracking-tight">{session.code}</span>

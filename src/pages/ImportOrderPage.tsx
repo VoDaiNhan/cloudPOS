@@ -1,25 +1,48 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import VoiceOverlay from '../components/VoiceOverlay'
 import { useProductStore } from '../store/productStore'
 import type { Product } from '../types/product'
 import type { ImportItem } from '../types/importOrder'
-import { mockSuppliers, mockDefaultImportItems } from '../mock/importOrders'
-import { standardUnits as units, sampleConversions as unitConversions } from '../mock/units'
+import type { Supplier } from '../types/supplier'
+import { importOrderService } from '../services/importOrderService'
+import { supplierService } from '../services/supplierService'
+import { unitService, unitConversionService, type UnitItem, type UnitConversion } from '../services/unitService'
 
 const ImportOrderPage = () => {
   const navigate = useNavigate()
-  const { products, importStocks } = useProductStore()
+  const { products, refresh, saveProduct } = useProductStore()
   const [selectedSupplier, setSelectedSupplier] = useState('')
   const [importDate, setImportDate] = useState(() => {
     const d = new Date()
     return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`
   })
-  const [items, setItems] = useState<ImportItem[]>(mockDefaultImportItems)
+  const [items, setItems] = useState<ImportItem[]>([])
   const [note, setNote] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [voiceOpen, setVoiceOpen] = useState(false)
+  const [suppliers, setSuppliers] = useState<Supplier[]>([])
+  const [units, setUnits] = useState<UnitItem[]>([])
+  const [unitConversions, setUnitConversions] = useState<UnitConversion[]>([])
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [suppData, unitData, convData] = await Promise.all([
+          supplierService.getAll(),
+          unitService.getAll(),
+          unitConversionService.getAll(),
+        ])
+        setSuppliers(suppData)
+        setUnits(unitData)
+        setUnitConversions(convData)
+      } catch (err) {
+        console.error('Failed to load import order data:', err)
+      }
+    }
+    load()
+  }, [])
 
   const orderCode = `PNK-${importDate.replace(/-/g, '')}-001`
 
@@ -50,9 +73,9 @@ const ImportOrderPage = () => {
     if (initialRate === 1 && initialConversionUnit.toLowerCase() === selectedUnit.toLowerCase()) {
       const unitObj = units.find(u => u.name.toLowerCase() === selectedUnit.toLowerCase())
       if (unitObj) {
-        const userConfiguredConv = unitConversions.find(c => c.fromUnit === unitObj.id)
+        const userConfiguredConv = unitConversions.find(c => c.fromUnitId === unitObj.id)
         if (userConfiguredConv) {
-          const toUnitObj = units.find(u => u.id === userConfiguredConv.toUnit)
+          const toUnitObj = units.find(u => u.id === userConfiguredConv.toUnitId)
           if (toUnitObj) {
             initialRate = userConfiguredConv.rate
             initialConversionUnit = toUnitObj.name
@@ -62,12 +85,12 @@ const ImportOrderPage = () => {
       
       // generic fallback if still 1:1
       if (initialRate === 1 && initialConversionUnit.toLowerCase() === selectedUnit.toLowerCase()) {
-        const genericFallback = sampleConversions.find(
-          c => c.fromUnit.toLowerCase() === selectedUnit.toLowerCase()
-        )
+        const uObj = units.find(u => u.name.toLowerCase() === selectedUnit.toLowerCase())
+        const genericFallback = uObj ? unitConversions.find(c => c.fromUnitId === uObj.id) : undefined
         if (genericFallback) {
           initialRate = genericFallback.rate
-          initialConversionUnit = genericFallback.toUnit
+          const toUnitObj = units.find(u => u.id === genericFallback.toUnitId)
+          initialConversionUnit = toUnitObj ? toUnitObj.name : genericFallback.toUnitId
         }
       }
     }
@@ -80,7 +103,7 @@ const ImportOrderPage = () => {
       conversionUnit: initialConversionUnit,
       unitPrice: Math.round(product.costPrice ?? product.price ?? 0),
     }
-  }, [])
+  }, [units, unitConversions])
 
   const applyProductToItem = useCallback((item: ImportItem, product: Product): ImportItem => {
     const unitData = buildUnitDataFromProduct(product)
@@ -151,9 +174,9 @@ const ImportOrderPage = () => {
           // 1. Lookup globally configured conversions
           const unitObj = units.find(u => u.name.toLowerCase() === unit.toLowerCase())
           if (unitObj) {
-            const userConfiguredConv = unitConversions.find(c => c.fromUnit === unitObj.id)
+            const userConfiguredConv = unitConversions.find(c => c.fromUnitId === unitObj.id)
             if (userConfiguredConv) {
-              const toUnitObj = units.find(u => u.id === userConfiguredConv.toUnit)
+              const toUnitObj = units.find(u => u.id === userConfiguredConv.toUnitId)
               if (toUnitObj) {
                 nextRate = userConfiguredConv.rate
                 nextConversionUnit = toUnitObj.name
@@ -163,12 +186,13 @@ const ImportOrderPage = () => {
 
           // 2. Fallback to generic templates
           if (nextRate === undefined || (nextRate === 1 && nextConversionUnit.toLowerCase() === unit.toLowerCase())) {
-            const genericFallback = sampleConversions.find(
-              c => c.fromUnit.toLowerCase() === unit.toLowerCase()
-            )
+            const uObj = units.find(u => u.name.toLowerCase() === unit.toLowerCase())
+            const genericFallback = uObj ? unitConversions.find(c => c.fromUnitId === uObj.id) : undefined
+
             if (genericFallback) {
               nextRate = genericFallback.rate
-              nextConversionUnit = genericFallback.toUnit
+              const toUnitObj = units.find(u => u.id === genericFallback.toUnitId)
+              nextConversionUnit = toUnitObj ? toUnitObj.name : genericFallback.toUnitId
             } else {
               if (nextRate === undefined) {
                 nextRate = 1
@@ -186,7 +210,7 @@ const ImportOrderPage = () => {
         }
       })
     )
-  }, [])
+  }, [units, unitConversions])
 
 
   // Remove item
@@ -212,7 +236,7 @@ const ImportOrderPage = () => {
       batchNumber: '',
     }
     setItems((prev) => [...prev, newItem])
-  }, [])
+  }, [units])
 
   // Voice result handler — adds a mock product
   const handleVoiceResult = useCallback(() => {
@@ -288,7 +312,6 @@ const ImportOrderPage = () => {
     }
 
     setIsLoading(true)
-    await new Promise((resolve) => setTimeout(resolve, 1500))
     const normalizedItems = items.map((item) => ({
       ...item,
       sku: item.sku || `NEW-${Date.now()}-${item.id.slice(-4)}`,
@@ -296,30 +319,65 @@ const ImportOrderPage = () => {
       normalizedUnit: item.conversionUnit,
     }))
 
-    const result = importStocks(
-      normalizedItems.map((item) => ({
-        sku: item.sku,
-        name: item.name,
-        quantityInBaseUnit: item.normalizedQuantity,
-        baseUnit: item.normalizedUnit,
-        costPrice: item.unitPrice > 0 && item.conversionRate > 0 ? Math.round(item.unitPrice / item.conversionRate) : 0,
-        batchNumber: item.batchNumber.trim(),
-        expiryDate: item.expiryDate || undefined,
-        receivedDate: importDate,
-      }))
-    )
+    try {
+      const importItems = []
+      let createdProducts = 0
 
-    console.log('Import order saved:', {
-      selectedSupplier,
-      orderCode,
-      importDate,
-      items: normalizedItems,
-      note,
-      grandTotal,
-    })
-    setIsLoading(false)
-    alert(`Đã nhập kho thành công. Cập nhật ${result.updated} sản phẩm, tạo mới ${result.created} sản phẩm.`)
-    navigate('/inventory')
+      for (const item of normalizedItems) {
+        let productId = item.linkedProductId
+        if (!productId) {
+          const createdProduct = await saveProduct({
+            code: item.sku,
+            name: item.name,
+            barcode: '',
+            categoryName: 'Nhập kho',
+            price: item.unitPrice > 0 && item.conversionRate > 0 ? Math.round(item.unitPrice / item.conversionRate) : item.unitPrice,
+            costPrice: item.unitPrice > 0 && item.conversionRate > 0 ? Math.round(item.unitPrice / item.conversionRate) : item.unitPrice,
+            stock: 0,
+            status: 'active',
+            baseUnit: item.normalizedUnit,
+            conversions: [],
+            tax: 0,
+          })
+          productId = createdProduct.id
+          createdProducts += 1
+        }
+
+        importItems.push({
+          productId,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          conversionRate: item.conversionRate,
+          conversionUnit: item.normalizedUnit,
+          expiryDate: item.expiryDate || undefined,
+          batchNumber: item.batchNumber.trim(),
+        })
+      }
+
+      const createdOrder = await importOrderService.create({
+        supplierId: selectedSupplier || undefined,
+        paidAmount: grandTotal,
+        notes: note.trim() || undefined,
+        items: importItems,
+      })
+      await importOrderService.confirm(createdOrder.id)
+      await refresh()
+
+      console.log('Import order saved:', {
+        selectedSupplier,
+        orderCode: createdOrder.importNumber || orderCode,
+        importDate,
+        items: normalizedItems,
+        note,
+        grandTotal,
+      })
+      alert(`Đã nhập kho thành công từ phiếu ${createdOrder.importNumber}. Tạo mới ${createdProducts} sản phẩm.`)
+      navigate('/inventory')
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Không thể tạo phiếu nhập kho.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -364,8 +422,8 @@ const ImportOrderPage = () => {
                 className="w-full rounded-2xl border-none bg-slate-50 dark:bg-slate-900 text-sm font-bold focus:ring-2 focus:ring-primary/20 py-3.5"
               >
                 <option value="">Chọn nhà cung cấp</option>
-                {mockSuppliers.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                {suppliers.map((supplier) => (
+                  <option key={supplier.id} value={supplier.id}>{supplier.name}</option>
                 ))}
               </select>
             </div>

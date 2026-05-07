@@ -168,7 +168,7 @@ export const case5_NearExpiry = () => {
 export const case6_BatchExpiry = () => {
   console.log('=== CASE 6: Kiểm tra hàng hết hạn cuối ngày ===')
   
-  const today = new Date()
+  
   const yesterday = new Date()
   yesterday.setDate(yesterday.getDate() - 1)
   const tomorrow = new Date()

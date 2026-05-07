@@ -1,10 +1,34 @@
-import { useNavigate } from 'react-router-dom'
-import { mockShiftReport } from '../mock/shiftReport'
+import { useState, useEffect } from 'react'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { shiftService, type ShiftReport } from '../services/shiftService'
 import { Modal } from '../components/Modal'
+
+const defaultReport: ShiftReport = {
+  shiftId: '', employeeName: '', startTime: '', endTime: '',
+  totalRevenue: 0, paymentMethods: [],
+  orderStats: { successful: 0, cancelled: 0 },
+  cashReconciliation: { systemRecorded: 0, actualHandover: 0, difference: 0 },
+}
 
 const EndShiftReportPage = () => {
   const navigate = useNavigate()
-  const report = mockShiftReport
+  const location = useLocation()
+  const { id } = useParams<{ id: string }>()
+  const [report, setReport] = useState<ShiftReport>(defaultReport)
+
+  useEffect(() => {
+    const shiftId = id || (location.state as { shiftId?: string } | null)?.shiftId
+    if (!shiftId) return
+    const load = async () => {
+      try {
+        const data = await shiftService.getReport(shiftId)
+        setReport(data)
+      } catch (err) {
+        console.error('Failed to load shift report:', err)
+      }
+    }
+    load()
+  }, [id, location.state])
 
   return (
     <Modal size="full" closeOnBackdrop={false}>

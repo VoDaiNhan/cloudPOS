@@ -18,4 +18,5 @@ export interface Product {
   baseUnit?: string
   conversions?: UnitConversion[]
   tax?: number
+  is_sellable?: boolean // true = sản phẩm bán, false = nguyên liệu
 }

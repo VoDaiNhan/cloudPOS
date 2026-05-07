@@ -1,12 +1,31 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { mockUnpaidImportOrders, mockTreasuryData } from '../mock/voucher'
+import { importOrderService, type ImportOrderListItem } from '../services/importOrderService'
+import { cashbookService } from '../services/cashbookService'
 import { Modal } from '../components/Modal'
 
 const PaymentVoucherPage = () => {
   const navigate = useNavigate()
   const [amount, setAmount] = useState<string>('0')
   const [selectedOrders, setSelectedOrders] = useState<Record<string, boolean>>({})
+  const [unpaidImports, setUnpaidImports] = useState<ImportOrderListItem[]>([])
+  const [treasury, setTreasury] = useState({ cashBalance: 0, bankBalance: 0 })
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [imports, cashbook] = await Promise.all([
+          importOrderService.getAll(undefined, 'unpaid'),
+          cashbookService.getSummary(),
+        ])
+        setUnpaidImports(imports)
+        setTreasury({ cashBalance: cashbook.cashBalance, bankBalance: 0 })
+      } catch (err) {
+        console.error('Failed to load payment data:', err)
+      }
+    }
+    load()
+  }, [])
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/[^0-9]/g, '')
@@ -20,10 +39,10 @@ const PaymentVoucherPage = () => {
 
   const handleSelectAll = (e: React.MouseEvent) => {
     e.preventDefault()
-    const allSelected = mockUnpaidImportOrders.every(order => selectedOrders[order.id])
+    const allSelected = unpaidImports.every(order => selectedOrders[order.id])
     const newSelected: Record<string, boolean> = {}
     if (!allSelected) {
-      mockUnpaidImportOrders.forEach(order => { newSelected[order.id] = true })
+      unpaidImports.forEach(order => { newSelected[order.id] = true })
     }
     setSelectedOrders(newSelected)
   }
@@ -65,7 +84,7 @@ const PaymentVoucherPage = () => {
             </div>
             <div>
               <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-0.5">Quỹ tiền mặt</p>
-              <p className="text-base font-black tracking-tight">{mockTreasuryData.cashBalance.toLocaleString()}đ</p>
+              <p className="text-base font-black tracking-tight">{treasury.cashBalance.toLocaleString()}đ</p>
             </div>
           </div>
           <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center gap-3 shadow-sm group hover:border-blue-500/30 transition-colors">
@@ -74,7 +93,7 @@ const PaymentVoucherPage = () => {
             </div>
             <div>
               <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-0.5">Tài khoản NH</p>
-              <p className="text-base font-black tracking-tight">{mockTreasuryData.bankBalance.toLocaleString()}đ</p>
+              <p className="text-base font-black tracking-tight">{treasury.bankBalance.toLocaleString()}đ</p>
             </div>
           </div>
           <div className="p-4 bg-primary/5 dark:bg-primary/10 rounded-2xl border border-primary/20 flex items-center gap-3 shadow-sm">
@@ -106,6 +125,7 @@ const PaymentVoucherPage = () => {
                     <option value="">Chọn loại chi</option>
                     <option value="nhap-hang">Nhập hàng</option>
                     <option value="tra-no">Trả nợ nhà cung cấp</option>
+                    <option value="commission-payout">Chi hoa hồng</option>
                     <option value="luong">Chi lương nhân viên</option>
                     <option value="khac">Chi khác</option>
                   </select>
@@ -158,13 +178,13 @@ const PaymentVoucherPage = () => {
                     <button onClick={handleSelectAll} className="text-primary hover:text-primary/70 transition-colors">Chọn tất cả</button>
                   </div>
                   <div className="space-y-2 max-h-32 overflow-y-auto">
-                    {mockUnpaidImportOrders.map(order => (
+                    {unpaidImports.map(order => (
                       <label key={order.id} className="flex items-center gap-3 p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-primary/50 transition-colors shadow-sm">
                         <input type="checkbox" className="w-4 h-4 rounded accent-primary" checked={!!selectedOrders[order.id]} onChange={() => toggleOrder(order.id)} />
                         <div className="flex-1 flex justify-between items-center min-w-0">
                           <div className="min-w-0">
-                            <p className="text-sm font-black text-slate-900 dark:text-white truncate">{order.code}</p>
-                            <p className="text-[11px] font-bold text-slate-400 truncate">{order.supplier} - {order.date}</p>
+                            <p className="text-sm font-black text-slate-900 dark:text-white truncate">{order.importNumber}</p>
+                            <p className="text-[11px] font-bold text-slate-400 truncate">{order.supplierName || 'NCC'} - {order.createdAt}</p>
                           </div>
                           <div className="text-right ml-2">
                             <span className="text-rose-500 font-black text-sm">{order.debtAmount.toLocaleString()}đ</span>

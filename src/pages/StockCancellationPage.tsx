@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
-import { initialStockCancellationItems } from '../mock/stockCancellation'
+import { stockCancellationService } from '../services/stockCancellationService'
 import type { StockCancellationItem, CancellationReason } from '../types/stockCancellation'
 
 const StockCancellationPage = () => {
-  const [items, setItems] = useState<StockCancellationItem[]>(initialStockCancellationItems)
+  const [items, setItems] = useState<StockCancellationItem[]>([])
   const [reason, setReason] = useState<CancellationReason>('damage')
   const [note, setNote] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
@@ -26,9 +26,20 @@ const StockCancellationPage = () => {
 
   const handleConfirm = async () => {
     setIsLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    console.log('Stock Cancellation Confirmed:', { items, reason, note, totalLoss })
-    setIsLoading(false)
+    try {
+      await stockCancellationService.create({
+        reason,
+        notes: note,
+        items: items.map(i => ({ productId: i.id, quantity: i.cancellationQuantity, unitPrice: i.costPrice, reason })),
+      })
+      alert('Đã tạo phiếu hủy hàng thành công!')
+      setItems([])
+    } catch (err) {
+      console.error('Failed to create cancellation:', err)
+      alert('Không thể tạo phiếu hủy hàng')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const getReasonLabel = (r: CancellationReason) => {

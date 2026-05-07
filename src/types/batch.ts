@@ -140,7 +140,7 @@ export interface ReturnOrder {
   
   // Status
   status: 'pending' | 'approved' | 'rejected' | 'completed'
-  destinationWarehouse: 'main' | 'damaged' | 'expired' | 'return_to_supplier'
+  destinationWarehouse: WarehouseType | 'return_to_supplier'
   
   // Financial impact
   totalAmount: number

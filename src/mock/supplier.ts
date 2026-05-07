@@ -7,8 +7,16 @@ const productBundle = (start: number, length = 2) =>
     .map((product) => product.name)
     .join(', ')
 
+const withDiscountDefaults = (supplier: Omit<Supplier, 'discountPercent' | 'discountType' | 'actualTotalPaid' | 'totalDiscountSaved'>): Supplier => ({
+  ...supplier,
+  discountPercent: 0,
+  discountType: 'percent',
+  actualTotalPaid: supplier.totalImported,
+  totalDiscountSaved: 0,
+})
+
 export const mockSuppliers: Supplier[] = [
-  {
+  withDiscountDefaults({
     id: '1',
     code: 'NCC001',
     name: 'NCC Do Uong CloudPOS',
@@ -20,27 +28,11 @@ export const mockSuppliers: Supplier[] = [
     totalImported: 500000000,
     debt: 0,
     imports: [
-      {
-        id: 'i1',
-        code: 'PNK-2309-005',
-        date: '15/09/2023 10:30',
-        products: productBundle(0, 3),
-        quantity: 220,
-        total: 120000000,
-        status: 'imported',
-      },
-      {
-        id: 'i2',
-        code: 'PNK-2308-020',
-        date: '22/08/2023 14:00',
-        products: productBundle(3, 2),
-        quantity: 180,
-        total: 80000000,
-        status: 'imported',
-      },
+      { id: 'i1', code: 'PNK-2309-005', date: '15/09/2023 10:30', products: productBundle(0, 3), quantity: 220, total: 120000000, status: 'imported' },
+      { id: 'i2', code: 'PNK-2308-020', date: '22/08/2023 14:00', products: productBundle(3, 2), quantity: 180, total: 80000000, status: 'imported' },
     ],
-  },
-  {
+  }),
+  withDiscountDefaults({
     id: '2',
     code: 'NCC002',
     name: 'NCC Thuc An CloudPOS',
@@ -52,36 +44,12 @@ export const mockSuppliers: Supplier[] = [
     totalImported: 120000000,
     debt: 15000000,
     imports: [
-      {
-        id: 'i3',
-        code: 'PNK-2309-001',
-        date: '12/09/2023 14:30',
-        products: productBundle(7, 3),
-        quantity: 140,
-        total: 45000000,
-        status: 'imported',
-      },
-      {
-        id: 'i4',
-        code: 'PNK-2308-042',
-        date: '28/08/2023 09:15',
-        products: productBundle(10, 2),
-        quantity: 95,
-        total: 25000000,
-        status: 'imported',
-      },
-      {
-        id: 'i5',
-        code: 'PNK-2308-015',
-        date: '15/08/2023 16:45',
-        products: productBundle(12, 2),
-        quantity: 120,
-        total: 50000000,
-        status: 'imported',
-      },
+      { id: 'i3', code: 'PNK-2309-001', date: '12/09/2023 14:30', products: productBundle(7, 3), quantity: 140, total: 45000000, status: 'imported' },
+      { id: 'i4', code: 'PNK-2308-042', date: '28/08/2023 09:15', products: productBundle(10, 2), quantity: 95, total: 25000000, status: 'imported' },
+      { id: 'i5', code: 'PNK-2308-015', date: '15/08/2023 16:45', products: productBundle(12, 2), quantity: 120, total: 50000000, status: 'imported' },
     ],
-  },
-  {
+  }),
+  withDiscountDefaults({
     id: '3',
     code: 'NCC003',
     name: 'NCC Combo CloudPOS',
@@ -93,27 +61,11 @@ export const mockSuppliers: Supplier[] = [
     totalImported: 85000000,
     debt: 2500000,
     imports: [
-      {
-        id: 'i6',
-        code: 'PNK-2309-010',
-        date: '18/09/2023 08:00',
-        products: productBundle(14, 2),
-        quantity: 70,
-        total: 35000000,
-        status: 'imported',
-      },
-      {
-        id: 'i7',
-        code: 'PNK-2308-030',
-        date: '25/08/2023 11:30',
-        products: productBundle(16, 2),
-        quantity: 55,
-        total: 20000000,
-        status: 'pending',
-      },
+      { id: 'i6', code: 'PNK-2309-010', date: '18/09/2023 08:00', products: productBundle(14, 2), quantity: 70, total: 35000000, status: 'imported' },
+      { id: 'i7', code: 'PNK-2308-030', date: '25/08/2023 11:30', products: productBundle(16, 2), quantity: 55, total: 20000000, status: 'pending' },
     ],
-  },
-  {
+  }),
+  withDiscountDefaults({
     id: '4',
     code: 'NCC004',
     name: 'NCC Tong Hop CloudPOS',
@@ -125,18 +77,10 @@ export const mockSuppliers: Supplier[] = [
     totalImported: 250000000,
     debt: 0,
     imports: [
-      {
-        id: 'i8',
-        code: 'PNK-2309-008',
-        date: '16/09/2023 07:30',
-        products: productBundle(0, 4),
-        quantity: 300,
-        total: 75000000,
-        status: 'imported',
-      },
+      { id: 'i8', code: 'PNK-2309-008', date: '16/09/2023 07:30', products: productBundle(0, 4), quantity: 300, total: 75000000, status: 'imported' },
     ],
-  },
-  {
+  }),
+  withDiscountDefaults({
     id: '5',
     code: 'NCC005',
     name: 'NCC Bo Sung CloudPOS',
@@ -148,15 +92,7 @@ export const mockSuppliers: Supplier[] = [
     totalImported: 32000000,
     debt: 5000000,
     imports: [
-      {
-        id: 'i9',
-        code: 'PNK-2309-012',
-        date: '20/09/2023 15:00',
-        products: productBundle(8, 2),
-        quantity: 90,
-        total: 12000000,
-        status: 'imported',
-      },
+      { id: 'i9', code: 'PNK-2309-012', date: '20/09/2023 15:00', products: productBundle(8, 2), quantity: 90, total: 12000000, status: 'imported' },
     ],
-  },
+  }),
 ]

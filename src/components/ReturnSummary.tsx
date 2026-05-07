@@ -20,8 +20,7 @@ export const ReturnSummary = ({
 
   const subtotal = items.reduce((sum, item) => sum + (item.returnAmount || 0), 0)
   const refundAmount = returnType === 'cancel' || returnType === 'return' ? subtotal : 0
-  const additionalCharge = 0 // Sẽ tính khi có đổi hàng
-  const netAmount = returnType === 'return' ? -refundAmount : additionalCharge
+  // additionalCharge and netAmount will be computed when exchange feature is implemented
 
   const refundMethods = [
     { value: 'cash', label: 'Tiền mặt', icon: 'payments' },

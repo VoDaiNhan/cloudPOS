@@ -1,13 +1,29 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { DashboardLayout } from '../layouts/DashboardLayout'
-import { mockCashbookSummary, mockCashbookTransactions } from '../mock/cashbook'
-import type { CashbookTransaction } from '../types/cashbook'
+import { cashbookService } from '../services/cashbookService'
+import type { CashbookTransaction, CashbookSummary } from '../types/cashbook'
 
 const CashbookPage = () => {
   const navigate = useNavigate()
-  const [transactions] = useState<CashbookTransaction[]>(mockCashbookTransactions)
-  const summary = mockCashbookSummary
+  const [transactions, setTransactions] = useState<CashbookTransaction[]>([])
+  const [summary, setSummary] = useState<CashbookSummary>({ totalIncome: 0, totalExpense: 0, cashBalance: 0, incomeChangePercent: 0, expenseChangePercent: 0 })
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [txns, sum] = await Promise.all([
+          cashbookService.getAll(),
+          cashbookService.getSummary(),
+        ])
+        setTransactions(txns)
+        setSummary(sum)
+      } catch (err) {
+        console.error('Failed to load cashbook:', err)
+      }
+    }
+    load()
+  }, [])
 
   const getStatusBadge = (status: string) => {
     switch (status) {

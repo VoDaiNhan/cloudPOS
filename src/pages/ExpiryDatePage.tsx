@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import { useProductStore } from '../store/productStore'
 import { formatDisplayDate } from '../utils/stockBatchUtils'
@@ -44,32 +44,27 @@ const ExpiryDatePage = () => {
 
   const totalPages = Math.max(1, Math.ceil(filteredBatches.length / pageSize))
 
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm, statusFilter, windowFilter])
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages)
-    }
+  const currentPageClamped = useMemo(() => {
+    if (currentPage > totalPages) return totalPages
+    return currentPage
   }, [currentPage, totalPages])
 
   const paginatedBatches = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
+    const start = (currentPageClamped - 1) * pageSize
     return filteredBatches.slice(start, start + pageSize)
-  }, [currentPage, filteredBatches])
+  }, [currentPageClamped, filteredBatches])
 
   const pageNumbers = useMemo(() => {
     if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1)
 
-    const start = Math.max(1, currentPage - 2)
+    const start = Math.max(1, currentPageClamped - 2)
     const end = Math.min(totalPages, start + 4)
     const adjustedStart = Math.max(1, end - 4)
     return Array.from({ length: end - adjustedStart + 1 }, (_, i) => adjustedStart + i)
-  }, [currentPage, totalPages])
+  }, [currentPageClamped, totalPages])
 
-  const startIndex = filteredBatches.length === 0 ? 0 : (currentPage - 1) * pageSize + 1
-  const endIndex = Math.min(currentPage * pageSize, filteredBatches.length)
+  const startIndex = filteredBatches.length === 0 ? 0 : (currentPageClamped - 1) * pageSize + 1
+  const endIndex = Math.min(currentPageClamped * pageSize, filteredBatches.length)
   
   return (
     <DashboardLayout title="Hạn sử dụng" breadcrumb={[{ label: 'Hàng hóa' }, { label: 'Hạn sử dụng' }]}>
@@ -278,7 +273,7 @@ const ExpiryDatePage = () => {
             <div className="flex gap-2.5">
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
+                disabled={currentPageClamped === 1}
                 className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-xl text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Trước
@@ -288,7 +283,7 @@ const ExpiryDatePage = () => {
                   key={page}
                   onClick={() => setCurrentPage(page)}
                   className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${
-                    page === currentPage
+                    page === currentPageClamped
                       ? 'bg-primary text-white shadow-md shadow-primary/20'
                       : 'bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50'
                   }`}
@@ -298,7 +293,7 @@ const ExpiryDatePage = () => {
               ))}
               <button
                 onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
+                disabled={currentPageClamped === totalPages}
                 className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-xl text-xs font-black uppercase tracking-widest text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Sau

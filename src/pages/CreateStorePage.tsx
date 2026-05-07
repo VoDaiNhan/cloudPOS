@@ -2,8 +2,12 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { InputField } from '../components/InputField'
 import { Button } from '../components/Button'
-import { mockStoreSectors } from '../mock/store'
 import type { StoreSector } from '../types/store'
+
+const storeSectors: StoreSector[] = [
+  { id: 'tap-hoa', title: 'Tạp hóa', description: 'Phù hợp cửa hàng nhỏ, gia đình', icon: 'shopping_basket' },
+  { id: 'sieu-thi-mini', title: 'Siêu thị mini', description: 'Phù hợp mô hình tự chọn hiện đại', icon: 'local_mall' },
+]
 
 const SectorCard = ({
   sector,
@@ -120,7 +124,7 @@ const CreateStorePage = () => {
                 Chọn ngành hàng kinh doanh
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {mockStoreSectors.map((sector) => (
+                {storeSectors.map((sector) => (
                   <SectorCard
                     key={sector.id}
                     sector={sector}

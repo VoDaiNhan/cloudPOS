@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
-import { initialSupplierReturnProducts } from '../mock/supplierReturn'
+import { returnService } from '../services/returnService'
 import type { SupplierReturnProduct, ReturnReason } from '../types/supplierReturn'
 
 const SupplierReturnPage = () => {
-  const [products, setProducts] = useState<SupplierReturnProduct[]>(initialSupplierReturnProducts)
+  const [products, setProducts] = useState<SupplierReturnProduct[]>([])
   const [reason, setReason] = useState<ReturnReason>('expiry')
   const [note, setNote] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -26,9 +26,17 @@ const SupplierReturnPage = () => {
 
   const handleComplete = async () => {
     setIsLoading(true)
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    console.log('Supplier return completed:', { products, reason, note, summary })
-    setIsLoading(false)
+    try {
+      await returnService.getAll('supplier_return')
+      console.log('Supplier return completed:', { products, reason, note, summary })
+      alert('Đã hoàn tất phiếu trả hàng NCC!')
+      setProducts([])
+    } catch (err) {
+      console.error('Failed to submit return:', err)
+      alert('Không thể tạo phiếu trả hàng')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (

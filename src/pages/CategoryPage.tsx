@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
 import { Table } from '../components/Table'
 import type { Column } from '../components/Table'
 import { Button } from '../components/Button'
-import { mockCategories } from '../mock/category'
+import { categoryService } from '../services/categoryService'
 import type { Category } from '../types/category'
 
 const StatCard = ({
@@ -31,8 +31,22 @@ const StatCard = ({
 )
 
 const CategoryPage = () => {
-  const [data] = useState<Category[]>(mockCategories)
-  const [loading] = useState(false)
+  const [data, setData] = useState<Category[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const categories = await categoryService.getAll()
+        setData(categories)
+      } catch (err) {
+        console.error('Failed to load categories:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
   const [searchTerm, setSearchTerm] = useState('')
 
   const filteredData = useMemo(() => {
@@ -111,14 +125,14 @@ const CategoryPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
             label="Tổng sản phẩm"
-            value="1,284"
+            value={loading ? '...' : data.reduce((sum, c) => sum + c.skuCount, 0).toLocaleString()}
             icon="inventory_2"
             color="text-blue-600"
             bgColor="bg-blue-50/80 dark:bg-blue-900/10"
           />
           <StatCard
             label="Số nhóm hàng"
-            value="24"
+            value={loading ? '...' : String(data.length)}
             icon="category"
             color="text-primary"
             bgColor="bg-primary/10"
@@ -158,7 +172,7 @@ const CategoryPage = () => {
             pagination={{
               current: 1,
               pageSize: 10,
-              total: 24,
+              total: filteredData.length,
               onChange: (page) => console.log('Page:', page),
             }}
           />

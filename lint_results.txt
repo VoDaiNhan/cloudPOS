@@ -1,0 +1,181 @@
+
+> lhu-pos@0.0.0 lint
+> eslint .
+
+
+D:\dev\cloudpos\CloudPOS\src\components\BarcodeScanner.tsx
+  17:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\dev\cloudpos\CloudPOS\src\components\BatchSelector.tsx
+  30:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\dev\cloudpos\CloudPOS\src\components\BatchSelector.tsx:30:7
+  28 |     if (strategy !== 'MANUAL') {
+  29 |       const allocated = allocateBatches(batches, requestedQuantity, strategy)
+> 30 |       setAllocations(allocated)
+     |       ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  31 |     }
+  32 |   }, [batches, requestedQuantity, strategy])
+  33 |  react-hooks/set-state-in-effect
+
+D:\dev\cloudpos\CloudPOS\src\components\ReturnItemSelector.tsx
+   6:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:35  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\dev\cloudpos\CloudPOS\src\components\ReturnOrderManager.tsx
+  51:75  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  66:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  68:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  70:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  72:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  74:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  84:58  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\dev\cloudpos\CloudPOS\src\components\VoiceOverlay.tsx
+  13:24  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+  14:30  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+  21:33  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+  26:5   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\dev\cloudpos\CloudPOS\src\components\VoiceOverlay.tsx:26:5
+  24 |     if (!isOpen) return
+  25 |
+> 26 |     setTranscript('')
+     |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  27 |     setIsListening(true)
+  28 |
+  29 |     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition  react-hooks/set-state-in-effect
+  42:36  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+  64:35  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                @typescript-eslint/no-explicit-any
+  88:54  error    'e' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+  88:57  error    Empty block statement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   no-empty
+  91:6   warning  React Hook useEffect has missing dependencies: 'onClose', 'onResult', and 'transcript'. Either include them or remove the dependency array. If 'onClose' changes too often, find the parent component that defines it and wrap that definition in useCallback                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           react-hooks/exhaustive-deps
+
+D:\dev\cloudpos\CloudPOS\src\pages\BatchManagementDemo.tsx
+  174:53  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\dev\cloudpos\CloudPOS\src\pages\ExpiryDatePage.tsx
+  48:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\dev\cloudpos\CloudPOS\src\pages\ExpiryDatePage.tsx:48:5
+  46 |
+  47 |   useEffect(() => {
+> 48 |     setCurrentPage(1)
+     |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  49 |   }, [searchTerm, statusFilter, windowFilter])
+  50 |
+  51 |   useEffect(() => {                      react-hooks/set-state-in-effect
+  53:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\dev\cloudpos\CloudPOS\src\pages\ExpiryDatePage.tsx:53:7
+  51 |   useEffect(() => {
+  52 |     if (currentPage > totalPages) {
+> 53 |       setCurrentPage(totalPages)
+     |       ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  54 |     }
+  55 |   }, [currentPage, totalPages])
+  56 |  react-hooks/set-state-in-effect
+
+D:\dev\cloudpos\CloudPOS\src\pages\InventoryPage.tsx
+  57:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\dev\cloudpos\CloudPOS\src\pages\InventoryPage.tsx:57:5
+  55 |
+  56 |   useEffect(() => {
+> 57 |     setCurrentPage(1)
+     |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  58 |   }, [filter, category])
+  59 |
+  60 |   useEffect(() => {                                            react-hooks/set-state-in-effect
+  62:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\dev\cloudpos\CloudPOS\src\pages\InventoryPage.tsx:62:7
+  60 |   useEffect(() => {
+  61 |     if (currentPage > totalPages) {
+> 62 |       setCurrentPage(totalPages)
+     |       ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  63 |     }
+  64 |   }, [currentPage, totalPages])
+  65 |  react-hooks/set-state-in-effect
+
+D:\dev\cloudpos\CloudPOS\src\pages\ProductListPage.tsx
+  29:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\dev\cloudpos\CloudPOS\src\pages\ProductListPage.tsx:29:5
+  27 |
+  28 |   useEffect(() => {
+> 29 |     setCurrentPage(1)
+     |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  30 |   }, [searchTerm])
+  31 |
+  32 |   useEffect(() => {                                                  react-hooks/set-state-in-effect
+  34:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+D:\dev\cloudpos\CloudPOS\src\pages\ProductListPage.tsx:34:7
+  32 |   useEffect(() => {
+  33 |     if (currentPage > totalPages) {
+> 34 |       setCurrentPage(totalPages)
+     |       ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  35 |     }
+  36 |   }, [currentPage, totalPages])
+  37 |  react-hooks/set-state-in-effect
+
+D:\dev\cloudpos\CloudPOS\src\pages\ReturnExchangePage.tsx
+  16:54  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  34:49  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  42:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  48:43  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+D:\dev\cloudpos\CloudPOS\src\pages\UnitConversionPage.tsx
+  55:38  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Ô£û 32 problems (31 errors, 1 warning)
+

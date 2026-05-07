@@ -12,6 +12,7 @@ export interface POSProduct {
   baseUnit: string
   importConversion?: ImportUnitConversion
   category: string
+  is_sellable?: boolean
 }
 
 export type DiscountType = 'percent' | 'fixed'

@@ -1,11 +1,23 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
-import type { InventoryStatus } from '../types/inventory'
+import type { InventoryItem, InventoryStatus } from '../types/inventory'
 import { exportToExcel } from '../utils/exportUtils'
-import { useProductStore } from '../store/productStore'
+import { inventoryService } from '../services/inventoryService'
 
 const InventoryPage = () => {
-  const { inventoryItems } = useProductStore()
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([])
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await inventoryService.getAll()
+        setInventoryItems(data)
+      } catch (err) {
+        console.error('Failed to load inventory:', err)
+      }
+    }
+    load()
+  }, [])
   const [filter, setFilter] = useState<'all' | 'low' | 'out'>('all')
   const [category, setCategory] = useState('Tất cả')
   const [currentPage, setCurrentPage] = useState(1)
@@ -53,32 +65,27 @@ const InventoryPage = () => {
 
   const totalPages = Math.max(1, Math.ceil(filteredInventory.length / pageSize))
 
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [filter, category])
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages)
-    }
+  const currentPageClamped = useMemo(() => {
+    if (currentPage > totalPages) return totalPages
+    return currentPage
   }, [currentPage, totalPages])
 
   const paginatedInventory = useMemo(() => {
-    const start = (currentPage - 1) * pageSize
+    const start = (currentPageClamped - 1) * pageSize
     return filteredInventory.slice(start, start + pageSize)
-  }, [currentPage, filteredInventory])
+  }, [currentPageClamped, filteredInventory])
 
   const pageNumbers = useMemo(() => {
     if (totalPages <= 5) return Array.from({ length: totalPages }, (_, i) => i + 1)
 
-    const start = Math.max(1, currentPage - 2)
+    const start = Math.max(1, currentPageClamped - 2)
     const end = Math.min(totalPages, start + 4)
     const adjustedStart = Math.max(1, end - 4)
     return Array.from({ length: end - adjustedStart + 1 }, (_, i) => adjustedStart + i)
-  }, [currentPage, totalPages])
+  }, [currentPageClamped, totalPages])
 
-  const startIndex = filteredInventory.length === 0 ? 0 : (currentPage - 1) * pageSize + 1
-  const endIndex = Math.min(currentPage * pageSize, filteredInventory.length)
+  const startIndex = filteredInventory.length === 0 ? 0 : (currentPageClamped - 1) * pageSize + 1
+  const endIndex = Math.min(currentPageClamped * pageSize, filteredInventory.length)
 
   return (
     <DashboardLayout title="Quản lý Tồn kho" breadcrumb={[{ label: 'Hàng hóa' }, { label: 'Tồn kho' }]}>
@@ -237,7 +244,7 @@ const InventoryPage = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
+                disabled={currentPageClamped === 1}
                 className="size-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <span className="material-symbols-outlined text-lg">chevron_left</span>
@@ -247,7 +254,7 @@ const InventoryPage = () => {
                   key={page}
                   onClick={() => setCurrentPage(page)}
                   className={`size-8 flex items-center justify-center rounded-lg text-[10px] font-black transition-all ${
-                    page === currentPage
+                    page === currentPageClamped
                       ? 'bg-primary text-white shadow-md shadow-primary/20'
                       : 'border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900'
                   }`}
@@ -257,7 +264,7 @@ const InventoryPage = () => {
               ))}
               <button
                 onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
+                disabled={currentPageClamped === totalPages}
                 className="size-8 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <span className="material-symbols-outlined text-lg">chevron_right</span>

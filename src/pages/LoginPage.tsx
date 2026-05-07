@@ -33,8 +33,17 @@ const LoginPage = () => {
         rememberMe: formData.rememberMe,
       })
       navigate('/dashboard')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Đã xảy ra lỗi')
+    } catch (err: unknown) {
+      const error = err as { response?: { status?: number; data?: { message?: string } } }
+      if (error?.response?.status === 401) {
+        setError('Số điện thoại hoặc mật khẩu không đúng')
+      } else if (error?.response?.data?.message) {
+        setError(error.response.data.message)
+      } else if (err instanceof Error) {
+        setError(err.message)
+      } else {
+        setError('Không thể kết nối đến máy chủ. Vui lòng thử lại.')
+      }
     } finally {
       setIsLoading(false)
     }

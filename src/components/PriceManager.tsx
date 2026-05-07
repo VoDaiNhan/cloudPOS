@@ -1,7 +1,13 @@
 import { useState } from 'react'
 import type { PricingStrategy } from '../types/pricing'
 import { calculatePrices, validatePrices, formatPrice } from '../utils/priceCalculator'
-import { pricingStrategies } from '../mock/pricing'
+
+const pricingStrategies: PricingStrategy[] = [
+  { id: 'strategy-1', name: 'Tiêu chuẩn', description: 'Lợi nhuận 30% cho bán lẻ, giảm 10% cho bán sỉ', retailMarkupPercent: 30, wholesaleDiscountPercent: 10, isDefault: true },
+  { id: 'strategy-2', name: 'Cao cấp', description: 'Lợi nhuận 50% cho bán lẻ, giảm 8% cho bán sỉ', retailMarkupPercent: 50, wholesaleDiscountPercent: 8, isDefault: false },
+  { id: 'strategy-3', name: 'Cạnh tranh', description: 'Lợi nhuận 20% cho bán lẻ, giảm 15% cho bán sỉ', retailMarkupPercent: 20, wholesaleDiscountPercent: 15, isDefault: false },
+  { id: 'strategy-4', name: 'Khuyến mãi', description: 'Lợi nhuận 25% cho bán lẻ, giảm 20% cho bán sỉ', retailMarkupPercent: 25, wholesaleDiscountPercent: 20, isDefault: false },
+]
 
 interface PriceManagerProps {
   productName: string

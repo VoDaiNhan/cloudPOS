@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DashboardLayout } from '../layouts/DashboardLayout'
-import { mockStaffList, mockRoles, mockRolePermissions } from '../mock/staff'
-import type { Staff, StaffRole, Permission } from '../types/staff'
+import { staffService } from '../services/staffService'
+import type { Staff, StaffRole, Permission, RoleItem, RolePermissions } from '../types/staff'
 
 // ── Role badge config ────────────────────────────────────────────────────────
 
@@ -88,8 +88,21 @@ const AddStaffModal = ({ onClose }: { onClose: () => void }) => (
 const StaffListTab = ({ onAdd }: { onAdd: () => void }) => {
   const [searchTerm, setSearchTerm] = useState('')
   const [roleFilter, setRoleFilter] = useState<StaffRole | 'all'>('all')
+  const [staffList, setStaffList] = useState<Staff[]>([])
 
-  const filteredStaff = mockStaffList.filter((s: Staff) => {
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const data = await staffService.getAll()
+        setStaffList(data)
+      } catch (err) {
+        console.error('Failed to load staff:', err)
+      }
+    }
+    load()
+  }, [])
+
+  const filteredStaff = staffList.filter((s: Staff) => {
     const matchSearch = !searchTerm || s.name.toLowerCase().includes(searchTerm.toLowerCase()) || s.phone.includes(searchTerm)
     const matchRole = roleFilter === 'all' || s.role === roleFilter
     return matchSearch && matchRole
@@ -195,15 +208,31 @@ const StaffListTab = ({ onAdd }: { onAdd: () => void }) => {
 // ── Tab 2: Role & Permissions ────────────────────────────────────────────────
 
 const RolePermissionsTab = () => {
-  const [selectedRoleId, setSelectedRoleId] = useState('admin')
-  const roles = mockRoles
+  const [selectedRoleId, setSelectedRoleId] = useState('')
+  const [roles, setRoles] = useState<RoleItem[]>([])
+  const [allRolePermissions, setAllRolePermissions] = useState<RolePermissions[]>([])
+  const [permissions, setPermissions] = useState<Permission[]>([])
 
-  const rolePerms = mockRolePermissions.find((r) => r.roleId === selectedRoleId)
-  const [permissions, setPermissions] = useState<Permission[]>(rolePerms?.permissions ?? [])
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { roles: r, rolePermissions: rp } = await staffService.getAllRolesWithPermissions()
+        setRoles(r)
+        setAllRolePermissions(rp)
+        if (r.length > 0) {
+          setSelectedRoleId(r[0].id)
+          setPermissions(rp[0]?.permissions ?? [])
+        }
+      } catch (err) {
+        console.error('Failed to load roles:', err)
+      }
+    }
+    load()
+  }, [])
 
   const handleRoleSelect = (id: string) => {
     setSelectedRoleId(id)
-    const perms = mockRolePermissions.find((r) => r.roleId === id)
+    const perms = allRolePermissions.find((r) => r.roleId === id)
     setPermissions(perms?.permissions ?? [])
   }
 

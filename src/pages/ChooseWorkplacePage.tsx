@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { mockUser } from '../mock/auth'
+import { authService } from '../services/authService'
 
 const WorkModeCard = ({
   title,
@@ -44,7 +44,7 @@ const WorkModeCard = ({
 
 const ChooseWorkplacePage = () => {
   const navigate = useNavigate()
-  const [user] = useState(mockUser)
+  const [user] = useState(() => authService.getUser() || { name: 'Người dùng', role: 'admin' })
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

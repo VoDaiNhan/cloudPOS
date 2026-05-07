@@ -48,7 +48,7 @@ export const ReturnOrderManager = ({
     setItems(items.filter((_, i) => i !== index))
   }
 
-  const updateItem = (index: number, field: keyof ReturnOrderItem, value: any) => {
+  const updateItem = (index: number, field: keyof ReturnOrderItem, value: string | number) => {
     const newItems = [...items]
     newItems[index] = { ...newItems[index], [field]: value }
     setItems(newItems)
@@ -60,10 +60,10 @@ export const ReturnOrderManager = ({
     }, 0)
   }
 
-  const getDestinationWarehouse = (): WarehouseType => {
+  const getDestinationWarehouse = (): WarehouseType | 'return_to_supplier' => {
     switch (returnType) {
       case 'customer_return':
-        return 'return'
+        return 'main'
       case 'supplier_return':
         return 'return_to_supplier'
       case 'damage':
@@ -71,7 +71,7 @@ export const ReturnOrderManager = ({
       case 'expiry':
         return 'expired'
       default:
-        return 'return'
+        return 'main'
     }
   }
 

@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { mockUnpaidSalesOrders } from '../mock/voucher'
+import { orderService, type OrderResult } from '../services/orderService'
 import type { ReceiptCategory } from '../types/voucher'
 import { Modal } from '../components/Modal'
 
@@ -10,6 +10,19 @@ const ReceiptVoucherPage = () => {
   const navigate = useNavigate()
   const [category, setCategory] = useState<ReceiptCategory>('SALES')
   const [amount, setAmount] = useState<string>('0')
+  const [unpaidOrders, setUnpaidOrders] = useState<OrderResult[]>([])
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const orders = await orderService.getAll()
+        setUnpaidOrders(orders.filter(o => o.status === 'unpaid' || o.status === 'partial'))
+      } catch (err) {
+        console.error('Failed to load orders:', err)
+      }
+    }
+    load()
+  }, [])
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value.replace(/[^0-9]/g, '')
@@ -96,9 +109,9 @@ const ReceiptVoucherPage = () => {
                   <div className="relative">
                     <select className="appearance-none w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm font-medium transition-all cursor-pointer">
                       <option value="">Chọn đơn hàng chưa thanh toán</option>
-                      {mockUnpaidSalesOrders.map(order => (
+                      {unpaidOrders.map(order => (
                         <option key={order.id} value={order.id}>
-                          {order.code} - {order.amount.toLocaleString('vi-VN')}đ ({order.customer})
+                          {order.orderNumber} - {order.totalAmount.toLocaleString('vi-VN')}đ ({order.customerName || 'Khách lẻ'})
                         </option>
                       ))}
                     </select>

@@ -1,12 +1,8 @@
 import axios from 'axios'
 
-/**
- * Base Axios instance for API communication.
- * Update baseURL when the backend is ready.
- */
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
-  timeout: 10000,
+  baseURL: '/api',
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -19,6 +15,12 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+
+    const storeId = localStorage.getItem('store_id')
+    if (storeId) {
+      config.headers['X-Store-Id'] = storeId
+    }
+
     return config
   },
   (error) => Promise.reject(error),
@@ -28,10 +30,15 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle common errors (401, 403, 500, etc.)
     if (error.response?.status === 401) {
       localStorage.removeItem('access_token')
-      window.location.href = '/login'
+      localStorage.removeItem('store_id')
+      localStorage.removeItem('user')
+
+      if (!['/', '/login', '/register'].includes(window.location.pathname)) {
+        window.history.replaceState(null, '', '/')
+        window.dispatchEvent(new PopStateEvent('popstate'))
+      }
     }
     return Promise.reject(error)
   },
